@@ -15,7 +15,7 @@
 '''
 Web自动化的辅助类
 '''
-#2012-02-14    beyondli    创建
+#2012-02-14    banana    创建
 #2012-02-20    cherry  加入XPathParser
 from tuia.mouse import Mouse        #@UnusedImport
 from tuia.keyboard import Keyboard  #@UnusedImport
@@ -26,8 +26,8 @@ __all__ = ["Mouse", "Keyboard", "Rect", "XPath", "XPathParser",
 # -*- -*- -*- -*- -*- -*- -*- -*- -*- -*- -*- -*- -*- -*- -*- -*- -*- -*- Rect
 class Rect(object):
     '''表示矩形区域'''
-    #2012-02-14    beyondli    创建
-    #2012-02-17    beyondli    添加__str__()方法
+    #2012-02-14    banana    创建
+    #2012-02-17    banana    添加__str__()方法
     def __init__(self, left=0, top=0, width=0, height=0):
         '''构造函数
         @type left: int
@@ -135,7 +135,7 @@ class XPathParser(object):
 
 class XPath(str):
     '''表示XPath'''
-    #2012-02-14    beyondli    创建
+    #2012-02-14    banana    创建
     def __init__(self, obj):
         str.__init__(self)
         self._obj = obj
@@ -250,7 +250,7 @@ class XPath(str):
 # -*- -*- -*- -*- -*- -*- -*- -*- -*- -*- -*- -*- -*- -*- -*- -*- -*- -*- WebElementAttributes
 class LazyDict(object):
     '''类字典容器，本身不存储数据，只在需要时调用相应函数实现读写操作'''
-    #2012-02-21    beyondli    创建
+    #2012-02-21    banana    创建
     def __init__(self, getter, setter=None, lister=None):
         self._getter = getter
         self._setter = setter
@@ -286,14 +286,14 @@ class LazyDict(object):
 
 class WebElementAttributes(LazyDict):
     '''供WebElement的Attributes属性使用的类字典容器'''
-    #2012-02-14    beyondli    创建
-    #2012-02-21    beyondli    改为从LazyDict继承
+    #2012-02-14    banana    创建
+    #2012-02-21    banana    改为从LazyDict继承
     def __delitem__(self):
         raise Exception("Attribute cannot be deleted.")
 
 class WebElementStyles(LazyDict):
     '''供WebElement的Styles属性使用的类字典容器'''
-    #2012-02-21    beyondli    创建
+    #2012-02-21    banana    创建
     def __setitem__(self, key, value):
         raise Exception("Style cannot be set.")
 

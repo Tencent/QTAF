@@ -76,13 +76,7 @@ env保存了用例运行时的一些测试环境变量。
 
 测试环境变量分为3个部分：
 
-1、由测试管理平台中的测试计划中传入的环境变量。
-a、测试计划968(url: http://testing.sng.local/qta/index.php/Druntask/viewtask/id/968)定义了以下变量：
-...
-用例环境变量:  AssertTest=True;
-...
-
-b、在测试执行时，env则存储了由测试计划定义的用例环境变量，使用方法如下::
+1、在测试执行时，env则存储了由测试计划定义的用例环境变量，使用方法如下::
 
     from testbase.testcase import Environ
     env = Environ()

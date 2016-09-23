@@ -15,8 +15,8 @@
 '''
 Web自动化适配层
 '''
-#2012-02-14    beyondli    创建
-#2012-02-29    beyondli    初步完成WebPage与浏览器实现的整合
+#2012-02-14    banana    创建
+#2012-02-29    banana    初步完成WebPage与浏览器实现的整合
 import time
 
 import base
@@ -32,7 +32,7 @@ __all__ = ["WebPage", "WebElement", "FrameElement", "BrowserEnum", "XPath"]
 
 class BrowserEnum(object):
     '''支持的浏览器类型枚举'''
-    #2012-02-29    beyondli    创建
+    #2012-02-29    banana    创建
     IE = "msie"
     Firefox = "firefox"
     Chrome = "chrome"
@@ -59,7 +59,7 @@ _browser_type_to_browser = {
 
 class WebBase(object):
     '''WebPage与WebElement通用的属性与方法'''
-    #2012-03-15    beyondli    创建
+    #2012-03-15    banana    创建
     def __init__(self):
         '''构造函数'''
         self._locators = {}
@@ -139,8 +139,8 @@ class WebBase(object):
 
 class WebPage(WebBase):
     '''封装Web自动化所需的页面相关的逻辑，对应于具体浏览器的派生类需要实现这些接口'''
-    #2012-02-14    beyondli    创建
-    #2012-02-29    beyondli    新增findByHWnd方法
+    #2012-02-14    banana    创建
+    #2012-02-29    banana    新增findByHWnd方法
     def __init__(self, page):
         '''构造函数
         @type page: WebPage 或 Window
@@ -362,8 +362,8 @@ class WebPage(WebBase):
 
 class WebElement(WebBase):
     '''封装Web自动化所需的页面元素相关的逻辑，对应于具体浏览器的派生类需要实现这些接口'''
-    #2012-02-14    beyondli    创建
-    #2012-03-08    beyondli    实现
+    #2012-02-14    banana    创建
+    #2012-03-08    banana    实现
     def __init__(self, root, locator):
         '''构造函数
         @type root: WebElement或WebPage
@@ -590,7 +590,7 @@ class WebElement(WebBase):
 
 class FrameElement(WebElement):
     '''对应于HTMLFrame元素和HTMLIFrame元素的WebElement派生类'''
-    #2012-03-08    beyondli    创建
+    #2012-03-08    banana    创建
     def __init__(self, root, locator):
         loc = XPathParser.parse_for_frames(locator)[-1]
         if not ('/iframe' in loc or '/frame' in loc):

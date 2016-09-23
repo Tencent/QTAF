@@ -15,11 +15,11 @@
 '''
 定义对应于具体浏览器的Web自动化组件需要实现的接口
 '''
-#2012-02-14    beyondli    创建
+#2012-02-14    banana    创建
 
 class IWebPage(object):
     '''封装Web自动化所需的页面相关的逻辑，对应于具体浏览器的派生类需要实现这些接口'''
-    #2012-02-14    beyondli    创建
+    #2012-02-14    banana    创建
     def __init__(self, hwnd):
         '''构造函数
         @type hwnd: hwnd
@@ -151,7 +151,7 @@ class IWebPage(object):
 
 class IWebElement(object):
     '''封装Web自动化所需的页面元素相关的逻辑，对应于具体浏览器的派生类需要实现这些接口'''
-    #2012-02-14    beyondli    创建
+    #2012-02-14    banana    创建
     def __init__(self, root, locator):
         '''构造函数
         @type root: WebElement或WebPage

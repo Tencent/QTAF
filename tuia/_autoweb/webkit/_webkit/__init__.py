@@ -15,10 +15,10 @@
 '''
 用于各种Webkit内核浏览器的Web自动化实现的基类，目前支持Chrome和QPlus
 '''
-#2012-02-22    beyondli    创建
-#2012-03-07    beyondli    增加了LazyDriver类
-#2012-03-08    beyondli    _wait方法从WebPage移动到WebElement
-#2012-04-10    cherry  在顶部加入自解压部分，beyondli回来上班后请梳理这个导包逻辑
+#2012-02-22    banana    创建
+#2012-03-07    banana    增加了LazyDriver类
+#2012-03-08    banana    _wait方法从WebPage移动到WebElement
+#2012-04-10    cherry  在顶部加入自解压部分，banana回来上班后请梳理这个导包逻辑
 
 '''
 # -*- -*- -*- -*- -*- -*- -*- -*- -*- -*- -*- -*- -*- -*- -*-
@@ -157,11 +157,11 @@ LOGGING_LEVEL = 0
 
 class WebPage(base.IWebPage):
     '''用于各种Webkit内核浏览器的WebPage实现'''
-    #2012-02-22    beyondli    创建
-    #2012-02-27    beyondli    添加了__str__方法
-    #2012-03-08    beyondli    优化了getElement方法的效率
-    #2012-03-08    beyondli    优化了_get_control方法的效率
-    #2012-03-08    beyondli    添加了getFramePage方法
+    #2012-02-22    banana    创建
+    #2012-02-27    banana    添加了__str__方法
+    #2012-03-08    banana    优化了getElement方法的效率
+    #2012-03-08    banana    优化了_get_control方法的效率
+    #2012-03-08    banana    添加了getFramePage方法
     def __init__(self, driver, locator = ''):
         '''构造函数
         @type driver: WebkitInspector
@@ -452,9 +452,9 @@ class WebPage(base.IWebPage):
 
 class WebElement(base.IWebElement):
     '''用于Webkit内核浏览器的WebElement实现'''
-    #2012-02-14    beyondli    创建
-    #2012-02-21    beyondli    初步实现了全部方法
-    #2012-02-27    beyondli    添加了__str__方法
+    #2012-02-14    banana    创建
+    #2012-02-21    banana    初步实现了全部方法
+    #2012-02-27    banana    添加了__str__方法
     def __init__(self, root, locator):
         '''构造函数
         @type root: WebElement或WebPage
@@ -870,7 +870,7 @@ class WebElement(base.IWebElement):
 
 class MeanDriver(object):
     '''统一管理，对同一hwnd只创建一次的driver'''
-    #2012-04-13    beyondli    创建
+    #2012-04-13    banana    创建
     drivers = {}
 
     def __init__(self, drvcls, *args, **kwargs):
@@ -935,7 +935,7 @@ class MeanDriver(object):
 
 class LazyDriver(object):
     '''只在需要时创建连接的driver'''
-    #2012-03-07    beyondli    创建
+    #2012-03-07    banana    创建
     def __init__(self, drvcls, *args, **kwargs):
         '''构造函数
         @type drvcls: callable
