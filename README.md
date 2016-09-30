@@ -19,7 +19,7 @@ QTAF (QTA Framework) is a base framework for QTA, including,
 
 Testbase is a test framework providing test execution, reporting and management, and is the common base for each platform-specific QTA driver.
 
-For more inforamtion about quick startup, usage and API reference, please read this [document](http://testbase.readthedocs.io/cn/latest/).
+For more inforamtion about quick startup, usage and API reference, please read this [document](http://qta-testbase.readthedocs.io/zh/latest/).
 
 
 ### TUIA
