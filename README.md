@@ -57,3 +57,10 @@ Testbase是测试框架基础，提供包括测试执行、报告和用例管理
 ### TUIA
 
 TUIA (Tencent UI Automation)是UI自动化基础库，为QTA各个平台下的客户端UI测试Driver所使用。
+
+
+------------------------------
+
+欢迎加入QQ群（432699528）交流使用和反馈
+
+![image](https://github.com/Tencent/QTAF/blob/master/docs/misc/qq_group.png)
