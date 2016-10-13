@@ -45,6 +45,16 @@ except ImportError:
     
 os_encoding = locale.getdefaultlocale()[1]
 
+def _to_unicode( s ):
+    '''将任意字符串转换为unicode编码
+    '''
+    if isinstance(str, unicode):
+        return s
+    try:
+        return s.decode('utf8')
+    except UnicodeDecodeError:
+        return s.decode(os_encoding)
+        
 class ITestReport(object):
     '''测试报告接口
     '''
