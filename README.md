@@ -51,9 +51,16 @@ QTAF (QTA Framework)是QTA的基础框架，包括以下模块：
 
 Testbase是测试框架基础，提供包括测试执行、报告和用例管理等基础功能。Testbase会被各个平台的QTA Driver所使用。
 
-快速入门、使用和接口文档请参考《[Testbase文档](http://testbase.readthedocs.io/cn/latest/)》
+快速入门、使用和接口文档请参考《[Testbase文档](http://qta-testbase.readthedocs.io/zh/latest/)》
 
 
 ### TUIA
 
 TUIA (Tencent UI Automation)是UI自动化基础库，为QTA各个平台下的客户端UI测试Driver所使用。
+
+
+------------------------------
+
+欢迎加入QQ群（432699528）交流使用和反馈
+
+![image](https://github.com/Tencent/QTAF/blob/master/docs/misc/qq_group.png)
