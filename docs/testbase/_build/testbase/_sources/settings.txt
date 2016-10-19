@@ -1,0 +1,109 @@
+配置测试项目
+======
+
+本节主要介绍如何修改测试项目的配置文件 settings.py来修改测试框架的行为。如果需要查询QTA框架的全部配置项，请参考《:doc:`./settingslist`》。
+
+====
+配置语法
+====
+
+测试项目的配置文件是一个python模块，所以配置项都是python模块的模块变量，如下所示::
+
+   DEBUG = True
+   RUNNER_THREAD_COUNT = 5
+   LOCAL_REPORT = 'console'
+
+由于使用的是python模块表示，因此需要符合以下要求：
+   
+   * 需要符合python语法要求
+
+除此之外，对于配置项还需要符合以下要求：
+
+   * 配置变量名必须使用大写
+   * 配置变量名不可以双下划线开头
+   
+比如下面的变量都是非法的::
+
+   lower_test = 34
+   __CONFIG = "XXX"
+   
+======
+配置文件路径
+======
+
+QTA配置文件分为三种：
+   
+   * 用户配置文件
+   * 依赖Egg包的配置文件
+   * Testbase配置文件
+   
+.. note:: 注意依赖Egg包的配置文件只有通过“manage.py installlib”方式安装到测试项目中，其配置文件才会被加载
+   
+用户配置文件存放在测试项目的顶层位置；而QTAF配置文件打包在QTAF的egg包中，在QTAF egg包的顶层位置上；如下::
+
+   test_proj/
+            qt4a/
+            exlib/
+                 qtaf.egg/
+                         testbase/
+                         tuia/
+                         pyqq/
+                         qtaf_settings.py # Testbase配置
+                 qt4i.egg/
+                         qt4i/settings.py # 依赖Egg包的配置文件
+            mqlib/
+            mqtest/
+            settings.py # 用户配置
+            
+            
+当两个配置文件中的配置项存在冲突时，按照以下优先级从高到低处理:
+
+   * 用户配置文件
+   * 依赖Egg包的配置文件
+   * Testbase配置文件
+
+也就是说，用户配置文件可以重载QTAF配置中的默认配置。
+
+======
+使用测试配置
+======
+
+配置使用的接口统一使用conf接口，如下::
+
+   from testbase.conf import settings
+   if settings.DEBUG:
+       print 'debug mode'
+   else:
+       print 'release mode'
+
+也可以使用get接口查询配置，比如::
+
+   from testbase.conf import settings
+   my_conf = settings.get('MY_SETTING', None)
+
+.. warning:: settings.py和qtaf_settings.py也是可以直接import使用的，但是不建议这样做，如果这样使用，可能会遇到非预期的结果。
+
+注意settings配置不允许动态修改配置的值，如::
+   
+   settings.DEBUG = False
+
+会导致异常::
+
+   Traceback (most recent call last):
+     File "D:\workspace\qtaftest\test.py", line 17, in <module>
+       settings.DEBUG = 9
+     File "build\bdist.win32\egg\testbase\conf.py", line 85, in __setattr__
+   RuntimeError: 尝试动态修改配置项"DEBUG"
+
+=====
+增加配置项
+=====
+
+QTA对配置项的新增没有严格的限制，但是为避免冲突，最好按照以下的原则：
+
+  * 测试项目自定义的配置，增加一个统一的前缀，比如QQ的测试项目增加前缀“QQ_”
+  
+  * QTA相关组件的配置项目，除了统一增加前缀外，还需要更新到《:doc:`./settingslist`》
+  
+
+

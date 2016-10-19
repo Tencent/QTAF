@@ -1,0 +1,391 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>testbase.datadrive Package &mdash; Testbase 5.0.0 文档</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="Testbase 5.0.0 文档" href="../index.html"/>
+        <link rel="up" title="接口文档" href="../apiref.html"/>
+        <link rel="next" title="testbase.exlib Package" href="exlib.html"/>
+        <link rel="prev" title="testbase.context Package" href="context.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        
+
+        
+          <a href="../index.html" class="icon icon-home"> Testbase
+        
+
+        
+        </a>
+
+        
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+        
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+          
+          
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../setup.html">使用前准备</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../setup.html#python">安装Python和相关工具</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../setup.html#qtaf">获取QTAF包</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../project.html">创建和修改测试项目</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../project.html#id2">创建测试项目</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../project.html#eclipse">导入测试项目到Eclipse</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../project.html#id3">测试项目结构</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../project.html#qtaf">升级QTAF</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../project.html#egg">安装依赖的Egg</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../testcase.html">设计测试用例</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../testcase.html#id2">最简单的测试用例</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../testcase.html#id3">调试执行</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../testcase.html#id4">测试断言</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../testcase.html#id5">忙等待检查</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../testcase.html#id6">测试执行控制</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../testcase.html#id7">测试环境初始化和清理</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../testcaserun.html">执行测试用例</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../testcaserun.html#id2">重复执行</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../testcaserun.html#id3">控制执行顺序</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../testcaserun.html#id4">自定义执行方式</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../testresult.html">处理测试结果</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../testresult.html#id2">测试通过与不通过</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../testresult.html#id3">测试日志</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../testresult.html#id4">测试结果对象</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../testresult.html#id5">测试日志的级别</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../testresult.html#id6">异常时日志</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../testmgr.html">管理测试用例</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../testmgr.html#id2">组织形式</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../testmgr.html#id3">加载测试用例</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../testmgr.html#id4">处理加载失败</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../datadrive.html">数据驱动测试</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../datadrive.html#id2">数据驱动测试用例</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../datadrive.html#id3">测试数据</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../datadrive.html#list">list类型测试数据</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../datadrive.html#dict">dict类型测试数据</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../datadrive.html#id4">管理数据驱动测试用例</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../datadrive.html#id5">调试数据驱动测试用例</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../datadrive.html#id6">全局数据驱动测试</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../testrun.html">执行测试</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../testrun.html#id2">批量执行测试用例</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../testrun.html#id3">指定测试报告类型</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../testrun.html#id4">并发执行</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../testrun.html#id5">指定测试用例</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../testrun.html#id6">自定义测试执行</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../settings.html">配置测试项目</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../settings.html#id2">配置语法</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../settings.html#id3">配置文件路径</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../settings.html#id4">使用测试配置</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../settings.html#id5">增加配置项</a></li>
+</ul>
+</li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../apiref.html">接口文档</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="conf.html"><code class="docutils literal"><span class="pre">testbase.conf</span></code> Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="context.html"><code class="docutils literal"><span class="pre">testbase.context</span></code> Package</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href=""><code class="docutils literal"><span class="pre">testbase.datadrive</span></code> Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="exlib.html"><code class="docutils literal"><span class="pre">testbase.exlib</span></code> Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="loader.html"><code class="docutils literal"><span class="pre">testbase.loader</span></code> Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="logger.html"><code class="docutils literal"><span class="pre">testbase.logger</span></code> Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="management.html"><code class="docutils literal"><span class="pre">testbase.management</span></code> Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="project.html"><code class="docutils literal"><span class="pre">testbase.project</span></code> Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="report.html"><code class="docutils literal"><span class="pre">testbase.report</span></code> Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="resource.html"><code class="docutils literal"><span class="pre">testbase.resource</span></code> Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="runner.html"><code class="docutils literal"><span class="pre">testbase.runner</span></code> Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="serialization.html"><code class="docutils literal"><span class="pre">testbase.serialization</span></code> Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testcase.html"><code class="docutils literal"><span class="pre">testbase.testcase</span></code> Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testresult.html"><code class="docutils literal"><span class="pre">testbase.testresult</span></code> Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="util.html"><code class="docutils literal"><span class="pre">testbase.util</span></code> Package</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../settingslist.html">配置项说明文档</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../settingslist.html#debug">DEBUG</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../settingslist.html#data-drive">DATA_DRIVE</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../settingslist.html#data-srouce">DATA_SROUCE</a></li>
+</ul>
+</li>
+</ul>
+
+          
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">Testbase</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../apiref.html">接口文档</a> &raquo;</li>
+      
+    <li><code class="docutils literal"><span class="pre">testbase.datadrive</span></code> Package</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/api/datadrive.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document">
+            
+  <div class="section" id="module-testbase.datadrive">
+<span id="testbase-datadrive-package"></span><h1><a class="reference internal" href="#module-testbase.datadrive" title="testbase.datadrive"><code class="xref py py-mod docutils literal"><span class="pre">testbase.datadrive</span></code></a> Package<a class="headerlink" href="#module-testbase.datadrive" title="永久链接至标题">¶</a></h1>
+<p>数据驱动模块</p>
+<p>使用介绍：
+1、在TestCase类前面加入&#64;DataDrive装饰器，参数为测试数据列表或者字典:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="nd">@datadrive.DataDrive</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">])</span>
+<span class="k">class</span> <span class="nc">Test</span><span class="p">(</span><span class="n">tc</span><span class="o">.</span><span class="n">TestCase</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">runTest</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+<span class="nd">@datadrive.DataDrive</span><span class="p">(</span>
+    <span class="p">{</span>
+    <span class="s">&#39;TEST1&#39;</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span>
+    <span class="s">&#39;TEST2&#39;</span><span class="p">:</span><span class="mi">2</span><span class="p">,</span>
+    <span class="s">&#39;TEST3&#39;</span><span class="p">:</span><span class="mi">3</span><span class="p">,</span>
+    <span class="p">}</span>
+    <span class="p">)</span>
+<span class="k">class</span> <span class="nc">Test</span><span class="p">(</span><span class="n">tc</span><span class="o">.</span><span class="n">TestCase</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">runTest</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span>
+</pre></div>
+</div>
+<p>在测试报告中展示用例名字时，若参数为列表的，则在用例后面增加一个索引序号，若参数为字典的，则在用例后面增加上key的名字：</p>
+<blockquote>
+<div><ul>
+<li><p class="first">列表显示为:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">Test</span><span class="c">#1</span>
+<span class="n">Test</span><span class="c">#2</span>
+<span class="n">Test</span><span class="c">#3</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">字典显示为:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">Test</span><span class="c">#TEST1</span>
+<span class="n">Test</span><span class="c">#TEST2</span>
+<span class="n">Test</span><span class="c">#TEST3</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</div></blockquote>
+<p>2、可以在runTest里通过self.casedata使用测试数据:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">runTest</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">print</span> <span class="bp">self</span><span class="o">.</span><span class="n">casedata</span>
+</pre></div>
+</div>
+<p>3、运行及调试方法和原来一样:</p>
+<div class="highlight-python"><div class="highlight"><pre>MyTest().run()
+    
+
+完整的例子如下::
+
+# -*- coding: utf-8 -*-
+
+import testbase.testcase as tc
+import testbase.datadrive as datadrive
+
+@datadrive.DataDrive([1,2,3])
+class MyTest(tc.TestCase):
+    &quot;&quot;&quot;test
+    &quot;&quot;&quot;
+    
+    owner = &#39;pillarzou&#39;
+    priority = tc.TestCase.EnumPriority.High
+    status = tc.TestCase.EnumStatus.Ready
+    timeout = 5       
+    
+    def runTest(self):
+        print &#39;runTest, casedata:&#39;, self.casedata
+          
+        
+if __name__ == &#39;__main__&#39;:
+    MyTest().run()
+</pre></div>
+</div>
+<dl class="class">
+<dt id="testbase.datadrive.DataDrive">
+<em class="property">class </em><code class="descclassname">testbase.datadrive.</code><code class="descname">DataDrive</code><span class="sig-paren">(</span><em>case_datas</em><span class="sig-paren">)</span><a class="headerlink" href="#testbase.datadrive.DataDrive" title="永久链接至目标">¶</a></dt>
+<dd><p>基类：<code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>数据驱动类修饰器，标识一个测试用例类使用数据驱动</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="testbase.datadrive.get_datadrive">
+<code class="descclassname">testbase.datadrive.</code><code class="descname">get_datadrive</code><span class="sig-paren">(</span><em>obj</em><span class="sig-paren">)</span><a class="headerlink" href="#testbase.datadrive.get_datadrive" title="永久链接至目标">¶</a></dt>
+<dd><p>获取对应用例的数据驱动</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">参数:</th><td class="field-body"><strong>obj</strong> (<em>TestCase/type</em>) &#8211; 测试用例或测试用例类</td>
+</tr>
+</tbody>
+</table>
+<p>:returns DataDrive</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="testbase.datadrive.is_datadrive">
+<code class="descclassname">testbase.datadrive.</code><code class="descname">is_datadrive</code><span class="sig-paren">(</span><em>obj</em><span class="sig-paren">)</span><a class="headerlink" href="#testbase.datadrive.is_datadrive" title="永久链接至目标">¶</a></dt>
+<dd><p>是否为数据驱动用例</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">参数:</th><td class="field-body"><strong>obj</strong> (<em>TestCase/type</em>) &#8211; 测试用例或测试用例类</td>
+</tr>
+</tbody>
+</table>
+<p>:returns boolean</p>
+</dd></dl>
+
+</div>
+
+
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="exlib.html" class="btn btn-neutral float-right" title="testbase.exlib Package" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="context.html" class="btn btn-neutral" title="testbase.context Package" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; 版权所有 2016, QTA.
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'5.0.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+      <script type="text/javascript" src="../_static/translations.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

@@ -1,0 +1,575 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>数据驱动测试 &mdash; Testbase 5.0.0 文档</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="Testbase 5.0.0 文档" href="index.html"/>
+        <link rel="next" title="执行测试" href="testrun.html"/>
+        <link rel="prev" title="管理测试用例" href="testmgr.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        
+
+        
+          <a href="index.html" class="icon icon-home"> Testbase
+        
+
+        
+        </a>
+
+        
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+        
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+          
+          
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="setup.html">使用前准备</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="setup.html#python">安装Python和相关工具</a></li>
+<li class="toctree-l2"><a class="reference internal" href="setup.html#qtaf">获取QTAF包</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="project.html">创建和修改测试项目</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="project.html#id2">创建测试项目</a></li>
+<li class="toctree-l2"><a class="reference internal" href="project.html#eclipse">导入测试项目到Eclipse</a></li>
+<li class="toctree-l2"><a class="reference internal" href="project.html#id3">测试项目结构</a></li>
+<li class="toctree-l2"><a class="reference internal" href="project.html#qtaf">升级QTAF</a></li>
+<li class="toctree-l2"><a class="reference internal" href="project.html#egg">安装依赖的Egg</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="testcase.html">设计测试用例</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="testcase.html#id2">最简单的测试用例</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testcase.html#id3">调试执行</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testcase.html#id4">测试断言</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testcase.html#id5">忙等待检查</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testcase.html#id6">测试执行控制</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testcase.html#id7">测试环境初始化和清理</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="testcaserun.html">执行测试用例</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="testcaserun.html#id2">重复执行</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testcaserun.html#id3">控制执行顺序</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testcaserun.html#id4">自定义执行方式</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="testresult.html">处理测试结果</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="testresult.html#id2">测试通过与不通过</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testresult.html#id3">测试日志</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testresult.html#id4">测试结果对象</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testresult.html#id5">测试日志的级别</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testresult.html#id6">异常时日志</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="testmgr.html">管理测试用例</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="testmgr.html#id2">组织形式</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testmgr.html#id3">加载测试用例</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testmgr.html#id4">处理加载失败</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">数据驱动测试</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#id2">数据驱动测试用例</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id3">测试数据</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#list">list类型测试数据</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#dict">dict类型测试数据</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#id4">管理数据驱动测试用例</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id5">调试数据驱动测试用例</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id6">全局数据驱动测试</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="testrun.html">执行测试</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="testrun.html#id2">批量执行测试用例</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testrun.html#id3">指定测试报告类型</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testrun.html#id4">并发执行</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testrun.html#id5">指定测试用例</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testrun.html#id6">自定义测试执行</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="settings.html">配置测试项目</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="settings.html#id2">配置语法</a></li>
+<li class="toctree-l2"><a class="reference internal" href="settings.html#id3">配置文件路径</a></li>
+<li class="toctree-l2"><a class="reference internal" href="settings.html#id4">使用测试配置</a></li>
+<li class="toctree-l2"><a class="reference internal" href="settings.html#id5">增加配置项</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="apiref.html">接口文档</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/conf.html"><code class="docutils literal"><span class="pre">testbase.conf</span></code> Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/context.html"><code class="docutils literal"><span class="pre">testbase.context</span></code> Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/datadrive.html"><code class="docutils literal"><span class="pre">testbase.datadrive</span></code> Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/exlib.html"><code class="docutils literal"><span class="pre">testbase.exlib</span></code> Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/loader.html"><code class="docutils literal"><span class="pre">testbase.loader</span></code> Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/logger.html"><code class="docutils literal"><span class="pre">testbase.logger</span></code> Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/management.html"><code class="docutils literal"><span class="pre">testbase.management</span></code> Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/project.html"><code class="docutils literal"><span class="pre">testbase.project</span></code> Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/report.html"><code class="docutils literal"><span class="pre">testbase.report</span></code> Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/resource.html"><code class="docutils literal"><span class="pre">testbase.resource</span></code> Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/runner.html"><code class="docutils literal"><span class="pre">testbase.runner</span></code> Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/serialization.html"><code class="docutils literal"><span class="pre">testbase.serialization</span></code> Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/testcase.html"><code class="docutils literal"><span class="pre">testbase.testcase</span></code> Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/testresult.html"><code class="docutils literal"><span class="pre">testbase.testresult</span></code> Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/util.html"><code class="docutils literal"><span class="pre">testbase.util</span></code> Package</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="settingslist.html">配置项说明文档</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="settingslist.html#debug">DEBUG</a></li>
+<li class="toctree-l2"><a class="reference internal" href="settingslist.html#data-drive">DATA_DRIVE</a></li>
+<li class="toctree-l2"><a class="reference internal" href="settingslist.html#data-srouce">DATA_SROUCE</a></li>
+</ul>
+</li>
+</ul>
+
+          
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">Testbase</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+    <li>数据驱动测试</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/datadrive.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document">
+            
+  <div class="section" id="id1">
+<h1>数据驱动测试<a class="headerlink" href="#id1" title="永久链接至标题">¶</a></h1>
+<p>所谓数据驱动测试，即是将测试数据和测试用例分离，可以实现一份测试用例跑多份的测试数据，在一些业务场景的测试下可以大大提升测试用例开发和维护的成本。</p>
+<div class="section" id="id2">
+<h2>数据驱动测试用例<a class="headerlink" href="#id2" title="永久链接至标题">¶</a></h2>
+<p>先看一个简单的例子，小E需要设计一个针对登录的测试用例：</p>
+<blockquote>
+<div><ul class="simple">
+<li>输入“111”登录QQ，登录失败，提示非法帐号</li>
+<li>输入“”登录QQ，登录失败，提示非法帐号</li>
+<li>输入“11111111111111111”登录QQ，登录失败，提示非法帐号</li>
+<li>输入“$%^&amp;#”登录QQ，登录失败，提示非法帐号</li>
+</ul>
+</div></blockquote>
+<p>如果需要实现对应的自动化测试用例，则可能会写类似下面的代码:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">testbase.testcase</span> <span class="kn">import</span> <span class="n">TestCase</span>
+
+<span class="k">class</span> <span class="nc">InvalidUinTest1</span><span class="p">(</span><span class="n">TestCase</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;非法测试号码1</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">owner</span> <span class="o">=</span> <span class="s">&quot;eeelin&quot;</span>
+    <span class="n">status</span> <span class="o">=</span> <span class="n">TestCase</span><span class="o">.</span><span class="n">EnumStatus</span><span class="o">.</span><span class="n">Ready</span>
+    <span class="n">priority</span> <span class="o">=</span> <span class="n">TestCase</span><span class="o">.</span><span class="n">EnumPriority</span><span class="o">.</span><span class="n">Normal</span>
+    <span class="n">timeout</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="k">def</span> <span class="nf">run_test</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">qq</span> <span class="o">=</span> <span class="n">QQApp</span><span class="p">()</span>
+        <span class="n">login</span> <span class="o">=</span> <span class="n">LoginPanel</span><span class="p">(</span><span class="n">qq</span><span class="p">)</span>
+        <span class="n">login</span><span class="p">[</span><span class="s">&#39;uin&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&quot;111&quot;</span>
+        <span class="n">login</span><span class="p">[</span><span class="s">&#39;passwd&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&quot;test123&quot;</span>
+        <span class="n">login</span><span class="p">[</span><span class="s">&#39;login&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">click</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">login</span><span class="p">[</span><span class="s">&#39;tips&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">text</span><span class="p">,</span> <span class="s">&quot;非法帐号&quot;</span><span class="p">)</span>
+
+<span class="k">class</span> <span class="nc">InvalidUinTest2</span><span class="p">(</span><span class="n">TestCase</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;非法测试号码2</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">owner</span> <span class="o">=</span> <span class="s">&quot;eeelin&quot;</span>
+    <span class="n">status</span> <span class="o">=</span> <span class="n">TestCase</span><span class="o">.</span><span class="n">EnumStatus</span><span class="o">.</span><span class="n">Ready</span>
+    <span class="n">priority</span> <span class="o">=</span> <span class="n">TestCase</span><span class="o">.</span><span class="n">EnumPriority</span><span class="o">.</span><span class="n">Normal</span>
+    <span class="n">timeout</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="k">def</span> <span class="nf">run_test</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">qq</span> <span class="o">=</span> <span class="n">QQApp</span><span class="p">()</span>
+        <span class="n">login</span> <span class="o">=</span> <span class="n">LoginPanel</span><span class="p">(</span><span class="n">qq</span><span class="p">)</span>
+        <span class="n">login</span><span class="p">[</span><span class="s">&#39;uin&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&quot;&quot;</span>
+        <span class="n">login</span><span class="p">[</span><span class="s">&#39;passwd&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&quot;test123&quot;</span>
+        <span class="n">login</span><span class="p">[</span><span class="s">&#39;login&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">click</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">login</span><span class="p">[</span><span class="s">&#39;tips&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">text</span><span class="p">,</span> <span class="s">&quot;非法帐号&quot;</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">InvalidUinTest3</span><span class="p">(</span><span class="n">TestCase</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;非法测试号码3</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">owner</span> <span class="o">=</span> <span class="s">&quot;eeelin&quot;</span>
+    <span class="n">status</span> <span class="o">=</span> <span class="n">TestCase</span><span class="o">.</span><span class="n">EnumStatus</span><span class="o">.</span><span class="n">Ready</span>
+    <span class="n">priority</span> <span class="o">=</span> <span class="n">TestCase</span><span class="o">.</span><span class="n">EnumPriority</span><span class="o">.</span><span class="n">Normal</span>
+    <span class="n">timeout</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="k">def</span> <span class="nf">run_test</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">qq</span> <span class="o">=</span> <span class="n">QQApp</span><span class="p">()</span>
+        <span class="n">login</span> <span class="o">=</span> <span class="n">LoginPanel</span><span class="p">(</span><span class="n">qq</span><span class="p">)</span>
+        <span class="n">login</span><span class="p">[</span><span class="s">&#39;uin&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&quot;11111111111111111&quot;</span>
+        <span class="n">login</span><span class="p">[</span><span class="s">&#39;passwd&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&quot;test123&quot;</span>
+        <span class="n">login</span><span class="p">[</span><span class="s">&#39;login&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">click</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">login</span><span class="p">[</span><span class="s">&#39;tips&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">text</span><span class="p">,</span> <span class="s">&quot;非法帐号&quot;</span><span class="p">)</span>
+
+<span class="k">class</span> <span class="nc">InvalidUinTest4</span><span class="p">(</span><span class="n">TestCase</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;非法测试号码4</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">owner</span> <span class="o">=</span> <span class="s">&quot;eeelin&quot;</span>
+    <span class="n">status</span> <span class="o">=</span> <span class="n">TestCase</span><span class="o">.</span><span class="n">EnumStatus</span><span class="o">.</span><span class="n">Ready</span>
+    <span class="n">priority</span> <span class="o">=</span> <span class="n">TestCase</span><span class="o">.</span><span class="n">EnumPriority</span><span class="o">.</span><span class="n">Normal</span>
+    <span class="n">timeout</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="k">def</span> <span class="nf">run_test</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">qq</span> <span class="o">=</span> <span class="n">QQApp</span><span class="p">()</span>
+        <span class="n">login</span> <span class="o">=</span> <span class="n">LoginPanel</span><span class="p">(</span><span class="n">qq</span><span class="p">)</span>
+        <span class="n">login</span><span class="p">[</span><span class="s">&#39;uin&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&quot;$%^&amp;#&quot;</span>
+        <span class="n">login</span><span class="p">[</span><span class="s">&#39;passwd&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&quot;test123&quot;</span>
+        <span class="n">login</span><span class="p">[</span><span class="s">&#39;login&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">click</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">login</span><span class="p">[</span><span class="s">&#39;tips&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">text</span><span class="p">,</span> <span class="s">&quot;非法帐号&quot;</span><span class="p">)</span>
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&#39;__main__&#39;</span><span class="p">:</span>
+   <span class="n">InvalidUinTest1</span><span class="p">()</span><span class="o">.</span><span class="n">debug_run</span><span class="p">()</span>
+   <span class="n">InvalidUinTest2</span><span class="p">()</span><span class="o">.</span><span class="n">debug_run</span><span class="p">()</span>
+   <span class="n">InvalidUinTest3</span><span class="p">()</span><span class="o">.</span><span class="n">debug_run</span><span class="p">()</span>
+   <span class="n">InvalidUinTest4</span><span class="p">()</span><span class="o">.</span><span class="n">debug_run</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>从上面的代码看出，用户的逻辑基本上是类似的，每个用例几乎只有一点点的差异，特别是如果测试的场景变多了，用例维护起来更麻烦。</p>
+<p>这里我们就可以用数据驱动用例来解决这个问题，使用数据驱动修改后的用例:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">testbase.testcase</span> <span class="kn">import</span> <span class="n">TestCase</span>
+<span class="kn">from</span> <span class="nn">testbase</span> <span class="kn">import</span> <span class="n">datadrive</span>
+
+<span class="n">testdata</span> <span class="o">=</span> <span class="p">[</span>
+  <span class="s">&quot;111&quot;</span><span class="p">,</span>
+  <span class="s">&quot;&quot;</span><span class="p">,</span>
+  <span class="s">&quot;11111111111111111&quot;</span><span class="p">,</span>
+  <span class="s">&quot;$%^&amp;#&quot;</span><span class="p">,</span>
+<span class="p">]</span>
+
+<span class="nd">@datadrive.DataDrive</span><span class="p">(</span><span class="n">testdata</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">InvalidUinTest</span><span class="p">(</span><span class="n">TestCase</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;非法测试号码</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">owner</span> <span class="o">=</span> <span class="s">&quot;eeelin&quot;</span>
+    <span class="n">status</span> <span class="o">=</span> <span class="n">TestCase</span><span class="o">.</span><span class="n">EnumStatus</span><span class="o">.</span><span class="n">Ready</span>
+    <span class="n">priority</span> <span class="o">=</span> <span class="n">TestCase</span><span class="o">.</span><span class="n">EnumPriority</span><span class="o">.</span><span class="n">Normal</span>
+    <span class="n">timeout</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="k">def</span> <span class="nf">run_test</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">qq</span> <span class="o">=</span> <span class="n">QQApp</span><span class="p">()</span>
+        <span class="n">login</span> <span class="o">=</span> <span class="n">LoginPanel</span><span class="p">(</span><span class="n">qq</span><span class="p">)</span>
+        <span class="n">login</span><span class="p">[</span><span class="s">&#39;uin&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">casedata</span>
+        <span class="n">login</span><span class="p">[</span><span class="s">&#39;passwd&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&quot;test123&quot;</span>
+        <span class="n">login</span><span class="p">[</span><span class="s">&#39;login&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">click</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">login</span><span class="p">[</span><span class="s">&#39;tips&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">text</span><span class="p">,</span> <span class="s">&quot;非法帐号&quot;</span><span class="p">)</span>
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">InvalidUinTest</span><span class="p">()</span><span class="o">.</span><span class="n">debug_run</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>如果执行以上的代码，其输出的结果是和前面四个测试用例的执行结果是一致的，但是这里却只有一个用例，这个就是数据驱动测试用例的强大之处。</p>
+<p>上面的数据驱动测试用例和一般测试用例的主要区别在两点：</p>
+<blockquote>
+<div><ul class="simple">
+<li>测试用例类增加了修饰器“<a class="reference internal" href="api/datadrive.html#testbase.datadrive.DataDrive" title="testbase.datadrive.DataDrive"><code class="xref py py-class docutils literal"><span class="pre">testbase.datadrive.DataDrive</span></code></a>”，修饰器接受一个参数来指定对应的测试数据</li>
+<li>测试用例通过casedata属性获取测试数据</li>
+</ul>
+</div></blockquote>
+</div>
+<div class="section" id="id3">
+<h2>测试数据<a class="headerlink" href="#id3" title="永久链接至标题">¶</a></h2>
+<p>测试数据通过修饰器“<a class="reference internal" href="api/datadrive.html#testbase.datadrive.DataDrive" title="testbase.datadrive.DataDrive"><code class="xref py py-class docutils literal"><span class="pre">testbase.datadrive.DataDrive</span></code></a>”指定，目前支持两个格式的数据：</p>
+<blockquote>
+<div><ul class="simple">
+<li>list和list兼容类型</li>
+<li>dict和dict兼容类型</li>
+</ul>
+</div></blockquote>
+<div class="section" id="list">
+<h3>list类型测试数据<a class="headerlink" href="#list" title="永久链接至标题">¶</a></h3>
+<p>上面的InvalidUinTest使用的就是list类型的测试数据，对于list类型的数据，QTA会将list的每一个元素生成对应的一个测试用例，并将该元素赋值给对应的测试用例的casedata属性。</p>
+<p>例如测试数据为:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="nd">@datadrive.DataDrive</span><span class="p">([</span><span class="s">&quot;AA&quot;</span><span class="p">,</span> <span class="mi">1234234</span><span class="p">,</span> <span class="p">{</span><span class="s">&quot;xx&quot;</span><span class="p">:</span><span class="s">&quot;XX&quot;</span><span class="p">},</span>  <span class="bp">True</span><span class="p">])</span>
+<span class="k">class</span> <span class="nc">HelloDataTest</span><span class="p">(</span><span class="n">TestCase</span><span class="p">):</span>
+   <span class="k">pass</span>
+</pre></div>
+</div>
+<p>则生成的四个测试用例对应的casedata分别为:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="s">&quot;AA&quot;</span>
+
+<span class="mi">1234234</span>
+
+<span class="p">{</span><span class="s">&quot;xx&quot;</span><span class="p">:</span><span class="s">&quot;XX&quot;</span><span class="p">}</span>
+
+<span class="bp">True</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="dict">
+<h3>dict类型测试数据<a class="headerlink" href="#dict" title="永久链接至标题">¶</a></h3>
+<p>数据驱动也支持dict类型的测试数据，QTA会讲dict类型的所有值生成对应的一个测试用例，并将该值赋给对应的测试用例的casedata属性。</p>
+<p>例如测试数据为:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="nd">@datadrive.DataDrive</span><span class="p">({</span>
+   <span class="s">&quot;A&quot;</span><span class="p">:</span> <span class="s">&quot;AA&quot;</span><span class="p">,</span>
+   <span class="s">&quot;B&quot;</span><span class="p">:</span> <span class="mi">1234234</span><span class="p">,</span>
+   <span class="s">&quot;C&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s">&quot;xx&quot;</span><span class="p">:</span><span class="s">&quot;XX&quot;</span><span class="p">},</span>
+   <span class="s">&quot;D&quot;</span><span class="p">:</span> <span class="bp">True</span>
+<span class="p">})</span>
+<span class="k">class</span> <span class="nc">HelloDataTest</span><span class="p">(</span><span class="n">TestCase</span><span class="p">):</span>
+   <span class="k">pass</span>
+</pre></div>
+</div>
+<p>则生成的四个测试用例对应的casedata分别为:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="s">&quot;AA&quot;</span>
+
+<span class="mi">1234234</span>
+
+<span class="p">{</span><span class="s">&quot;xx&quot;</span><span class="p">:</span><span class="s">&quot;XX&quot;</span><span class="p">}</span>
+
+<span class="bp">True</span>
+</pre></div>
+</div>
+<p>但dict的键在这里似乎没什么用处？</p>
+</div>
+</div>
+<div class="section" id="id4">
+<h2>管理数据驱动测试用例<a class="headerlink" href="#id4" title="永久链接至标题">¶</a></h2>
+<p>QTA对于每个测试用例，都有一个唯一的名字；由于数据驱动把一个测试用例对应数据生成了多个测试用例，所以QTA对于每个数据驱动生成的用例的名字也是不一样的。</p>
+<p>假设一个数据驱动的用例footest/cat/eat.py:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="nd">@datadrive.DataDrive</span><span class="p">([</span><span class="s">&quot;fish&quot;</span><span class="p">,</span> <span class="s">&quot;mouse&quot;</span><span class="p">,</span> <span class="s">&quot;apple&quot;</span><span class="p">])</span>
+<span class="k">class</span> <span class="nc">EatTest</span><span class="p">(</span><span class="n">TestCase</span><span class="p">):</span>
+   <span class="c">#这里省略相关代码</span>
+   <span class="k">pass</span>
+</pre></div>
+</div>
+<p>如果我们参考《<a class="reference internal" href="testmgr.html"><em>管理测试用例</em></a>》使用TestLoader来加载这块测试用例:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">testbase.loader</span> <span class="kn">import</span> <span class="n">TestLoader</span>
+<span class="n">loader</span> <span class="o">=</span> <span class="n">TestLoader</span><span class="p">()</span>
+<span class="k">for</span> <span class="n">it</span> <span class="ow">in</span> <span class="n">loader</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s">&quot;zootest.cat.eat&quot;</span><span class="p">):</span>
+   <span class="k">print</span> <span class="n">it</span><span class="o">.</span><span class="n">test_name</span>
+</pre></div>
+</div>
+<p>执行结果如下:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">zootest</span><span class="o">.</span><span class="n">cat</span><span class="o">.</span><span class="n">eat</span><span class="o">.</span><span class="n">EatTest</span><span class="o">/</span><span class="mi">0</span>
+<span class="n">zootest</span><span class="o">.</span><span class="n">cat</span><span class="o">.</span><span class="n">eat</span><span class="o">.</span><span class="n">EatTest</span><span class="o">/</span><span class="mi">1</span>
+<span class="n">zootest</span><span class="o">.</span><span class="n">cat</span><span class="o">.</span><span class="n">eat</span><span class="o">.</span><span class="n">EatTest</span><span class="o">/</span><span class="mi">2</span>
+</pre></div>
+</div>
+<p>可以看到每个用例后面都有一个后缀，表示对应的list的索引值。</p>
+<p>这个是list类型的例子，如果是dict类型:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="nd">@datadrive.DataDrive</span><span class="p">({</span>
+   <span class="s">&quot;fish&quot;</span><span class="p">:</span> <span class="s">&quot;fish&quot;</span><span class="p">,</span>
+   <span class="s">&quot;mouse&quot;</span><span class="p">:</span> <span class="s">&quot;mouse&quot;</span><span class="p">,</span>
+   <span class="s">&quot;apple&quot;</span><span class="p">:</span> <span class="s">&quot;apple&quot;</span><span class="p">,</span>
+<span class="p">})</span>
+<span class="k">class</span> <span class="nc">EatTest</span><span class="p">(</span><span class="n">TestCase</span><span class="p">):</span>
+   <span class="c">#这里省略相关代码</span>
+   <span class="k">pass</span>
+</pre></div>
+</div>
+<p>则TestLoader的执行结果如下:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">zootest</span><span class="o">.</span><span class="n">cat</span><span class="o">.</span><span class="n">eat</span><span class="o">.</span><span class="n">EatTest</span><span class="o">/</span><span class="n">fish</span>
+<span class="n">zootest</span><span class="o">.</span><span class="n">cat</span><span class="o">.</span><span class="n">eat</span><span class="o">.</span><span class="n">EatTest</span><span class="o">/</span><span class="n">mouse</span>
+<span class="n">zootest</span><span class="o">.</span><span class="n">cat</span><span class="o">.</span><span class="n">eat</span><span class="o">.</span><span class="n">EatTest</span><span class="o">/</span><span class="n">apple</span>
+</pre></div>
+</div>
+<p>之前的list的索引变成了dict键。</p>
+<p>其实TestLoader也支持加载一个单独的数据驱动用例:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">testbase.loader</span> <span class="kn">import</span> <span class="n">TestLoader</span>
+<span class="n">loader</span> <span class="o">=</span> <span class="n">TestLoader</span><span class="p">()</span>
+<span class="k">for</span> <span class="n">it</span> <span class="ow">in</span> <span class="n">loader</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s">&quot;zootest.cat.eat/fish&quot;</span><span class="p">):</span>
+   <span class="k">print</span> <span class="n">it</span><span class="o">.</span><span class="n">test_name</span>
+</pre></div>
+</div>
+<p>则TestLoader的执行结果如下:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">zootest</span><span class="o">.</span><span class="n">cat</span><span class="o">.</span><span class="n">eat</span><span class="o">.</span><span class="n">EatTest</span><span class="o">/</span><span class="n">fish</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="id5">
+<h2>调试数据驱动测试用例<a class="headerlink" href="#id5" title="永久链接至标题">¶</a></h2>
+<p>数据驱动测试用例本地调试的时候，可以和一般的测试用例一样:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">DataHelloTest</span><span class="p">()</span><span class="o">.</span><span class="n">debug_run</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>但是上面的方式会执行所有的数据驱动的用例，如果需要指定测试用例使用具体某一个测试数据，对于list类型的数据可以:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">DataHelloTest</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">debug_run</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>上面的例子指调试执行第一个数据驱动生成的用例。</p>
+<p>如果是dict类型的测试数据，可以:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">DataHelloTest</span><span class="p">()[</span><span class="s">&quot;key&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">debug_run</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>上面的例子会调试执行键为&#8221;key&#8221;对应的数据驱动生成的用例</p>
+</div>
+<div class="section" id="id6">
+<h2>全局数据驱动测试<a class="headerlink" href="#id6" title="永久链接至标题">¶</a></h2>
+<p>数据驱动用例需要我们去修改测试用例，并为每个测试用例都增加修饰器和通过casedata访问数据，但是有没有可能在不修改测试用例的情况下，对全部的测试用例都进行数据驱动测试呢？比如对于后台测试，通过配置一份测试服务器的IP列表作为测试数据，然后对全部用例都以这份IP列表来生成对应的N个用例。答案就是全局数据驱动用例。</p>
+<p>设置全局数据驱动需要修改项目的settings.py文件，增加下面两个配置:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">DATA_DRIVE</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="n">DATA_SOURCE</span> <span class="o">=</span> <span class="s">&#39;test/data/server.py&#39;</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">注解</p>
+<p class="last">settings.py配置的更多使用方法，请参考《<a class="reference internal" href="settings.html"><em>配置测试项目</em></a>》</p>
+</div>
+<p>第一个配置表示打开全局数据驱动，第二个配置指定一个py文件作为数据源，如server.py:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">DATASET</span> <span class="o">=</span> <span class="p">[</span>
+ <span class="s">&quot;11.22.11.11&quot;</span><span class="p">,</span>
+ <span class="s">&quot;11.22.11.12&quot;</span><span class="p">,</span>
+ <span class="s">&quot;11.22.11.13&quot;</span><span class="p">,</span>
+ <span class="s">&quot;11.22.11.14&quot;</span><span class="p">,</span>
+<span class="p">]</span>
+</pre></div>
+</div>
+<p>数据py文件只需要定义一个DATASET模块变量，变量类型要求是list或者dict类型，格式和作用和前面的数据驱动用例DataDrive参数是一样的。</p>
+<p>通过以上配置之后，本地调用debug_run调试脚本，可以看到每个用例都会被执行4次，且每次的casedata数据分别为DATASET变量定义的数据。</p>
+<p>如果数据格式比较简单，也可以直接内嵌在settings.py中，这个时候DATA_SOURCE即表示数据源，同上面配置等价的配置如下:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">DATA_DRIVE</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="n">DATA_SOURCE</span> <span class="o">=</span> <span class="p">[</span>
+ <span class="s">&quot;11.22.11.11&quot;</span><span class="p">,</span>
+ <span class="s">&quot;11.22.11.12&quot;</span><span class="p">,</span>
+ <span class="s">&quot;11.22.11.13&quot;</span><span class="p">,</span>
+ <span class="s">&quot;11.22.11.14&quot;</span><span class="p">,</span>
+<span class="p">]</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">注解</p>
+<p class="last">当测试用例已经有修饰器DataDrive，但同时配置了全局数据驱动，这个时候全局数据驱动对于这个用例是无效的，这个用例还是只会通过DataDrive生成数据驱动测试用例。</p>
+</div>
+</div>
+</div>
+
+
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="testrun.html" class="btn btn-neutral float-right" title="执行测试" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="testmgr.html" class="btn btn-neutral" title="管理测试用例" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; 版权所有 2016, QTA.
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'5.0.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="_static/translations.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

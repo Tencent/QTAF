@@ -1,0 +1,515 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>处理测试结果 &mdash; Testbase 5.0.0 文档</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="Testbase 5.0.0 文档" href="index.html"/>
+        <link rel="next" title="管理测试用例" href="testmgr.html"/>
+        <link rel="prev" title="执行测试用例" href="testcaserun.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        
+
+        
+          <a href="index.html" class="icon icon-home"> Testbase
+        
+
+        
+        </a>
+
+        
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+        
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+          
+          
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="setup.html">使用前准备</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="setup.html#python">安装Python和相关工具</a></li>
+<li class="toctree-l2"><a class="reference internal" href="setup.html#qtaf">获取QTAF包</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="project.html">创建和修改测试项目</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="project.html#id2">创建测试项目</a></li>
+<li class="toctree-l2"><a class="reference internal" href="project.html#eclipse">导入测试项目到Eclipse</a></li>
+<li class="toctree-l2"><a class="reference internal" href="project.html#id3">测试项目结构</a></li>
+<li class="toctree-l2"><a class="reference internal" href="project.html#qtaf">升级QTAF</a></li>
+<li class="toctree-l2"><a class="reference internal" href="project.html#egg">安装依赖的Egg</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="testcase.html">设计测试用例</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="testcase.html#id2">最简单的测试用例</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testcase.html#id3">调试执行</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testcase.html#id4">测试断言</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testcase.html#id5">忙等待检查</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testcase.html#id6">测试执行控制</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testcase.html#id7">测试环境初始化和清理</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="testcaserun.html">执行测试用例</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="testcaserun.html#id2">重复执行</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testcaserun.html#id3">控制执行顺序</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testcaserun.html#id4">自定义执行方式</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">处理测试结果</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#id2">测试通过与不通过</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id3">测试日志</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id4">测试结果对象</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id5">测试日志的级别</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id6">异常时日志</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="testmgr.html">管理测试用例</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="testmgr.html#id2">组织形式</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testmgr.html#id3">加载测试用例</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testmgr.html#id4">处理加载失败</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="datadrive.html">数据驱动测试</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="datadrive.html#id2">数据驱动测试用例</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datadrive.html#id3">测试数据</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="datadrive.html#list">list类型测试数据</a></li>
+<li class="toctree-l3"><a class="reference internal" href="datadrive.html#dict">dict类型测试数据</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="datadrive.html#id4">管理数据驱动测试用例</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datadrive.html#id5">调试数据驱动测试用例</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datadrive.html#id6">全局数据驱动测试</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="testrun.html">执行测试</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="testrun.html#id2">批量执行测试用例</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testrun.html#id3">指定测试报告类型</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testrun.html#id4">并发执行</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testrun.html#id5">指定测试用例</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testrun.html#id6">自定义测试执行</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="settings.html">配置测试项目</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="settings.html#id2">配置语法</a></li>
+<li class="toctree-l2"><a class="reference internal" href="settings.html#id3">配置文件路径</a></li>
+<li class="toctree-l2"><a class="reference internal" href="settings.html#id4">使用测试配置</a></li>
+<li class="toctree-l2"><a class="reference internal" href="settings.html#id5">增加配置项</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="apiref.html">接口文档</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/conf.html"><code class="docutils literal"><span class="pre">testbase.conf</span></code> Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/context.html"><code class="docutils literal"><span class="pre">testbase.context</span></code> Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/datadrive.html"><code class="docutils literal"><span class="pre">testbase.datadrive</span></code> Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/exlib.html"><code class="docutils literal"><span class="pre">testbase.exlib</span></code> Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/loader.html"><code class="docutils literal"><span class="pre">testbase.loader</span></code> Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/logger.html"><code class="docutils literal"><span class="pre">testbase.logger</span></code> Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/management.html"><code class="docutils literal"><span class="pre">testbase.management</span></code> Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/project.html"><code class="docutils literal"><span class="pre">testbase.project</span></code> Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/report.html"><code class="docutils literal"><span class="pre">testbase.report</span></code> Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/resource.html"><code class="docutils literal"><span class="pre">testbase.resource</span></code> Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/runner.html"><code class="docutils literal"><span class="pre">testbase.runner</span></code> Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/serialization.html"><code class="docutils literal"><span class="pre">testbase.serialization</span></code> Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/testcase.html"><code class="docutils literal"><span class="pre">testbase.testcase</span></code> Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/testresult.html"><code class="docutils literal"><span class="pre">testbase.testresult</span></code> Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/util.html"><code class="docutils literal"><span class="pre">testbase.util</span></code> Package</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="settingslist.html">配置项说明文档</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="settingslist.html#debug">DEBUG</a></li>
+<li class="toctree-l2"><a class="reference internal" href="settingslist.html#data-drive">DATA_DRIVE</a></li>
+<li class="toctree-l2"><a class="reference internal" href="settingslist.html#data-srouce">DATA_SROUCE</a></li>
+</ul>
+</li>
+</ul>
+
+          
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">Testbase</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+    <li>处理测试结果</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/testresult.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document">
+            
+  <div class="section" id="id1">
+<h1>处理测试结果<a class="headerlink" href="#id1" title="永久链接至标题">¶</a></h1>
+<p>对于一个测试用例，其测试结果包括这个测试用例的执行通过与否，和对应的日志信息。</p>
+<div class="section" id="id2">
+<h2>测试通过与不通过<a class="headerlink" href="#id2" title="永久链接至标题">¶</a></h2>
+<p>对于QTA，判断一个测试用例是否通过的原则：</p>
+<blockquote>
+<div><ul class="simple">
+<li>测试用例类定义有问题，比如缺少DocString或必要属性，缺少run_test接口的实现。</li>
+<li>如果测试用例类定义正确，则当所有测试步骤都通过时，测试用例测试通过，否则测试用例不通过”。</li>
+</ul>
+</div></blockquote>
+<p>而判断一个测试步骤是否通过，主要看是否出现以下任意一个情况：</p>
+<blockquote>
+<div><ul class="simple">
+<li>测试断言失败，即调用assert或wait_for系列的接口检查不通过</li>
+<li>测试代码问题，Python代码执行异常</li>
+<li>测试执行过程中，QTA内置的logger有错误级别的日志</li>
+</ul>
+</div></blockquote>
+<p>第一种情况在前面《<a class="reference internal" href="testcase.html"><em>设计测试用例</em></a>》章节已经有介绍，对于后面的两种情况，我们看下面的例子:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">ExceptTest</span><span class="p">(</span><span class="n">TestCase</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;异常测试</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">owner</span> <span class="o">=</span> <span class="s">&quot;eeelin&quot;</span>
+    <span class="n">status</span> <span class="o">=</span> <span class="n">TestCase</span><span class="o">.</span><span class="n">EnumStatus</span><span class="o">.</span><span class="n">Ready</span>
+    <span class="n">priority</span> <span class="o">=</span> <span class="n">TestCase</span><span class="o">.</span><span class="n">EnumPriority</span><span class="o">.</span><span class="n">Normal</span>
+    <span class="n">timeout</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="k">def</span> <span class="nf">run_test</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c">#---------------------------</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">start_step</span><span class="p">(</span><span class="s">&quot;异常测试&quot;</span><span class="p">)</span>
+        <span class="c">#---------------------------</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s">&quot;抛异常&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>以上的用例有问题，执行比如有会有异常抛出，因此测试结果是不通过的:</p>
+<div class="highlight-python"><div class="highlight"><pre>============================================================
+测试用例:ExceptTest 所有者:eeelin 优先级:Normal 超时:1分钟
+============================================================
+----------------------------------------
+步骤1: 异常测试
+CRITICAL: run_test执行失败
+Traceback (most recent call last):
+  File &quot;D:\workspace\qtaf5\testbase\testcase.py&quot;, line 550, in _thread_run
+    getattr(self._testcase, it)()
+  File &quot;D:\workspace\qtaf5\test\hellotest.py&quot;, line 86, in run_test
+    raise RuntimeError(&quot;抛异常&quot;)
+RuntimeError: 抛异常
+
+============================================================
+测试用例开始时间: 2016-02-02 15:12:03
+测试用例结束时间: 2016-02-02 15:12:03
+测试用例执行时间: 00:00:0.02
+测试用例步骤结果:  1:失败
+测试用例最终结果: 失败
+============================================================
+</pre></div>
+</div>
+<p>再看看一个测试不通过的用例的例子:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">LogErrorTest</span><span class="p">(</span><span class="n">TestCase</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;异常测试</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">owner</span> <span class="o">=</span> <span class="s">&quot;eeelin&quot;</span>
+    <span class="n">status</span> <span class="o">=</span> <span class="n">TestCase</span><span class="o">.</span><span class="n">EnumStatus</span><span class="o">.</span><span class="n">Ready</span>
+    <span class="n">priority</span> <span class="o">=</span> <span class="n">TestCase</span><span class="o">.</span><span class="n">EnumPriority</span><span class="o">.</span><span class="n">Normal</span>
+    <span class="n">timeout</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="k">def</span> <span class="nf">run_test</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c">#---------------------------</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">start_step</span><span class="p">(</span><span class="s">&quot;异常测试&quot;</span><span class="p">)</span>
+        <span class="c">#---------------------------</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fail</span><span class="p">(</span><span class="s">&quot;异常发生&quot;</span><span class="p">)</span>
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">ExceptTest</span><span class="p">()</span><span class="o">.</span><span class="n">debug_run</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>上面的用例是调用日志的接口，记录一个错误的日志，因此测试也不通过:</p>
+<div class="highlight-python"><div class="highlight"><pre>============================================================
+测试用例:LogErrorTest 所有者:eeelin 优先级:Normal 超时:1分钟
+============================================================
+----------------------------------------
+步骤1: 异常测试
+ERROR: 异常发生
+============================================================
+测试用例开始时间: 2016-02-02 15:14:19
+测试用例结束时间: 2016-02-02 15:14:19
+测试用例执行时间: 00:00:0.01
+测试用例步骤结果:  1:失败
+测试用例最终结果: 失败
+============================================================
+</pre></div>
+</div>
+</div>
+<div class="section" id="id3">
+<h2>测试日志<a class="headerlink" href="#id3" title="永久链接至标题">¶</a></h2>
+<p>从前面测试用例的例子可以看到，测试结果主要包括几类信息：</p>
+<blockquote>
+<div><ul class="simple">
+<li>测试用例基本信息，如名称、负责、优先级等</li>
+<li>测试用例执行的基本信息，比如开始时间、结束时间</li>
+<li>测试用例执行结果，通过或不通过</li>
+<li>各个测试步骤的日志信息，包括测试步骤的名称、测试步骤通过与否，和测试步骤执行过程中的日志、断言失败信息等</li>
+</ul>
+</div></blockquote>
+<p>前面三点的信息都是固定的，第四点的信息是基于测试用例的代码而变化的，像一些特殊的日志信息，比如断言失败的日志，会由用户的assert或wait_for接口产生。但是一般来说，用户可以通过下面两个接口记录日志:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">log_info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">info</span> <span class="p">):</span>
+   <span class="sd">&#39;&#39;&#39;Log一条信息</span>
+
+<span class="sd">   :type info: string</span>
+<span class="sd">   :param info: 要Log的信息</span>
+<span class="sd">   &#39;&#39;&#39;</span>
+
+<span class="k">def</span> <span class="nf">fail</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">):</span>
+   <span class="sd">&#39;&#39;&#39;测试用例失败</span>
+
+<span class="sd">   :type message: string</span>
+<span class="sd">   :param message: 要Log的信息</span>
+<span class="sd">   &#39;&#39;&#39;</span>
+</pre></div>
+</div>
+<p>以上两个接口在《<a class="reference internal" href="testcase.html"><em>设计测试用例</em></a>》章节已经有介绍，从使用上，这两个接口只能在测试用例类的方法中使用，如果需要在测试用例之外的代码，比如lib层，则可以使用QTA内置的logger:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">testbase</span> <span class="kn">import</span> <span class="n">logger</span>
+<span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;hello&quot;</span><span class="p">)</span>
+<span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;error&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>上面的代码等价于在测试用例中使用log_info和fail:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="bp">self</span><span class="o">.</span><span class="n">log_info</span><span class="p">(</span><span class="s">&quot;hello&quot;</span><span class="p">)</span>
+<span class="bp">self</span><span class="o">.</span><span class="n">fail</span><span class="p">(</span><span class="s">&quot;error&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>QTA内置的logger的接口和Python标准库的logging的logger是完全兼容的。</p>
+</div>
+<div class="section" id="id4">
+<h2>测试结果对象<a class="headerlink" href="#id4" title="永久链接至标题">¶</a></h2>
+<p>对于一个测试用例对象，在执行过程中都会有一个test_result属性表示此测试用例对应的测试结果，我们也可以通过这个测试结果对象的接口去记录日志信息:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="bp">self</span><span class="o">.</span><span class="n">test_result</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;hello&quot;</span><span class="p">)</span>
+<span class="bp">self</span><span class="o">.</span><span class="n">test_result</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;error&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>上面的代码等价于在测试用例中使用log_info和fail:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="bp">self</span><span class="o">.</span><span class="n">log_info</span><span class="p">(</span><span class="s">&quot;hello&quot;</span><span class="p">)</span>
+<span class="bp">self</span><span class="o">.</span><span class="n">fail</span><span class="p">(</span><span class="s">&quot;error&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>test_result属性返回的类型为“<a class="reference internal" href="api/testresult.html#testbase.testresult.TestResultBase" title="testbase.testresult.TestResultBase"><code class="xref py py-class docutils literal"><span class="pre">testbase.testresult.TestResultBase</span></code></a>”，更多接口可以参考接口文档。</p>
+<p>test_result的日志接口，无论info、error等，其实都是调用log_record实现，比如info的接口:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">msg</span><span class="p">,</span>  <span class="n">record</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">attachments</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;处理一个INFO日志</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">log_record</span><span class="p">(</span><span class="n">EnumLogLevel</span><span class="o">.</span><span class="n">INFO</span><span class="p">,</span> <span class="n">msg</span><span class="p">,</span> <span class="n">record</span><span class="p">,</span> <span class="n">attachments</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>可以看到这里其实有两个另外的参数：record和attachments。record主要是给用户传递自定义的参数给自定义的测试结果对象，这块会在《<a class="reference internal" href="testrun.html"><em>执行测试</em></a>》中讨论。而atachments参数表示的是测试用例的附加文件信息，比如截图、Dump文件或日志文件等。</p>
+<p>下面是使用attachments参数的例子:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="bp">self</span><span class="o">.</span><span class="n">test_result</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;这个是一个截图&quot;</span><span class="p">,</span> <span class="n">attachments</span><span class="o">=</span><span class="p">{</span><span class="s">&quot;PC截图&quot;</span><span class="p">:</span><span class="s">&quot;desktop.png&quot;</span><span class="p">})</span>
+</pre></div>
+</div>
+<p>调试执行的结果:</p>
+<div class="highlight-python"><div class="highlight"><pre>INFO: 这个是一个截图
+PC截图：desktop.png
+</pre></div>
+</div>
+<p>attachments参数是一个字典，因此也支持多个附件:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="bp">self</span><span class="o">.</span><span class="n">test_result</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;这个是全部截图&quot;</span><span class="p">,</span> <span class="n">attachments</span><span class="o">=</span><span class="p">{</span><span class="s">&quot;PC截图&quot;</span><span class="p">:</span><span class="s">&quot;desktop.png&quot;</span><span class="p">,</span> <span class="s">&quot;手机截图&quot;</span><span class="p">:</span><span class="s">&quot;mobile.png&quot;</span><span class="p">})</span>
+</pre></div>
+</div>
+<p>在调试执行是，附件的日志信息意义其实不大，但是对于其他执行方式，如果采用不同的测试结果格式（比如xml、网页报告），测试附件会直接附加在对应的测试结果中，方便用户分析测试用例问题。这块会在《<a class="reference internal" href="testrun.html"><em>执行测试</em></a>》中讨论，这里也不展开讨论。</p>
+</div>
+<div class="section" id="id5">
+<h2>测试日志的级别<a class="headerlink" href="#id5" title="永久链接至标题">¶</a></h2>
+<p>test_result的log_record接口第一个参数就是日志级别，比如对于info接口，其对应的日志的级别就是INFO。以下是test_result目前支持的全部日志级别信息:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">EnumLogLevel</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+   <span class="sd">&#39;&#39;&#39;日志级别</span>
+<span class="sd">   &#39;&#39;&#39;</span>
+   <span class="n">DEBUG</span> <span class="o">=</span> <span class="mi">10</span>
+   <span class="n">INFO</span> <span class="o">=</span> <span class="mi">20</span>
+   <span class="n">Environment</span> <span class="o">=</span> <span class="mi">21</span>  <span class="c">#测试环境相关信息， device/devices表示使用的设备、machine表示执行的机器</span>
+   <span class="n">ENVIRONMENT</span> <span class="o">=</span> <span class="n">Environment</span>
+
+   <span class="n">WARNING</span> <span class="o">=</span> <span class="mi">30</span>
+   <span class="n">ERROR</span> <span class="o">=</span> <span class="mi">40</span>
+   <span class="n">ASSERT</span> <span class="o">=</span> <span class="mi">41</span> <span class="c">#断言失败，actual/expect/code_location</span>
+   <span class="n">CRITICAL</span> <span class="o">=</span> <span class="mi">60</span>
+   <span class="n">APPCRASH</span> <span class="o">=</span> <span class="mi">61</span> <span class="c">#测试目标Crash</span>
+   <span class="n">TESTTIMEOUT</span> <span class="o">=</span> <span class="mi">62</span> <span class="c">#测试执行超时</span>
+   <span class="n">RESNOTREADY</span> <span class="o">=</span> <span class="mi">69</span> <span class="c">#当前资源不能满足测试执行的要求</span>
+</pre></div>
+</div>
+<p>其中，INFO/WANRING/ERROR/CRITICAL的类型都是和Python的logging模块的日志级别对应的，是一般的日志级别。除此之外，ASSERT是在断言失败的时候使用，也就是wait_for_和assert_系列结果中使用，用户不用直接使用。TESTTIMEOUT和RESNOTREADY也是内置的类型，由测试框架调用，用户一般都不用使用。用户可以使用的剩下的两个特殊的日志级：ENVIRONMENT和APPCRASH。</p>
+<p>ENVIRONMENT用于日志环境信息，比如测试用例使用PC、手机等信息，比如:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="bp">self</span><span class="o">.</span><span class="n">test_result</span><span class="o">.</span><span class="n">log_record</span><span class="p">(</span><span class="n">EnumLogLevel</span><span class="o">.</span><span class="n">ENVIRONMENT</span><span class="p">,</span> <span class="s">&quot;测试用例执行机名称&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s">&quot;machine&quot;</span><span class="p">:</span><span class="n">socket</span><span class="o">.</span><span class="n">gethostname</span><span class="p">()})</span>
+<span class="bp">self</span><span class="o">.</span><span class="n">test_result</span><span class="o">.</span><span class="n">log_record</span><span class="p">(</span><span class="n">EnumLogLevel</span><span class="o">.</span><span class="n">ENVIRONMENT</span><span class="p">,</span> <span class="s">&quot;使用移动设备&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s">&quot;device&quot;</span><span class="p">:</span><span class="s">&quot;01342300111222&quot;</span><span class="p">})</span>
+<span class="bp">self</span><span class="o">.</span><span class="n">test_result</span><span class="o">.</span><span class="n">log_record</span><span class="p">(</span><span class="n">EnumLogLevel</span><span class="o">.</span><span class="n">ENVIRONMENT</span><span class="p">,</span> <span class="s">&quot;使用移动设备&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s">&quot;devices&quot;</span><span class="p">:[</span><span class="s">&quot;93284972333&quot;</span><span class="p">,</span> <span class="s">&quot;21903948324923&quot;</span><span class="p">]})</span>
+</pre></div>
+</div>
+<p>APPCRASH用于记录被测对象的Crash，比如:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="bp">self</span><span class="o">.</span><span class="n">test_result</span><span class="o">.</span><span class="n">log_record</span><span class="p">(</span><span class="n">EnumLogLevel</span><span class="o">.</span><span class="n">APPCRASH</span><span class="p">,</span> <span class="s">&quot;QQ Crash&quot;</span><span class="p">,</span> <span class="n">attachments</span><span class="o">=</span><span class="p">{</span><span class="s">&quot;QQ日志&quot;</span><span class="p">:</span> <span class="s">&quot;QQ.tlg&quot;</span><span class="p">,</span> <span class="s">&quot;QQ Dump&quot;</span><span class="p">:</span> <span class="s">&quot;QQ34ef450a.dmp&quot;</span><span class="p">})</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">注解</p>
+<p class="last">ENVIRONMENT和APPCRASH约定的record参数类型并不是强制的，但是如果希望日志被内置的测试结果类型更好的处理，需要按照其约定来调用。</p>
+</div>
+</div>
+<div class="section" id="id6">
+<h2>异常时日志<a class="headerlink" href="#id6" title="永久链接至标题">¶</a></h2>
+<p>测试用例执行过程中有两种可能的异常情况，用例执行超时或者用例测试代码异常。在这种情况下，QTA一般会记录当时的堆栈信息，但是如果需要在这种情况增加更多的信息，比如当时的截图、环境信息等，则可以使用测试用例类的get_extra_fail_record接口。示例代码如下:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">EnvLogOnExceptTest</span><span class="p">(</span><span class="n">TestCase</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;异常时记录IP和时间</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">owner</span> <span class="o">=</span> <span class="s">&quot;eeelin&quot;</span>
+    <span class="n">status</span> <span class="o">=</span> <span class="n">TestCase</span><span class="o">.</span><span class="n">EnumStatus</span><span class="o">.</span><span class="n">Ready</span>
+    <span class="n">priority</span> <span class="o">=</span> <span class="n">TestCase</span><span class="o">.</span><span class="n">EnumPriority</span><span class="o">.</span><span class="n">Normal</span>
+    <span class="n">timeout</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="k">def</span> <span class="nf">run_test</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s">&quot;异常&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_extra_fail_record</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">record</span><span class="p">,</span> <span class="n">attachments</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">EnvLogOnExceptTest</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">get_extra_fail_record</span><span class="p">()</span>
+        <span class="n">record</span><span class="p">[</span><span class="s">&#39;当前IP&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">socket</span><span class="o">.</span><span class="n">gethostbyname</span><span class="p">(</span><span class="n">socket</span><span class="o">.</span><span class="n">gethostname</span><span class="p">())</span>
+        <span class="n">attachments</span><span class="p">[</span><span class="s">&#39;当前代码文件&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">__file__</span>
+        <span class="k">return</span> <span class="n">record</span><span class="p">,</span> <span class="n">attachments</span>
+</pre></div>
+</div>
+<p>get_extra_fail_record主要是提供一个hook点，可以在日志异常信息时，让测试用例去修改record和attachments参数。上面的例子就是在record和attachments增加了两项内容。</p>
+<p>get_extra_fail_record是在日志级别为ERROR或者以上时被执行，也就是包括：</p>
+<blockquote>
+<div><ul class="simple">
+<li>self.fail、logger.error和test_result.error产生ERROR级别的日志时</li>
+<li>self.assert_和self.wait_for_系列接口断言失败时</li>
+<li>测试用例执行超时时</li>
+<li>测试用例执行异常时</li>
+</ul>
+</div></blockquote>
+</div>
+</div>
+
+
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="testmgr.html" class="btn btn-neutral float-right" title="管理测试用例" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="testcaserun.html" class="btn btn-neutral" title="执行测试用例" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; 版权所有 2016, QTA.
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'5.0.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="_static/translations.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

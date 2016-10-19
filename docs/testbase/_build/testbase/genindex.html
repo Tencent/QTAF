@@ -1,0 +1,1769 @@
+
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>索引 &mdash; Testbase 5.0.0 文档</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="Testbase 5.0.0 文档" href="index.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        
+
+        
+          <a href="index.html" class="icon icon-home"> Testbase
+        
+
+        
+        </a>
+
+        
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+        
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+          
+          
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="setup.html">使用前准备</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="setup.html#python">安装Python和相关工具</a></li>
+<li class="toctree-l2"><a class="reference internal" href="setup.html#qtaf">获取QTAF包</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="project.html">创建和修改测试项目</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="project.html#id2">创建测试项目</a></li>
+<li class="toctree-l2"><a class="reference internal" href="project.html#eclipse">导入测试项目到Eclipse</a></li>
+<li class="toctree-l2"><a class="reference internal" href="project.html#id3">测试项目结构</a></li>
+<li class="toctree-l2"><a class="reference internal" href="project.html#qtaf">升级QTAF</a></li>
+<li class="toctree-l2"><a class="reference internal" href="project.html#egg">安装依赖的Egg</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="testcase.html">设计测试用例</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="testcase.html#id2">最简单的测试用例</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testcase.html#id3">调试执行</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testcase.html#id4">测试断言</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testcase.html#id5">忙等待检查</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testcase.html#id6">测试执行控制</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testcase.html#id7">测试环境初始化和清理</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="testcaserun.html">执行测试用例</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="testcaserun.html#id2">重复执行</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testcaserun.html#id3">控制执行顺序</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testcaserun.html#id4">自定义执行方式</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="testresult.html">处理测试结果</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="testresult.html#id2">测试通过与不通过</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testresult.html#id3">测试日志</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testresult.html#id4">测试结果对象</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testresult.html#id5">测试日志的级别</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testresult.html#id6">异常时日志</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="testmgr.html">管理测试用例</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="testmgr.html#id2">组织形式</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testmgr.html#id3">加载测试用例</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testmgr.html#id4">处理加载失败</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="datadrive.html">数据驱动测试</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="datadrive.html#id2">数据驱动测试用例</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datadrive.html#id3">测试数据</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="datadrive.html#list">list类型测试数据</a></li>
+<li class="toctree-l3"><a class="reference internal" href="datadrive.html#dict">dict类型测试数据</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="datadrive.html#id4">管理数据驱动测试用例</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datadrive.html#id5">调试数据驱动测试用例</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datadrive.html#id6">全局数据驱动测试</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="testrun.html">执行测试</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="testrun.html#id2">批量执行测试用例</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testrun.html#id3">指定测试报告类型</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testrun.html#id4">并发执行</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testrun.html#id5">指定测试用例</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testrun.html#id6">自定义测试执行</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="settings.html">配置测试项目</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="settings.html#id2">配置语法</a></li>
+<li class="toctree-l2"><a class="reference internal" href="settings.html#id3">配置文件路径</a></li>
+<li class="toctree-l2"><a class="reference internal" href="settings.html#id4">使用测试配置</a></li>
+<li class="toctree-l2"><a class="reference internal" href="settings.html#id5">增加配置项</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="apiref.html">接口文档</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/conf.html"><code class="docutils literal"><span class="pre">testbase.conf</span></code> Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/context.html"><code class="docutils literal"><span class="pre">testbase.context</span></code> Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/datadrive.html"><code class="docutils literal"><span class="pre">testbase.datadrive</span></code> Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/exlib.html"><code class="docutils literal"><span class="pre">testbase.exlib</span></code> Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/loader.html"><code class="docutils literal"><span class="pre">testbase.loader</span></code> Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/logger.html"><code class="docutils literal"><span class="pre">testbase.logger</span></code> Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/management.html"><code class="docutils literal"><span class="pre">testbase.management</span></code> Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/project.html"><code class="docutils literal"><span class="pre">testbase.project</span></code> Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/report.html"><code class="docutils literal"><span class="pre">testbase.report</span></code> Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/resource.html"><code class="docutils literal"><span class="pre">testbase.resource</span></code> Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/runner.html"><code class="docutils literal"><span class="pre">testbase.runner</span></code> Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/serialization.html"><code class="docutils literal"><span class="pre">testbase.serialization</span></code> Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/testcase.html"><code class="docutils literal"><span class="pre">testbase.testcase</span></code> Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/testresult.html"><code class="docutils literal"><span class="pre">testbase.testresult</span></code> Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/util.html"><code class="docutils literal"><span class="pre">testbase.util</span></code> Package</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="settingslist.html">配置项说明文档</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="settingslist.html#debug">DEBUG</a></li>
+<li class="toctree-l2"><a class="reference internal" href="settingslist.html#data-drive">DATA_DRIVE</a></li>
+<li class="toctree-l2"><a class="reference internal" href="settingslist.html#data-srouce">DATA_SROUCE</a></li>
+</ul>
+</li>
+</ul>
+
+          
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">Testbase</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+    <li></li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document">
+            
+
+<h1 id="index">索引</h1>
+
+<div class="genindex-jumpbox">
+ <a href="#A"><strong>A</strong></a>
+ | <a href="#B"><strong>B</strong></a>
+ | <a href="#C"><strong>C</strong></a>
+ | <a href="#D"><strong>D</strong></a>
+ | <a href="#E"><strong>E</strong></a>
+ | <a href="#F"><strong>F</strong></a>
+ | <a href="#G"><strong>G</strong></a>
+ | <a href="#H"><strong>H</strong></a>
+ | <a href="#I"><strong>I</strong></a>
+ | <a href="#J"><strong>J</strong></a>
+ | <a href="#L"><strong>L</strong></a>
+ | <a href="#M"><strong>M</strong></a>
+ | <a href="#N"><strong>N</strong></a>
+ | <a href="#O"><strong>O</strong></a>
+ | <a href="#P"><strong>P</strong></a>
+ | <a href="#Q"><strong>Q</strong></a>
+ | <a href="#R"><strong>R</strong></a>
+ | <a href="#S"><strong>S</strong></a>
+ | <a href="#T"><strong>T</strong></a>
+ | <a href="#U"><strong>U</strong></a>
+ | <a href="#W"><strong>W</strong></a>
+ | <a href="#X"><strong>X</strong></a>
+ 
+</div>
+<h2 id="A">A</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="api/runner.html#testbase.runner.TestResultStubManager.add_result">add_result() (testbase.runner.TestResultStubManager 方法)</a>
+  </dt>
+
+      
+  <dt><a href="api/management.html#testbase.management.ArgumentParser.add_subcommand">add_subcommand() (testbase.management.ArgumentParser 方法)</a>
+  </dt>
+
+      
+  <dt><a href="api/logger.html#testbase.logger.addHandler">addHandler() (在 testbase.logger 模块中)</a>
+  </dt>
+
+      
+  <dt><a href="api/management.html#testbase.management.ArgumentParser">ArgumentParser (testbase.management 中的类)</a>
+  </dt>
+
+  </dl></td>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="api/testcase.html#testbase.testcase.TestCase.assert_equal">assert_equal() (testbase.testcase.TestCase 方法)</a>
+  </dt>
+
+      
+  <dt><a href="api/testcase.html#testbase.testcase.TestCase.assert_match">assert_match() (testbase.testcase.TestCase 方法)</a>
+  </dt>
+
+      
+  <dt><a href="api/testcase.html#testbase.testcase.TestCase.assertEqual">assertEqual() (testbase.testcase.TestCase 方法)</a>
+  </dt>
+
+      
+  <dt><a href="api/testcase.html#testbase.testcase.TestCase.assertMatch">assertMatch() (testbase.testcase.TestCase 方法)</a>
+  </dt>
+
+  </dl></td>
+</tr></table>
+
+<h2 id="B">B</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="api/runner.html#testbase.runner.BaseTestRunner">BaseTestRunner (testbase.runner 中的类)</a>
+  </dt>
+
+      
+  <dt><a href="api/report.html#testbase.report.ITestReport.begin_report">begin_report() (testbase.report.ITestReport 方法)</a>
+  </dt>
+
+      <dd><dl>
+        
+  <dt><a href="api/report.html#testbase.report.OnlineTestReport.begin_report">(testbase.report.OnlineTestReport 方法)</a>
+  </dt>
+
+        
+  <dt><a href="api/report.html#testbase.report.StreamTestReport.begin_report">(testbase.report.StreamTestReport 方法)</a>
+  </dt>
+
+        
+  <dt><a href="api/report.html#testbase.report.XMLTestReport.begin_report">(testbase.report.XMLTestReport 方法)</a>
+  </dt>
+
+        
+  <dt><a href="api/runner.html#testbase.runner.TestReportProxy.begin_report">(testbase.runner.TestReportProxy 方法)</a>
+  </dt>
+
+        
+  <dt><a href="api/runner.html#testbase.runner.ThreadSafetyReport.begin_report">(testbase.runner.ThreadSafetyReport 方法)</a>
+  </dt>
+
+      </dl></dd>
+      
+  <dt><a href="api/testresult.html#testbase.testresult.TestResultBase.begin_step">begin_step() (testbase.testresult.TestResultBase 方法)</a>
+  </dt>
+
+  </dl></td>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="api/testresult.html#testbase.testresult.TestResultBase.begin_test">begin_test() (testbase.testresult.TestResultBase 方法)</a>
+  </dt>
+
+      
+  <dt><a href="api/testresult.html#testbase.testresult.TestResultBase.begin_time">begin_time (testbase.testresult.TestResultBase 属性)</a>
+  </dt>
+
+  </dl></td>
+</tr></table>
+
+<h2 id="C">C</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="api/runner.html#testbase.runner.TestResultStubManager.call_result_func">call_result_func() (testbase.runner.TestResultStubManager 方法)</a>
+  </dt>
+
+      
+  <dt><a href="api/testcase.html#testbase.testcase.TestCase.casedata">casedata (testbase.testcase.TestCase 属性)</a>
+  </dt>
+
+      
+  <dt><a href="api/testcase.html#testbase.testcase.TestCase.casedataname">casedataname (testbase.testcase.TestCase 属性)</a>
+  </dt>
+
+      
+  <dt><a href="api/report.html#testbase.report.CFSStorage">CFSStorage (testbase.report 中的类)</a>
+  </dt>
+
+      
+  <dt><a href="api/util.html#testbase.util.Timeout.check">check() (testbase.util.Timeout 方法)</a>
+  </dt>
+
+      
+  <dt><a href="api/report.html#testbase.report.CFSStorage.child">child() (testbase.report.CFSStorage 方法)</a>
+  </dt>
+
+      <dd><dl>
+        
+  <dt><a href="api/report.html#testbase.report.NFStorage.child">(testbase.report.NFStorage 方法)</a>
+  </dt>
+
+        
+  <dt><a href="api/report.html#testbase.report.TFSStorage.child">(testbase.report.TFSStorage 方法)</a>
+  </dt>
+
+      </dl></dd>
+      
+  <dt><a href="api/util.html#testbase.util.classproperty">classproperty (testbase.util 中的类)</a>
+  </dt>
+
+      
+  <dt><a href="api/testcase.html#testbase.testcase.TestCase.clean_test">clean_test() (testbase.testcase.TestCase 方法)</a>
+  </dt>
+
+  </dl></td>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="api/testcase.html#testbase.testcase.TestCase.cleanTest">cleanTest() (testbase.testcase.TestCase 方法)</a>
+  </dt>
+
+      
+  <dt><a href="api/management.html#testbase.management.Command">Command (testbase.management 中的类)</a>
+  </dt>
+
+      
+  <dt><a href="api/report.html#testbase.report.EmptyTestResultFactory.create">create() (testbase.report.EmptyTestResultFactory 方法)</a>
+  </dt>
+
+      <dd><dl>
+        
+  <dt><a href="api/report.html#testbase.report.ITestResultFactory.create">(testbase.report.ITestResultFactory 方法)</a>
+  </dt>
+
+        
+  <dt><a href="api/report.html#testbase.report.OnlineTestResultFactory.create">(testbase.report.OnlineTestResultFactory 方法)</a>
+  </dt>
+
+        
+  <dt><a href="api/report.html#testbase.report.StreamTestResultFactory.create">(testbase.report.StreamTestResultFactory 方法)</a>
+  </dt>
+
+        
+  <dt><a href="api/report.html#testbase.report.XMLTestResultFactory.create">(testbase.report.XMLTestResultFactory 方法)</a>
+  </dt>
+
+      </dl></dd>
+      
+  <dt><a href="api/report.html#testbase.report.ITestReport.critical">critical() (testbase.report.ITestReport 方法)</a>
+  </dt>
+
+      
+  <dt><a href="api/project.html#testbase.project.current_project">current_project() (在 testbase.project 模块中)</a>
+  </dt>
+
+      
+  <dt><a href="api/util.html#testbase.util.ThreadGroupScope.current_scope">current_scope() (testbase.util.ThreadGroupScope 静态方法)</a>
+  </dt>
+
+      
+  <dt><a href="api/runner.html#testbase.runner.TestWorker.current_testcase">current_testcase() (testbase.runner.TestWorker 方法)</a>
+  </dt>
+
+      <dd><dl>
+        
+  <dt><a href="api/context.html#testbase.context.current_testcase">(在 testbase.context 模块中)</a>
+  </dt>
+
+      </dl></dd>
+      
+  <dt><a href="api/context.html#testbase.context.current_testresult">current_testresult() (在 testbase.context 模块中)</a>
+  </dt>
+
+  </dl></td>
+</tr></table>
+
+<h2 id="D">D</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="api/datadrive.html#testbase.datadrive.DataDrive">DataDrive (testbase.datadrive 中的类)</a>
+  </dt>
+
+      
+  <dt><a href="api/report.html#testbase.report.ITestReport.debug">debug() (testbase.report.ITestReport 方法)</a>
+  </dt>
+
+      <dd><dl>
+        
+  <dt><a href="api/testresult.html#testbase.testresult.TestResultBase.debug">(testbase.testresult.TestResultBase 方法)</a>
+  </dt>
+
+        
+  <dt><a href="api/logger.html#testbase.logger.debug">(在 testbase.logger 模块中)</a>
+  </dt>
+
+      </dl></dd>
+      
+  <dt><a href="api/testcase.html#testbase.testcase.TestCase.debug_run">debug_run() (testbase.testcase.TestCase 方法)</a>
+  </dt>
+
+  </dl></td>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="api/testcase.html#testbase.testcase.debug_run_all">debug_run_all() (在 testbase.testcase 模块中)</a>
+  </dt>
+
+      
+  <dt><a href="api/report.html#testbase.report.CFSStorage.dumps">dumps() (testbase.report.CFSStorage 方法)</a>
+  </dt>
+
+      <dd><dl>
+        
+  <dt><a href="api/report.html#testbase.report.EmptyTestResultFactory.dumps">(testbase.report.EmptyTestResultFactory 方法)</a>
+  </dt>
+
+        
+  <dt><a href="api/report.html#testbase.report.ITestResultFactory.dumps">(testbase.report.ITestResultFactory 方法)</a>
+  </dt>
+
+        
+  <dt><a href="api/report.html#testbase.report.NFS.dumps">(testbase.report.NFS 方法)</a>
+  </dt>
+
+        
+  <dt><a href="api/report.html#testbase.report.NFStorage.dumps">(testbase.report.NFStorage 方法)</a>
+  </dt>
+
+        
+  <dt><a href="api/report.html#testbase.report.OnlineTestReport.dumps">(testbase.report.OnlineTestReport 方法)</a>
+  </dt>
+
+        
+  <dt><a href="api/report.html#testbase.report.OnlineTestResultFactory.dumps">(testbase.report.OnlineTestResultFactory 方法)</a>
+  </dt>
+
+        
+  <dt><a href="api/report.html#testbase.report.StreamTestResultFactory.dumps">(testbase.report.StreamTestResultFactory 方法)</a>
+  </dt>
+
+        
+  <dt><a href="api/report.html#testbase.report.TFSStorage.dumps">(testbase.report.TFSStorage 方法)</a>
+  </dt>
+
+        
+  <dt><a href="api/testcase.html#testbase.testcase.SeqTestSuite.dumps">(testbase.testcase.SeqTestSuite 方法)</a>
+  </dt>
+
+        
+  <dt><a href="api/testcase.html#testbase.testcase.TestSuite.dumps">(testbase.testcase.TestSuite 方法)</a>
+  </dt>
+
+        
+  <dt><a href="api/serialization.html#testbase.serialization.dumps">(在 testbase.serialization 模块中)</a>
+  </dt>
+
+      </dl></dd>
+  </dl></td>
+</tr></table>
+
+<h2 id="E">E</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="api/util.html#testbase.util.EggArchive">EggArchive (testbase.util 中的类)</a>
+  </dt>
+
+      
+  <dt><a href="api/logger.html#testbase.logger.TestResultBridge.emit">emit() (testbase.logger.TestResultBridge 方法)</a>
+  </dt>
+
+      
+  <dt><a href="api/testresult.html#testbase.testresult.EmptyResult">EmptyResult (testbase.testresult 中的类)</a>
+  </dt>
+
+      
+  <dt><a href="api/report.html#testbase.report.EmptyTestReport">EmptyTestReport (testbase.report 中的类)</a>
+  </dt>
+
+      
+  <dt><a href="api/report.html#testbase.report.EmptyTestResultFactory">EmptyTestResultFactory (testbase.report 中的类)</a>
+  </dt>
+
+      
+  <dt><a href="api/report.html#testbase.report.ITestReport.end_report">end_report() (testbase.report.ITestReport 方法)</a>
+  </dt>
+
+      <dd><dl>
+        
+  <dt><a href="api/report.html#testbase.report.OnlineTestReport.end_report">(testbase.report.OnlineTestReport 方法)</a>
+  </dt>
+
+        
+  <dt><a href="api/report.html#testbase.report.StreamTestReport.end_report">(testbase.report.StreamTestReport 方法)</a>
+  </dt>
+
+        
+  <dt><a href="api/report.html#testbase.report.XMLTestReport.end_report">(testbase.report.XMLTestReport 方法)</a>
+  </dt>
+
+        
+  <dt><a href="api/runner.html#testbase.runner.TestReportProxy.end_report">(testbase.runner.TestReportProxy 方法)</a>
+  </dt>
+
+        
+  <dt><a href="api/runner.html#testbase.runner.ThreadSafetyReport.end_report">(testbase.runner.ThreadSafetyReport 方法)</a>
+  </dt>
+
+      </dl></dd>
+      
+  <dt><a href="api/testresult.html#testbase.testresult.TestResultBase.end_test">end_test() (testbase.testresult.TestResultBase 方法)</a>
+  </dt>
+
+      
+  <dt><a href="api/testresult.html#testbase.testresult.TestResultBase.end_time">end_time (testbase.testresult.TestResultBase 属性)</a>
+  </dt>
+
+      
+  <dt><a href="api/testresult.html#testbase.testresult.EnumLogLevel">EnumLogLevel (testbase.testresult 中的类)</a>
+  </dt>
+
+  </dl></td>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="api/runner.html#testbase.runner.EnumProcessMsgType">EnumProcessMsgType (testbase.runner 中的类)</a>
+  </dt>
+
+      
+  <dt><a href="api/testcase.html#testbase.testcase.Environ">Environ (testbase.testcase 中的类)</a>
+  </dt>
+
+      
+  <dt><a href="api/testcase.html#testbase.testcase.TestCase.environ">environ (testbase.testcase.TestCase 属性)</a>
+  </dt>
+
+      
+  <dt><a href="api/report.html#testbase.report.ITestReport.error">error() (testbase.report.ITestReport 方法)</a>
+  </dt>
+
+      <dd><dl>
+        
+  <dt><a href="api/testresult.html#testbase.testresult.TestResultBase.error">(testbase.testresult.TestResultBase 方法)</a>
+  </dt>
+
+        
+  <dt><a href="api/logger.html#testbase.logger.error">(在 testbase.logger 模块中)</a>
+  </dt>
+
+      </dl></dd>
+      
+  <dt><a href="api/testresult.html#testbase.testresult.TestResultBase.exception">exception() (testbase.testresult.TestResultBase 方法)</a>
+  </dt>
+
+      <dd><dl>
+        
+  <dt><a href="api/logger.html#testbase.logger.exception">(在 testbase.logger 模块中)</a>
+  </dt>
+
+      </dl></dd>
+      
+  <dt><a href="api/management.html#testbase.management.Command.execute">execute() (testbase.management.Command 方法)</a>
+  </dt>
+
+      <dd><dl>
+        
+  <dt><a href="api/management.html#testbase.management.InstallLib.execute">(testbase.management.InstallLib 方法)</a>
+  </dt>
+
+        
+  <dt><a href="api/management.html#testbase.management.RunScript.execute">(testbase.management.RunScript 方法)</a>
+  </dt>
+
+        
+  <dt><a href="api/management.html#testbase.management.RunTest.execute">(testbase.management.RunTest 方法)</a>
+  </dt>
+
+      </dl></dd>
+      
+  <dt><a href="api/exlib.html#testbase.exlib.ExLibManager">ExLibManager (testbase.exlib 中的类)</a>
+  </dt>
+
+      
+  <dt><a href="api/testresult.html#testbase.testresult.OnlineResult.extra">extra (testbase.testresult.OnlineResult 属性)</a>
+  </dt>
+
+  </dl></td>
+</tr></table>
+
+<h2 id="F">F</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="api/testcase.html#testbase.testcase.TestCase.fail">fail() (testbase.testcase.TestCase 方法)</a>
+  </dt>
+
+      
+  <dt><a href="api/testresult.html#testbase.testresult.TestResultBase.failed_reason">failed_reason (testbase.testresult.TestResultBase 属性)</a>
+  </dt>
+
+      
+  <dt><a href="api/testresult.html#testbase.testresult.XmlResult.file_path">file_path (testbase.testresult.XmlResult 属性)</a>
+  </dt>
+
+  </dl></td>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="api/resource.html#testbase.resource.FileResourceMgr">FileResourceMgr (testbase.resource 中的类)</a>
+  </dt>
+
+      
+  <dt><a href="api/runner.html#testbase.runner.TestCaseSettings.filter">filter() (testbase.runner.TestCaseSettings 方法)</a>
+  </dt>
+
+      
+  <dt><a href="api/util.html#testbase.util.ForbidOverloadMethods">ForbidOverloadMethods() (在 testbase.util 模块中)</a>
+  </dt>
+
+  </dl></td>
+</tr></table>
+
+<h2 id="G">G</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="api/conf.html#testbase.conf.Settings.get">get() (testbase.conf.Settings 方法)</a>
+  </dt>
+
+      <dd><dl>
+        
+  <dt><a href="api/util.html#testbase.util.EggArchive.get">(testbase.util.EggArchive 方法)</a>
+  </dt>
+
+      </dl></dd>
+      
+  <dt><a href="api/datadrive.html#testbase.datadrive.get_datadrive">get_datadrive() (在 testbase.datadrive 模块中)</a>
+  </dt>
+
+      
+  <dt><a href="api/testcase.html#testbase.testcase.TestCase.get_extra_fail_record">get_extra_fail_record() (testbase.testcase.TestCase 方法)</a>
+  </dt>
+
+      
+  <dt><a href="api/resource.html#testbase.resource.FileResourceMgr.get_file">get_file() (testbase.resource.FileResourceMgr 方法)</a>
+  </dt>
+
+      
+  <dt><a href="api/loader.html#testbase.loader.TestLoader.get_filtered_tests">get_filtered_tests() (testbase.loader.TestLoader 方法)</a>
+  </dt>
+
+  </dl></td>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="api/loader.html#testbase.loader.TestLoader.get_filtered_tests_with_reason">get_filtered_tests_with_reason() (testbase.loader.TestLoader 方法)</a>
+  </dt>
+
+      
+  <dt><a href="api/loader.html#testbase.loader.TestLoader.get_last_errors">get_last_errors() (testbase.loader.TestLoader 方法)</a>
+  </dt>
+
+      
+  <dt><a href="api/runner.html#testbase.runner.TestResultStubManager.get_result_attr">get_result_attr() (testbase.runner.TestResultStubManager 方法)</a>
+  </dt>
+
+      
+  <dt><a href="api/report.html#testbase.report.EmptyTestReport.get_testresult_factory">get_testresult_factory() (testbase.report.EmptyTestReport 方法)</a>
+  </dt>
+
+      <dd><dl>
+        
+  <dt><a href="api/report.html#testbase.report.ITestReport.get_testresult_factory">(testbase.report.ITestReport 方法)</a>
+  </dt>
+
+        
+  <dt><a href="api/report.html#testbase.report.OnlineTestReport.get_testresult_factory">(testbase.report.OnlineTestReport 方法)</a>
+  </dt>
+
+        
+  <dt><a href="api/report.html#testbase.report.StreamTestReport.get_testresult_factory">(testbase.report.StreamTestReport 方法)</a>
+  </dt>
+
+        
+  <dt><a href="api/report.html#testbase.report.XMLTestReport.get_testresult_factory">(testbase.report.XMLTestReport 方法)</a>
+  </dt>
+
+        
+  <dt><a href="api/runner.html#testbase.runner.TestReportProxy.get_testresult_factory">(testbase.runner.TestReportProxy 方法)</a>
+  </dt>
+
+        
+  <dt><a href="api/runner.html#testbase.runner.ThreadSafetyReport.get_testresult_factory">(testbase.runner.ThreadSafetyReport 方法)</a>
+  </dt>
+
+      </dl></dd>
+  </dl></td>
+</tr></table>
+
+<h2 id="H">H</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="api/testresult.html#testbase.testresult.OnlineResult.handle_log_record">handle_log_record() (testbase.testresult.OnlineResult 方法)</a>
+  </dt>
+
+      <dd><dl>
+        
+  <dt><a href="api/testresult.html#testbase.testresult.StreamResult.handle_log_record">(testbase.testresult.StreamResult 方法)</a>
+  </dt>
+
+        
+  <dt><a href="api/testresult.html#testbase.testresult.TestResultBase.handle_log_record">(testbase.testresult.TestResultBase 方法)</a>
+  </dt>
+
+        
+  <dt><a href="api/testresult.html#testbase.testresult.XmlResult.handle_log_record">(testbase.testresult.XmlResult 方法)</a>
+  </dt>
+
+      </dl></dd>
+      
+  <dt><a href="api/testresult.html#testbase.testresult.StreamResult.handle_step_begin">handle_step_begin() (testbase.testresult.StreamResult 方法)</a>
+  </dt>
+
+      <dd><dl>
+        
+  <dt><a href="api/testresult.html#testbase.testresult.TestResultBase.handle_step_begin">(testbase.testresult.TestResultBase 方法)</a>
+  </dt>
+
+        
+  <dt><a href="api/testresult.html#testbase.testresult.XmlResult.handle_step_begin">(testbase.testresult.XmlResult 方法)</a>
+  </dt>
+
+      </dl></dd>
+      
+  <dt><a href="api/testresult.html#testbase.testresult.StreamResult.handle_step_end">handle_step_end() (testbase.testresult.StreamResult 方法)</a>
+  </dt>
+
+      <dd><dl>
+        
+  <dt><a href="api/testresult.html#testbase.testresult.TestResultBase.handle_step_end">(testbase.testresult.TestResultBase 方法)</a>
+  </dt>
+
+        
+  <dt><a href="api/testresult.html#testbase.testresult.XmlResult.handle_step_end">(testbase.testresult.XmlResult 方法)</a>
+  </dt>
+
+      </dl></dd>
+  </dl></td>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="api/testresult.html#testbase.testresult.StreamResult.handle_test_begin">handle_test_begin() (testbase.testresult.StreamResult 方法)</a>
+  </dt>
+
+      <dd><dl>
+        
+  <dt><a href="api/testresult.html#testbase.testresult.TestResultBase.handle_test_begin">(testbase.testresult.TestResultBase 方法)</a>
+  </dt>
+
+        
+  <dt><a href="api/testresult.html#testbase.testresult.XmlResult.handle_test_begin">(testbase.testresult.XmlResult 方法)</a>
+  </dt>
+
+      </dl></dd>
+      
+  <dt><a href="api/testresult.html#testbase.testresult.OnlineResult.handle_test_end">handle_test_end() (testbase.testresult.OnlineResult 方法)</a>
+  </dt>
+
+      <dd><dl>
+        
+  <dt><a href="api/testresult.html#testbase.testresult.StreamResult.handle_test_end">(testbase.testresult.StreamResult 方法)</a>
+  </dt>
+
+        
+  <dt><a href="api/testresult.html#testbase.testresult.TestResultBase.handle_test_end">(testbase.testresult.TestResultBase 方法)</a>
+  </dt>
+
+        
+  <dt><a href="api/testresult.html#testbase.testresult.XmlResult.handle_test_end">(testbase.testresult.XmlResult 方法)</a>
+  </dt>
+
+      </dl></dd>
+      
+  <dt><a href="api/management.html#testbase.management.Help">Help (testbase.management 中的类)</a>
+  </dt>
+
+  </dl></td>
+</tr></table>
+
+<h2 id="I">I</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="api/report.html#testbase.report.ITestReport.info">info() (testbase.report.ITestReport 方法)</a>
+  </dt>
+
+      <dd><dl>
+        
+  <dt><a href="api/testresult.html#testbase.testresult.TestResultBase.info">(testbase.testresult.TestResultBase 方法)</a>
+  </dt>
+
+        
+  <dt><a href="api/logger.html#testbase.logger.info">(在 testbase.logger 模块中)</a>
+  </dt>
+
+      </dl></dd>
+      
+  <dt><a href="api/testcase.html#testbase.testcase.TestCase.init_test">init_test() (testbase.testcase.TestCase 方法)</a>
+  </dt>
+
+      
+  <dt><a href="api/project.html#testbase.project.TestProject.initialize">initialize() (testbase.project.TestProject 方法)</a>
+  </dt>
+
+      
+  <dt><a href="api/testcase.html#testbase.testcase.TestCase.initTest">initTest() (testbase.testcase.TestCase 方法)</a>
+  </dt>
+
+      
+  <dt><a href="api/exlib.html#testbase.exlib.ExLibManager.install">install() (testbase.exlib.ExLibManager 方法)</a>
+  </dt>
+
+      
+  <dt><a href="api/management.html#testbase.management.InstallLib">InstallLib (testbase.management 中的类)</a>
+  </dt>
+
+  </dl></td>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="api/resource.html#testbase.resource.RemoteProcessMachine.IP">IP (testbase.resource.RemoteProcessMachine 属性)</a>
+  </dt>
+
+      
+  <dt><a href="api/datadrive.html#testbase.datadrive.is_datadrive">is_datadrive() (在 testbase.datadrive 模块中)</a>
+  </dt>
+
+      
+  <dt><a href="api/testcase.html#testbase.testcase.ITestCaseRunner">ITestCaseRunner (testbase.testcase 中的类)</a>
+  </dt>
+
+      
+  <dt><a href="api/report.html#testbase.report.ITestReport">ITestReport (testbase.report 中的类)</a>
+  </dt>
+
+      
+  <dt><a href="api/report.html#testbase.report.ITestResultFactory">ITestResultFactory (testbase.report 中的类)</a>
+  </dt>
+
+  </dl></td>
+</tr></table>
+
+<h2 id="J">J</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="api/report.html#testbase.report.TFSStorage.join">join() (testbase.report.TFSStorage 方法)</a>
+  </dt>
+
+  </dl></td>
+</tr></table>
+
+<h2 id="L">L</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="api/util.html#testbase.util.LazyInit">LazyInit (testbase.util 中的类)</a>
+  </dt>
+
+      
+  <dt><a href="api/exlib.html#testbase.exlib.ExLibManager.list_names">list_names() (testbase.exlib.ExLibManager 方法)</a>
+  </dt>
+
+      
+  <dt><a href="api/loader.html#testbase.loader.TestDataLoader.load">load() (testbase.loader.TestDataLoader 方法)</a>
+  </dt>
+
+      <dd><dl>
+        
+  <dt><a href="api/loader.html#testbase.loader.TestLoader.load">(testbase.loader.TestLoader 方法)</a>
+  </dt>
+
+      </dl></dd>
+      
+  <dt><a href="api/report.html#testbase.report.CFSStorage.loads">loads() (testbase.report.CFSStorage 方法)</a>
+  </dt>
+
+      <dd><dl>
+        
+  <dt><a href="api/report.html#testbase.report.EmptyTestResultFactory.loads">(testbase.report.EmptyTestResultFactory 方法)</a>
+  </dt>
+
+        
+  <dt><a href="api/report.html#testbase.report.ITestResultFactory.loads">(testbase.report.ITestResultFactory 方法)</a>
+  </dt>
+
+        
+  <dt><a href="api/report.html#testbase.report.NFS.loads">(testbase.report.NFS 方法)</a>
+  </dt>
+
+        
+  <dt><a href="api/report.html#testbase.report.NFStorage.loads">(testbase.report.NFStorage 方法)</a>
+  </dt>
+
+        
+  <dt><a href="api/report.html#testbase.report.OnlineTestReport.loads">(testbase.report.OnlineTestReport 方法)</a>
+  </dt>
+
+        
+  <dt><a href="api/report.html#testbase.report.OnlineTestResultFactory.loads">(testbase.report.OnlineTestResultFactory 方法)</a>
+  </dt>
+
+        
+  <dt><a href="api/report.html#testbase.report.StreamTestResultFactory.loads">(testbase.report.StreamTestResultFactory 方法)</a>
+  </dt>
+
+        
+  <dt><a href="api/report.html#testbase.report.TFSStorage.loads">(testbase.report.TFSStorage 方法)</a>
+  </dt>
+
+        
+  <dt><a href="api/testcase.html#testbase.testcase.SeqTestSuite.loads">(testbase.testcase.SeqTestSuite 方法)</a>
+  </dt>
+
+        
+  <dt><a href="api/testcase.html#testbase.testcase.TestSuite.loads">(testbase.testcase.TestSuite 方法)</a>
+  </dt>
+
+        
+  <dt><a href="api/serialization.html#testbase.serialization.loads">(在 testbase.serialization 模块中)</a>
+  </dt>
+
+      </dl></dd>
+      
+  <dt><a href="api/logger.html#testbase.logger.log">log() (在 testbase.logger 模块中)</a>
+  </dt>
+
+  </dl></td>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="api/testcase.html#testbase.testcase.TestCase.log_info">log_info() (testbase.testcase.TestCase 方法)</a>
+  </dt>
+
+      
+  <dt><a href="api/report.html#testbase.report.ITestReport.log_record">log_record() (testbase.report.ITestReport 方法)</a>
+  </dt>
+
+      <dd><dl>
+        
+  <dt><a href="api/report.html#testbase.report.OnlineTestReport.log_record">(testbase.report.OnlineTestReport 方法)</a>
+  </dt>
+
+        
+  <dt><a href="api/report.html#testbase.report.StreamTestReport.log_record">(testbase.report.StreamTestReport 方法)</a>
+  </dt>
+
+        
+  <dt><a href="api/report.html#testbase.report.XMLTestReport.log_record">(testbase.report.XMLTestReport 方法)</a>
+  </dt>
+
+        
+  <dt><a href="api/runner.html#testbase.runner.TestReportProxy.log_record">(testbase.runner.TestReportProxy 方法)</a>
+  </dt>
+
+        
+  <dt><a href="api/runner.html#testbase.runner.ThreadSafetyReport.log_record">(testbase.runner.ThreadSafetyReport 方法)</a>
+  </dt>
+
+        
+  <dt><a href="api/testresult.html#testbase.testresult.TestResultBase.log_record">(testbase.testresult.TestResultBase 方法)</a>
+  </dt>
+
+      </dl></dd>
+      
+  <dt><a href="api/report.html#testbase.report.ITestReport.log_test_result">log_test_result() (testbase.report.ITestReport 方法)</a>
+  </dt>
+
+      <dd><dl>
+        
+  <dt><a href="api/report.html#testbase.report.StreamTestReport.log_test_result">(testbase.report.StreamTestReport 方法)</a>
+  </dt>
+
+        
+  <dt><a href="api/report.html#testbase.report.XMLTestReport.log_test_result">(testbase.report.XMLTestReport 方法)</a>
+  </dt>
+
+        
+  <dt><a href="api/runner.html#testbase.runner.TestReportProxy.log_test_result">(testbase.runner.TestReportProxy 方法)</a>
+  </dt>
+
+        
+  <dt><a href="api/runner.html#testbase.runner.ThreadSafetyReport.log_test_result">(testbase.runner.ThreadSafetyReport 方法)</a>
+  </dt>
+
+      </dl></dd>
+      
+  <dt><a href="api/testcase.html#testbase.testcase.TestCase.logInfo">logInfo() (testbase.testcase.TestCase 方法)</a>
+  </dt>
+
+  </dl></td>
+</tr></table>
+
+<h2 id="M">M</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="api/management.html#testbase.management.ManagementTools">ManagementTools (testbase.management 中的类)</a>
+  </dt>
+
+  </dl></td>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="api/runner.html#testbase.runner.MultiProcessTestRunner">MultiProcessTestRunner (testbase.runner 中的类)</a>
+  </dt>
+
+  </dl></td>
+</tr></table>
+
+<h2 id="N">N</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="api/project.html#testbase.project.TestProject.name">name (testbase.project.TestProject 属性)</a>
+  </dt>
+
+      
+  <dt><a href="api/report.html#testbase.report.NFS">NFS (testbase.report 中的类)</a>
+  </dt>
+
+  </dl></td>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="api/report.html#testbase.report.NFStorage">NFStorage (testbase.report 中的类)</a>
+  </dt>
+
+      
+  <dt><a href="api/report.html#testbase.report.Notification">Notification (testbase.report 中的类)</a>
+  </dt>
+
+  </dl></td>
+</tr></table>
+
+<h2 id="O">O</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="api/testresult.html#testbase.testresult.OnlineResult">OnlineResult (testbase.testresult 中的类)</a>
+  </dt>
+
+      
+  <dt><a href="api/report.html#testbase.report.OnlineTestReport">OnlineTestReport (testbase.report 中的类)</a>
+  </dt>
+
+  </dl></td>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="api/report.html#testbase.report.OnlineTestResultFactory">OnlineTestResultFactory (testbase.report 中的类)</a>
+  </dt>
+
+  </dl></td>
+</tr></table>
+
+<h2 id="P">P</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="api/management.html#testbase.management.ArgumentParser.parse_args">parse_args() (testbase.management.ArgumentParser 方法)</a>
+  </dt>
+
+      
+  <dt><a href="api/testresult.html#testbase.testresult.TestResultBase.passed">passed (testbase.testresult.TestResultBase 属性)</a>
+  </dt>
+
+      <dd><dl>
+        
+  <dt><a href="api/testresult.html#testbase.testresult.TestResultCollection.passed">(testbase.testresult.TestResultCollection 属性)</a>
+  </dt>
+
+      </dl></dd>
+      
+  <dt><a href="api/project.html#testbase.project.TestProject.path">path (testbase.project.TestProject 属性)</a>
+  </dt>
+
+      
+  <dt><a href="api/testcase.html#testbase.testcase.TestCase.post_test">post_test() (testbase.testcase.TestCase 方法)</a>
+  </dt>
+
+      
+  <dt><a href="api/testcase.html#testbase.testcase.TestCase.postTest">postTest() (testbase.testcase.TestCase 方法)</a>
+  </dt>
+
+  </dl></td>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="api/testcase.html#testbase.testcase.TestCase.pre_test">pre_test() (testbase.testcase.TestCase 方法)</a>
+  </dt>
+
+      
+  <dt><a href="api/testcase.html#testbase.testcase.TestCase.preTest">preTest() (testbase.testcase.TestCase 方法)</a>
+  </dt>
+
+      
+  <dt><a href="api/management.html#testbase.management.ArgumentParser.print_help">print_help() (testbase.management.ArgumentParser 方法)</a>
+  </dt>
+
+      
+  <dt><a href="api/report.html#testbase.report.Product">Product (testbase.report 中的类)</a>
+  </dt>
+
+  </dl></td>
+</tr></table>
+
+<h2 id="Q">Q</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="api/project.html#testbase.project.TestProject.qtaf_version">qtaf_version (testbase.project.TestProject 属性)</a>
+  </dt>
+
+  </dl></td>
+</tr></table>
+
+<h2 id="R">R</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="api/runner.html#testbase.runner.TestWorker.recv_message">recv_message() (testbase.runner.TestWorker 方法)</a>
+  </dt>
+
+      
+  <dt><a href="api/resource.html#testbase.resource.RemoteProcessMachine">RemoteProcessMachine (testbase.resource 中的类)</a>
+  </dt>
+
+      
+  <dt><a href="api/logger.html#testbase.logger.removeHandler">removeHandler() (在 testbase.logger 模块中)</a>
+  </dt>
+
+      
+  <dt><a href="api/testcase.html#testbase.testcase.RepeatTestCaseRunner">RepeatTestCaseRunner (testbase.testcase 中的类)</a>
+  </dt>
+
+      
+  <dt><a href="api/runner.html#testbase.runner.BaseTestRunner.report">report (testbase.runner.BaseTestRunner 属性)</a>
+  </dt>
+
+      
+  <dt><a href="api/resource.html#testbase.resource.RemoteProcessMachine.request">request() (testbase.resource.RemoteProcessMachine 静态方法)</a>
+  </dt>
+
+      
+  <dt><a href="api/resource.html#testbase.resource.ResourceError">ResourceError</a>
+  </dt>
+
+      
+  <dt><a href="api/runner.html#testbase.runner.TestWorker.restart">restart() (testbase.runner.TestWorker 方法)</a>
+  </dt>
+
+  </dl></td>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="api/util.html#testbase.util.Timeout.retry">retry() (testbase.util.Timeout 方法)</a>
+  </dt>
+
+      
+  <dt><a href="api/management.html#testbase.management.ManagementTools.run">run() (testbase.management.ManagementTools 方法)</a>
+  </dt>
+
+      <dd><dl>
+        
+  <dt><a href="api/runner.html#testbase.runner.BaseTestRunner.run">(testbase.runner.BaseTestRunner 方法)</a>
+  </dt>
+
+        
+  <dt><a href="api/testcase.html#testbase.testcase.ITestCaseRunner.run">(testbase.testcase.ITestCaseRunner 方法)</a>
+  </dt>
+
+        
+  <dt><a href="api/testcase.html#testbase.testcase.RepeatTestCaseRunner.run">(testbase.testcase.RepeatTestCaseRunner 方法)</a>
+  </dt>
+
+        
+  <dt><a href="api/testcase.html#testbase.testcase.SeqTestCaseRunner.run">(testbase.testcase.SeqTestCaseRunner 方法)</a>
+  </dt>
+
+        
+  <dt><a href="api/testcase.html#testbase.testcase.TestCase.run">(testbase.testcase.TestCase 方法)</a>
+  </dt>
+
+        
+  <dt><a href="api/testcase.html#testbase.testcase.TestCaseRunner.run">(testbase.testcase.TestCaseRunner 方法)</a>
+  </dt>
+
+      </dl></dd>
+      
+  <dt><a href="api/runner.html#testbase.runner.BaseTestRunner.run_all_tests">run_all_tests() (testbase.runner.BaseTestRunner 方法)</a>
+  </dt>
+
+      <dd><dl>
+        
+  <dt><a href="api/runner.html#testbase.runner.MultiProcessTestRunner.run_all_tests">(testbase.runner.MultiProcessTestRunner 方法)</a>
+  </dt>
+
+        
+  <dt><a href="api/runner.html#testbase.runner.TestRunner.run_all_tests">(testbase.runner.TestRunner 方法)</a>
+  </dt>
+
+        
+  <dt><a href="api/runner.html#testbase.runner.ThreadingTestRunner.run_all_tests">(testbase.runner.ThreadingTestRunner 方法)</a>
+  </dt>
+
+      </dl></dd>
+      
+  <dt><a href="api/runner.html#testbase.runner.BaseTestRunner.run_test">run_test() (testbase.runner.BaseTestRunner 方法)</a>
+  </dt>
+
+      <dd><dl>
+        
+  <dt><a href="api/testcase.html#testbase.testcase.TestCase.run_test">(testbase.testcase.TestCase 方法)</a>
+  </dt>
+
+      </dl></dd>
+      
+  <dt><a href="api/runner.html#testbase.runner.TestWorker.run_testcase">run_testcase() (testbase.runner.TestWorker 方法)</a>
+  </dt>
+
+      
+  <dt><a href="api/management.html#testbase.management.RunScript">RunScript (testbase.management 中的类)</a>
+  </dt>
+
+      
+  <dt><a href="api/management.html#testbase.management.RunTest">RunTest (testbase.management 中的类)</a>
+  </dt>
+
+      
+  <dt><a href="api/testcase.html#testbase.testcase.TestCase.runTest">runTest() (testbase.testcase.TestCase 方法)</a>
+  </dt>
+
+  </dl></td>
+</tr></table>
+
+<h2 id="S">S</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="api/runner.html#testbase.runner.TestWorker.send_message">send_message() (testbase.runner.TestWorker 方法)</a>
+  </dt>
+
+      
+  <dt><a href="api/testcase.html#testbase.testcase.SeqTestCaseRunner">SeqTestCaseRunner (testbase.testcase 中的类)</a>
+  </dt>
+
+      
+  <dt><a href="api/testcase.html#testbase.testcase.SeqTestSuite">SeqTestSuite (testbase.testcase 中的类)</a>
+  </dt>
+
+      
+  <dt><a href="api/conf.html#testbase.conf.Settings">Settings (testbase.conf 中的类)</a>
+  </dt>
+
+      
+  <dt><a href="api/testcase.html#testbase.testcase.TestCaseRunner.setup">setup() (testbase.testcase.TestCaseRunner 方法)</a>
+  </dt>
+
+      
+  <dt><a href="api/util.html#testbase.util.Singleton">Singleton (testbase.util 中的类)</a>
+  </dt>
+
+      
+  <dt><a href="api/runner.html#testbase.runner.TestWorker.start">start() (testbase.runner.TestWorker 方法)</a>
+  </dt>
+
+      
+  <dt><a href="api/testcase.html#testbase.testcase.TestCase.start_step">start_step() (testbase.testcase.TestCase 方法)</a>
+  </dt>
+
+  </dl></td>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="api/testcase.html#testbase.testcase.TestCase.startStep">startStep() (testbase.testcase.TestCase 方法)</a>
+  </dt>
+
+      
+  <dt><a href="api/runner.html#testbase.runner.TestWorker.stop">stop() (testbase.runner.TestWorker 方法)</a>
+  </dt>
+
+      
+  <dt><a href="api/report.html#testbase.report.OnlineTestReport.storage">storage (testbase.report.OnlineTestReport 属性)</a>
+  </dt>
+
+      <dd><dl>
+        
+  <dt><a href="api/testresult.html#testbase.testresult.OnlineResult.storage">(testbase.testresult.OnlineResult 属性)</a>
+  </dt>
+
+      </dl></dd>
+      
+  <dt><a href="api/testresult.html#testbase.testresult.StreamResult">StreamResult (testbase.testresult 中的类)</a>
+  </dt>
+
+      
+  <dt><a href="api/report.html#testbase.report.StreamTestReport">StreamTestReport (testbase.report 中的类)</a>
+  </dt>
+
+      
+  <dt><a href="api/report.html#testbase.report.StreamTestResultFactory">StreamTestResultFactory (testbase.report 中的类)</a>
+  </dt>
+
+      
+  <dt><a href="api/testcase.html#testbase.testcase.TestSuite.suite_class_name">suite_class_name (testbase.testcase.TestSuite 属性)</a>
+  </dt>
+
+  </dl></td>
+</tr></table>
+
+<h2 id="T">T</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="api/testcase.html#testbase.testcase.TestCaseRunner.teardown">teardown() (testbase.testcase.TestCaseRunner 方法)</a>
+  </dt>
+
+      
+  <dt><a href="api/testcase.html#testbase.testcase.SeqTestSuite.test_class_name">test_class_name (testbase.testcase.SeqTestSuite 属性)</a>
+  </dt>
+
+      <dd><dl>
+        
+  <dt><a href="api/testcase.html#testbase.testcase.TestCase.test_class_name">(testbase.testcase.TestCase 属性)</a>
+  </dt>
+
+      </dl></dd>
+      
+  <dt><a href="api/testcase.html#testbase.testcase.TestCase.test_dir">test_dir (testbase.testcase.TestCase 属性)</a>
+  </dt>
+
+      
+  <dt><a href="api/testcase.html#testbase.testcase.SeqTestSuite.test_doc">test_doc (testbase.testcase.SeqTestSuite 属性)</a>
+  </dt>
+
+      <dd><dl>
+        
+  <dt><a href="api/testcase.html#testbase.testcase.TestCase.test_doc">(testbase.testcase.TestCase 属性)</a>
+  </dt>
+
+      </dl></dd>
+      
+  <dt><a href="api/testcase.html#testbase.testcase.SeqTestSuite.test_name">test_name (testbase.testcase.SeqTestSuite 属性)</a>
+  </dt>
+
+      <dd><dl>
+        
+  <dt><a href="api/testcase.html#testbase.testcase.TestCase.test_name">(testbase.testcase.TestCase 属性)</a>
+  </dt>
+
+      </dl></dd>
+      
+  <dt><a href="api/testcase.html#testbase.testcase.TestCase.test_result">test_result (testbase.testcase.TestCase 属性)</a>
+  </dt>
+
+      
+  <dt><a href="api/conf.html#module-testbase.conf">testbase.conf (模块)</a>
+  </dt>
+
+      
+  <dt><a href="api/context.html#module-testbase.context">testbase.context (模块)</a>
+  </dt>
+
+      
+  <dt><a href="api/datadrive.html#module-testbase.datadrive">testbase.datadrive (模块)</a>
+  </dt>
+
+      
+  <dt><a href="api/exlib.html#module-testbase.exlib">testbase.exlib (模块)</a>
+  </dt>
+
+      
+  <dt><a href="api/loader.html#module-testbase.loader">testbase.loader (模块)</a>
+  </dt>
+
+      
+  <dt><a href="api/logger.html#module-testbase.logger">testbase.logger (模块)</a>
+  </dt>
+
+      
+  <dt><a href="api/management.html#module-testbase.management">testbase.management (模块)</a>
+  </dt>
+
+      
+  <dt><a href="api/project.html#module-testbase.project">testbase.project (模块)</a>
+  </dt>
+
+      
+  <dt><a href="api/report.html#module-testbase.report">testbase.report (模块)</a>
+  </dt>
+
+      
+  <dt><a href="api/resource.html#module-testbase.resource">testbase.resource (模块)</a>
+  </dt>
+
+      
+  <dt><a href="api/runner.html#module-testbase.runner">testbase.runner (模块)</a>
+  </dt>
+
+      
+  <dt><a href="api/serialization.html#module-testbase.serialization">testbase.serialization (模块)</a>
+  </dt>
+
+      
+  <dt><a href="api/testcase.html#module-testbase.testcase">testbase.testcase (模块)</a>
+  </dt>
+
+      
+  <dt><a href="api/testresult.html#module-testbase.testresult">testbase.testresult (模块)</a>
+  </dt>
+
+      
+  <dt><a href="api/util.html#module-testbase.util">testbase.util (模块)</a>
+  </dt>
+
+      
+  <dt><a href="api/testcase.html#testbase.testcase.TestCase">TestCase (testbase.testcase 中的类)</a>
+  </dt>
+
+      
+  <dt><a href="api/testresult.html#testbase.testresult.TestResultBase.testcase">testcase (testbase.testresult.TestResultBase 属性)</a>
+  </dt>
+
+      
+  <dt><a href="api/testcase.html#testbase.testcase.TestCase.EnumPriority">TestCase.EnumPriority (testbase.testcase 中的类)</a>
+  </dt>
+
+      
+  <dt><a href="api/testcase.html#testbase.testcase.TestCase.EnumStatus">TestCase.EnumStatus (testbase.testcase 中的类)</a>
+  </dt>
+
+      
+  <dt><a href="api/testcase.html#testbase.testcase.TestCasePriority">TestCasePriority (testbase.testcase 中的类)</a>
+  </dt>
+
+      
+  <dt><a href="api/testcase.html#testbase.testcase.TestCaseRunner">TestCaseRunner (testbase.testcase 中的类)</a>
+  </dt>
+
+  </dl></td>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="api/runner.html#testbase.runner.TestCaseSettings">TestCaseSettings (testbase.runner 中的类)</a>
+  </dt>
+
+      
+  <dt><a href="api/testcase.html#testbase.testcase.TestCaseStatus">TestCaseStatus (testbase.testcase 中的类)</a>
+  </dt>
+
+      
+  <dt><a href="api/testcase.html#testbase.testcase.TestCase.TestClassName">TestClassName (testbase.testcase.TestCase 属性)</a>
+  </dt>
+
+      
+  <dt><a href="api/loader.html#testbase.loader.TestDataLoader">TestDataLoader (testbase.loader 中的类)</a>
+  </dt>
+
+      
+  <dt><a href="api/testcase.html#testbase.testcase.TestCase.TestDoc">TestDoc (testbase.testcase.TestCase 属性)</a>
+  </dt>
+
+      
+  <dt><a href="api/loader.html#testbase.loader.TestLoader">TestLoader (testbase.loader 中的类)</a>
+  </dt>
+
+      
+  <dt><a href="api/testcase.html#testbase.testcase.TestCase.TestName">TestName (testbase.testcase.TestCase 属性)</a>
+  </dt>
+
+      
+  <dt><a href="api/project.html#testbase.project.TestProject">TestProject (testbase.project 中的类)</a>
+  </dt>
+
+      
+  <dt><a href="api/runner.html#testbase.runner.TestReportProxy">TestReportProxy (testbase.runner 中的类)</a>
+  </dt>
+
+      
+  <dt><a href="api/testresult.html#testbase.testresult.TestResultBase">TestResultBase (testbase.testresult 中的类)</a>
+  </dt>
+
+      
+  <dt><a href="api/logger.html#testbase.logger.TestResultBridge">TestResultBridge (testbase.logger 中的类)</a>
+  </dt>
+
+      
+  <dt><a href="api/testresult.html#testbase.testresult.TestResultCollection">TestResultCollection (testbase.testresult 中的类)</a>
+  </dt>
+
+      
+  <dt><a href="api/runner.html#testbase.runner.TestResultFunctionProxy">TestResultFunctionProxy (testbase.runner 中的类)</a>
+  </dt>
+
+      
+  <dt><a href="api/runner.html#testbase.runner.TestResultProxy">TestResultProxy (testbase.runner 中的类)</a>
+  </dt>
+
+      
+  <dt><a href="api/runner.html#testbase.runner.TestResultStubManager">TestResultStubManager (testbase.runner 中的类)</a>
+  </dt>
+
+      
+  <dt><a href="api/runner.html#testbase.runner.TestRunner">TestRunner (testbase.runner 中的类)</a>
+  </dt>
+
+      
+  <dt><a href="api/testcase.html#testbase.testcase.TestSuite">TestSuite (testbase.testcase 中的类)</a>
+  </dt>
+
+      
+  <dt><a href="api/runner.html#testbase.runner.TestWorker">TestWorker (testbase.runner 中的类)</a>
+  </dt>
+
+      
+  <dt><a href="api/report.html#testbase.report.TFSStorage">TFSStorage (testbase.report 中的类)</a>
+  </dt>
+
+      
+  <dt><a href="api/util.html#testbase.util.ThreadGroupLocal">ThreadGroupLocal (testbase.util 中的类)</a>
+  </dt>
+
+      
+  <dt><a href="api/util.html#testbase.util.ThreadGroupScope">ThreadGroupScope (testbase.util 中的类)</a>
+  </dt>
+
+      
+  <dt><a href="api/runner.html#testbase.runner.ThreadingTestRunner">ThreadingTestRunner (testbase.runner 中的类)</a>
+  </dt>
+
+      
+  <dt><a href="api/runner.html#testbase.runner.ThreadSafetyReport">ThreadSafetyReport (testbase.runner 中的类)</a>
+  </dt>
+
+      
+  <dt><a href="api/util.html#testbase.util.Timeout">Timeout (testbase.util 中的类)</a>
+  </dt>
+
+      
+  <dt><a href="api/util.html#testbase.util.TimeoutError">TimeoutError</a>
+  </dt>
+
+      
+  <dt><a href="api/testresult.html#testbase.testresult.XmlResult.toxml">toxml() (testbase.testresult.XmlResult 方法)</a>
+  </dt>
+
+  </dl></td>
+</tr></table>
+
+<h2 id="U">U</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="api/project.html#testbase.project.TestProject.upgrate_qtaf">upgrate_qtaf() (testbase.project.TestProject 方法)</a>
+  </dt>
+
+      
+  <dt><a href="api/report.html#testbase.report.CFSStorage.upload">upload() (testbase.report.CFSStorage 方法)</a>
+  </dt>
+
+      <dd><dl>
+        
+  <dt><a href="api/report.html#testbase.report.NFStorage.upload">(testbase.report.NFStorage 方法)</a>
+  </dt>
+
+        
+  <dt><a href="api/report.html#testbase.report.TFSStorage.upload">(testbase.report.TFSStorage 方法)</a>
+  </dt>
+
+      </dl></dd>
+  </dl></td>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="api/report.html#testbase.report.CFSStorage.url">url (testbase.report.CFSStorage 属性)</a>
+  </dt>
+
+      <dd><dl>
+        
+  <dt><a href="api/report.html#testbase.report.NFStorage.url">(testbase.report.NFStorage 属性)</a>
+  </dt>
+
+        
+  <dt><a href="api/report.html#testbase.report.OnlineTestReport.url">(testbase.report.OnlineTestReport 属性)</a>
+  </dt>
+
+        
+  <dt><a href="api/report.html#testbase.report.TFSStorage.url">(testbase.report.TFSStorage 属性)</a>
+  </dt>
+
+      </dl></dd>
+  </dl></td>
+</tr></table>
+
+<h2 id="W">W</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="api/testcase.html#testbase.testcase.TestCase.wait_for_equal">wait_for_equal() (testbase.testcase.TestCase 方法)</a>
+  </dt>
+
+      
+  <dt><a href="api/testcase.html#testbase.testcase.TestCase.wait_for_match">wait_for_match() (testbase.testcase.TestCase 方法)</a>
+  </dt>
+
+      
+  <dt><a href="api/testcase.html#testbase.testcase.TestCase.waitForEqual">waitForEqual() (testbase.testcase.TestCase 方法)</a>
+  </dt>
+
+      
+  <dt><a href="api/testcase.html#testbase.testcase.TestCase.waitForMatch">waitForMatch() (testbase.testcase.TestCase 方法)</a>
+  </dt>
+
+  </dl></td>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="api/util.html#testbase.util.Timeout.waitObjectProperty">waitObjectProperty() (testbase.util.Timeout 方法)</a>
+  </dt>
+
+      
+  <dt><a href="api/logger.html#testbase.logger.warn">warn() (在 testbase.logger 模块中)</a>
+  </dt>
+
+      
+  <dt><a href="api/report.html#testbase.report.ITestReport.warning">warning() (testbase.report.ITestReport 方法)</a>
+  </dt>
+
+      <dd><dl>
+        
+  <dt><a href="api/testresult.html#testbase.testresult.TestResultBase.warning">(testbase.testresult.TestResultBase 方法)</a>
+  </dt>
+
+        
+  <dt><a href="api/logger.html#testbase.logger.warning">(在 testbase.logger 模块中)</a>
+  </dt>
+
+      </dl></dd>
+  </dl></td>
+</tr></table>
+
+<h2 id="X">X</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="api/testresult.html#testbase.testresult.XmlResult">XmlResult (testbase.testresult 中的类)</a>
+  </dt>
+
+      
+  <dt><a href="api/report.html#testbase.report.XMLTestReport">XMLTestReport (testbase.report 中的类)</a>
+  </dt>
+
+  </dl></td>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="api/report.html#testbase.report.XMLTestResultFactory">XMLTestResultFactory (testbase.report 中的类)</a>
+  </dt>
+
+  </dl></td>
+</tr></table>
+
+
+
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; 版权所有 2016, QTA.
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'5.0.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="_static/translations.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

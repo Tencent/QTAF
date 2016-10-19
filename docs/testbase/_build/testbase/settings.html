@@ -1,0 +1,388 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>配置测试项目 &mdash; Testbase 5.0.0 文档</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="Testbase 5.0.0 文档" href="index.html"/>
+        <link rel="next" title="接口文档" href="apiref.html"/>
+        <link rel="prev" title="执行测试" href="testrun.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        
+
+        
+          <a href="index.html" class="icon icon-home"> Testbase
+        
+
+        
+        </a>
+
+        
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+        
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+          
+          
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="setup.html">使用前准备</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="setup.html#python">安装Python和相关工具</a></li>
+<li class="toctree-l2"><a class="reference internal" href="setup.html#qtaf">获取QTAF包</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="project.html">创建和修改测试项目</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="project.html#id2">创建测试项目</a></li>
+<li class="toctree-l2"><a class="reference internal" href="project.html#eclipse">导入测试项目到Eclipse</a></li>
+<li class="toctree-l2"><a class="reference internal" href="project.html#id3">测试项目结构</a></li>
+<li class="toctree-l2"><a class="reference internal" href="project.html#qtaf">升级QTAF</a></li>
+<li class="toctree-l2"><a class="reference internal" href="project.html#egg">安装依赖的Egg</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="testcase.html">设计测试用例</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="testcase.html#id2">最简单的测试用例</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testcase.html#id3">调试执行</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testcase.html#id4">测试断言</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testcase.html#id5">忙等待检查</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testcase.html#id6">测试执行控制</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testcase.html#id7">测试环境初始化和清理</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="testcaserun.html">执行测试用例</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="testcaserun.html#id2">重复执行</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testcaserun.html#id3">控制执行顺序</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testcaserun.html#id4">自定义执行方式</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="testresult.html">处理测试结果</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="testresult.html#id2">测试通过与不通过</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testresult.html#id3">测试日志</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testresult.html#id4">测试结果对象</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testresult.html#id5">测试日志的级别</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testresult.html#id6">异常时日志</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="testmgr.html">管理测试用例</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="testmgr.html#id2">组织形式</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testmgr.html#id3">加载测试用例</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testmgr.html#id4">处理加载失败</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="datadrive.html">数据驱动测试</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="datadrive.html#id2">数据驱动测试用例</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datadrive.html#id3">测试数据</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="datadrive.html#list">list类型测试数据</a></li>
+<li class="toctree-l3"><a class="reference internal" href="datadrive.html#dict">dict类型测试数据</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="datadrive.html#id4">管理数据驱动测试用例</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datadrive.html#id5">调试数据驱动测试用例</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datadrive.html#id6">全局数据驱动测试</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="testrun.html">执行测试</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="testrun.html#id2">批量执行测试用例</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testrun.html#id3">指定测试报告类型</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testrun.html#id4">并发执行</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testrun.html#id5">指定测试用例</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testrun.html#id6">自定义测试执行</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">配置测试项目</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#id2">配置语法</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id3">配置文件路径</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id4">使用测试配置</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id5">增加配置项</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="apiref.html">接口文档</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/conf.html"><code class="docutils literal"><span class="pre">testbase.conf</span></code> Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/context.html"><code class="docutils literal"><span class="pre">testbase.context</span></code> Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/datadrive.html"><code class="docutils literal"><span class="pre">testbase.datadrive</span></code> Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/exlib.html"><code class="docutils literal"><span class="pre">testbase.exlib</span></code> Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/loader.html"><code class="docutils literal"><span class="pre">testbase.loader</span></code> Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/logger.html"><code class="docutils literal"><span class="pre">testbase.logger</span></code> Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/management.html"><code class="docutils literal"><span class="pre">testbase.management</span></code> Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/project.html"><code class="docutils literal"><span class="pre">testbase.project</span></code> Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/report.html"><code class="docutils literal"><span class="pre">testbase.report</span></code> Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/resource.html"><code class="docutils literal"><span class="pre">testbase.resource</span></code> Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/runner.html"><code class="docutils literal"><span class="pre">testbase.runner</span></code> Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/serialization.html"><code class="docutils literal"><span class="pre">testbase.serialization</span></code> Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/testcase.html"><code class="docutils literal"><span class="pre">testbase.testcase</span></code> Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/testresult.html"><code class="docutils literal"><span class="pre">testbase.testresult</span></code> Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/util.html"><code class="docutils literal"><span class="pre">testbase.util</span></code> Package</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="settingslist.html">配置项说明文档</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="settingslist.html#debug">DEBUG</a></li>
+<li class="toctree-l2"><a class="reference internal" href="settingslist.html#data-drive">DATA_DRIVE</a></li>
+<li class="toctree-l2"><a class="reference internal" href="settingslist.html#data-srouce">DATA_SROUCE</a></li>
+</ul>
+</li>
+</ul>
+
+          
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">Testbase</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+    <li>配置测试项目</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/settings.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document">
+            
+  <div class="section" id="id1">
+<h1>配置测试项目<a class="headerlink" href="#id1" title="永久链接至标题">¶</a></h1>
+<p>本节主要介绍如何修改测试项目的配置文件 settings.py来修改测试框架的行为。如果需要查询QTA框架的全部配置项，请参考《<a class="reference internal" href="settingslist.html"><em>配置项说明文档</em></a>》。</p>
+<div class="section" id="id2">
+<h2>配置语法<a class="headerlink" href="#id2" title="永久链接至标题">¶</a></h2>
+<p>测试项目的配置文件是一个python模块，所以配置项都是python模块的模块变量，如下所示:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">DEBUG</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="n">RUNNER_THREAD_COUNT</span> <span class="o">=</span> <span class="mi">5</span>
+<span class="n">LOCAL_REPORT</span> <span class="o">=</span> <span class="s">&#39;console&#39;</span>
+</pre></div>
+</div>
+<p>由于使用的是python模块表示，因此需要符合以下要求：</p>
+<blockquote>
+<div><ul class="simple">
+<li>需要符合python语法要求</li>
+</ul>
+</div></blockquote>
+<p>除此之外，对于配置项还需要符合以下要求：</p>
+<blockquote>
+<div><ul class="simple">
+<li>配置变量名必须使用大写</li>
+<li>配置变量名不可以双下划线开头</li>
+</ul>
+</div></blockquote>
+<p>比如下面的变量都是非法的:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">lower_test</span> <span class="o">=</span> <span class="mi">34</span>
+<span class="n">__CONFIG</span> <span class="o">=</span> <span class="s">&quot;XXX&quot;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="id3">
+<h2>配置文件路径<a class="headerlink" href="#id3" title="永久链接至标题">¶</a></h2>
+<p>QTA配置文件分为三种：</p>
+<blockquote>
+<div><ul class="simple">
+<li>用户配置文件</li>
+<li>依赖Egg包的配置文件</li>
+<li>Testbase配置文件</li>
+</ul>
+</div></blockquote>
+<div class="admonition note">
+<p class="first admonition-title">注解</p>
+<p class="last">注意依赖Egg包的配置文件只有通过“manage.py installlib”方式安装到测试项目中，其配置文件才会被加载</p>
+</div>
+<p>用户配置文件存放在测试项目的顶层位置；而QTAF配置文件打包在QTAF的egg包中，在QTAF egg包的顶层位置上；如下:</p>
+<div class="highlight-python"><div class="highlight"><pre>test_proj/
+         qt4a/
+         exlib/
+              qtaf.egg/
+                      testbase/
+                      tuia/
+                      pyqq/
+                      qtaf_settings.py # Testbase配置
+              qt4i.egg/
+                      qt4i/settings.py # 依赖Egg包的配置文件
+         mqlib/
+         mqtest/
+         settings.py # 用户配置
+</pre></div>
+</div>
+<p>当两个配置文件中的配置项存在冲突时，按照以下优先级从高到低处理:</p>
+<blockquote>
+<div><ul class="simple">
+<li>用户配置文件</li>
+<li>依赖Egg包的配置文件</li>
+<li>Testbase配置文件</li>
+</ul>
+</div></blockquote>
+<p>也就是说，用户配置文件可以重载QTAF配置中的默认配置。</p>
+</div>
+<div class="section" id="id4">
+<h2>使用测试配置<a class="headerlink" href="#id4" title="永久链接至标题">¶</a></h2>
+<p>配置使用的接口统一使用conf接口，如下:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">testbase.conf</span> <span class="kn">import</span> <span class="n">settings</span>
+<span class="k">if</span> <span class="n">settings</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">:</span>
+    <span class="k">print</span> <span class="s">&#39;debug mode&#39;</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="k">print</span> <span class="s">&#39;release mode&#39;</span>
+</pre></div>
+</div>
+<p>也可以使用get接口查询配置，比如:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">testbase.conf</span> <span class="kn">import</span> <span class="n">settings</span>
+<span class="n">my_conf</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;MY_SETTING&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="admonition warning">
+<p class="first admonition-title">警告</p>
+<p class="last">settings.py和qtaf_settings.py也是可以直接import使用的，但是不建议这样做，如果这样使用，可能会遇到非预期的结果。</p>
+</div>
+<p>注意settings配置不允许动态修改配置的值，如:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">settings</span><span class="o">.</span><span class="n">DEBUG</span> <span class="o">=</span> <span class="bp">False</span>
+</pre></div>
+</div>
+<p>会导致异常:</p>
+<div class="highlight-python"><div class="highlight"><pre>Traceback (most recent call last):
+  File &quot;D:\workspace\qtaftest\test.py&quot;, line 17, in &lt;module&gt;
+    settings.DEBUG = 9
+  File &quot;build\bdist.win32\egg\testbase\conf.py&quot;, line 85, in __setattr__
+RuntimeError: 尝试动态修改配置项&quot;DEBUG&quot;
+</pre></div>
+</div>
+</div>
+<div class="section" id="id5">
+<h2>增加配置项<a class="headerlink" href="#id5" title="永久链接至标题">¶</a></h2>
+<p>QTA对配置项的新增没有严格的限制，但是为避免冲突，最好按照以下的原则：</p>
+<blockquote>
+<div><ul class="simple">
+<li>测试项目自定义的配置，增加一个统一的前缀，比如QQ的测试项目增加前缀“<a href="#id6"><span class="problematic" id="id7">QQ_</span></a>”</li>
+<li>QTA相关组件的配置项目，除了统一增加前缀外，还需要更新到《<a class="reference internal" href="settingslist.html"><em>配置项说明文档</em></a>》</li>
+</ul>
+</div></blockquote>
+</div>
+</div>
+
+
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="apiref.html" class="btn btn-neutral float-right" title="接口文档" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="testrun.html" class="btn btn-neutral" title="执行测试" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; 版权所有 2016, QTA.
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'5.0.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="_static/translations.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

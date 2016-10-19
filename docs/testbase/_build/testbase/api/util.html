@@ -1,0 +1,486 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>testbase.util Package &mdash; Testbase 5.0.0 文档</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="Testbase 5.0.0 文档" href="../index.html"/>
+        <link rel="up" title="接口文档" href="../apiref.html"/>
+        <link rel="next" title="配置项说明文档" href="../settingslist.html"/>
+        <link rel="prev" title="testbase.testresult Package" href="testresult.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        
+
+        
+          <a href="../index.html" class="icon icon-home"> Testbase
+        
+
+        
+        </a>
+
+        
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+        
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+          
+          
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../setup.html">使用前准备</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../setup.html#python">安装Python和相关工具</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../setup.html#qtaf">获取QTAF包</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../project.html">创建和修改测试项目</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../project.html#id2">创建测试项目</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../project.html#eclipse">导入测试项目到Eclipse</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../project.html#id3">测试项目结构</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../project.html#qtaf">升级QTAF</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../project.html#egg">安装依赖的Egg</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../testcase.html">设计测试用例</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../testcase.html#id2">最简单的测试用例</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../testcase.html#id3">调试执行</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../testcase.html#id4">测试断言</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../testcase.html#id5">忙等待检查</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../testcase.html#id6">测试执行控制</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../testcase.html#id7">测试环境初始化和清理</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../testcaserun.html">执行测试用例</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../testcaserun.html#id2">重复执行</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../testcaserun.html#id3">控制执行顺序</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../testcaserun.html#id4">自定义执行方式</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../testresult.html">处理测试结果</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../testresult.html#id2">测试通过与不通过</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../testresult.html#id3">测试日志</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../testresult.html#id4">测试结果对象</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../testresult.html#id5">测试日志的级别</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../testresult.html#id6">异常时日志</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../testmgr.html">管理测试用例</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../testmgr.html#id2">组织形式</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../testmgr.html#id3">加载测试用例</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../testmgr.html#id4">处理加载失败</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../datadrive.html">数据驱动测试</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../datadrive.html#id2">数据驱动测试用例</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../datadrive.html#id3">测试数据</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../datadrive.html#list">list类型测试数据</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../datadrive.html#dict">dict类型测试数据</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../datadrive.html#id4">管理数据驱动测试用例</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../datadrive.html#id5">调试数据驱动测试用例</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../datadrive.html#id6">全局数据驱动测试</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../testrun.html">执行测试</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../testrun.html#id2">批量执行测试用例</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../testrun.html#id3">指定测试报告类型</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../testrun.html#id4">并发执行</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../testrun.html#id5">指定测试用例</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../testrun.html#id6">自定义测试执行</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../settings.html">配置测试项目</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../settings.html#id2">配置语法</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../settings.html#id3">配置文件路径</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../settings.html#id4">使用测试配置</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../settings.html#id5">增加配置项</a></li>
+</ul>
+</li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../apiref.html">接口文档</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="conf.html"><code class="docutils literal"><span class="pre">testbase.conf</span></code> Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="context.html"><code class="docutils literal"><span class="pre">testbase.context</span></code> Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datadrive.html"><code class="docutils literal"><span class="pre">testbase.datadrive</span></code> Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="exlib.html"><code class="docutils literal"><span class="pre">testbase.exlib</span></code> Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="loader.html"><code class="docutils literal"><span class="pre">testbase.loader</span></code> Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="logger.html"><code class="docutils literal"><span class="pre">testbase.logger</span></code> Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="management.html"><code class="docutils literal"><span class="pre">testbase.management</span></code> Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="project.html"><code class="docutils literal"><span class="pre">testbase.project</span></code> Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="report.html"><code class="docutils literal"><span class="pre">testbase.report</span></code> Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="resource.html"><code class="docutils literal"><span class="pre">testbase.resource</span></code> Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="runner.html"><code class="docutils literal"><span class="pre">testbase.runner</span></code> Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="serialization.html"><code class="docutils literal"><span class="pre">testbase.serialization</span></code> Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testcase.html"><code class="docutils literal"><span class="pre">testbase.testcase</span></code> Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testresult.html"><code class="docutils literal"><span class="pre">testbase.testresult</span></code> Package</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href=""><code class="docutils literal"><span class="pre">testbase.util</span></code> Package</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../settingslist.html">配置项说明文档</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../settingslist.html#debug">DEBUG</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../settingslist.html#data-drive">DATA_DRIVE</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../settingslist.html#data-srouce">DATA_SROUCE</a></li>
+</ul>
+</li>
+</ul>
+
+          
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">Testbase</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../apiref.html">接口文档</a> &raquo;</li>
+      
+    <li><code class="docutils literal"><span class="pre">testbase.util</span></code> Package</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/api/util.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document">
+            
+  <div class="section" id="module-testbase.util">
+<span id="testbase-util-package"></span><h1><a class="reference internal" href="#module-testbase.util" title="testbase.util"><code class="xref py py-mod docutils literal"><span class="pre">testbase.util</span></code></a> Package<a class="headerlink" href="#module-testbase.util" title="永久链接至标题">¶</a></h1>
+<p>共用类模块</p>
+<dl class="class">
+<dt id="testbase.util.EggArchive">
+<em class="property">class </em><code class="descclassname">testbase.util.</code><code class="descname">EggArchive</code><span class="sig-paren">(</span><em>egg_path</em><span class="sig-paren">)</span><a class="headerlink" href="#testbase.util.EggArchive" title="永久链接至目标">¶</a></dt>
+<dd><p>基类：<code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>Egg包</p>
+<dl class="method">
+<dt id="testbase.util.EggArchive.get">
+<code class="descname">get</code><span class="sig-paren">(</span><em>relpath</em><span class="sig-paren">)</span><a class="headerlink" href="#testbase.util.EggArchive.get" title="永久链接至目标">¶</a></dt>
+<dd><p>提取文件</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="testbase.util.ForbidOverloadMethods">
+<code class="descclassname">testbase.util.</code><code class="descname">ForbidOverloadMethods</code><span class="sig-paren">(</span><em>func_name_list</em><span class="sig-paren">)</span><a class="headerlink" href="#testbase.util.ForbidOverloadMethods" title="永久链接至目标">¶</a></dt>
+<dd><p>生成metaclass用于指定基类禁止子类重载函数</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="testbase.util.LazyInit">
+<em class="property">class </em><code class="descclassname">testbase.util.</code><code class="descname">LazyInit</code><span class="sig-paren">(</span><em>obj</em>, <em>propname</em>, <em>init_func</em><span class="sig-paren">)</span><a class="headerlink" href="#testbase.util.LazyInit" title="永久链接至目标">¶</a></dt>
+<dd><p>基类：<code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>实现延迟初始化</p>
+<p>使用方式示例:</p>
+<div class="highlight-python"><div class="highlight"><pre>class _Win32Window(object)
+    def click(self):
+        #......
+class Control(object):
+    def __init__(self, locator):
+        self._locator = locator
+        self._initobj = LazyInit(self, &#39;_initobj&#39;, self._init_window)
+    def _init_window(self):
+        return _Win32Window(self._locator)
+    def click(self):
+        return self._initobj.click()
+        
+ctrl = Control(&quot;/Name=xxx)
+ctrl.click()  # &lt;-- call _init_window
+ctrl.click()
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="testbase.util.Singleton">
+<em class="property">class </em><code class="descclassname">testbase.util.</code><code class="descname">Singleton</code><span class="sig-paren">(</span><em>name</em>, <em>bases</em>, <em>dic</em><span class="sig-paren">)</span><a class="headerlink" href="#testbase.util.Singleton" title="永久链接至目标">¶</a></dt>
+<dd><p>基类：<code class="xref py py-class docutils literal"><span class="pre">type</span></code></p>
+<p>单实例元类，用于某个类需要实现单例模式。
+使用方式示例如下:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">MyClass</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="n">__metaclass__</span> <span class="o">=</span> <span class="n">Singleton</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">pass</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="testbase.util.ThreadGroupLocal">
+<em class="property">class </em><code class="descclassname">testbase.util.</code><code class="descname">ThreadGroupLocal</code><a class="headerlink" href="#testbase.util.ThreadGroupLocal" title="永久链接至目标">¶</a></dt>
+<dd><p>基类：<code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>使用线程组本地存储的元类</p>
+<ul class="simple">
+<li>当配合ThreadGroupScope使用，类似threading.local()提供的TLS变种，一个线程和其子孙线程共享一个存储</li>
+</ul>
+<p>详细使用方式请参考ThreadGroupScope类</p>
+<ul class="simple">
+<li>当不在ThreadGroupScope中使用时，行为和threading.local()一致</li>
+</ul>
+</dd></dl>
+
+<dl class="class">
+<dt id="testbase.util.ThreadGroupScope">
+<em class="property">class </em><code class="descclassname">testbase.util.</code><code class="descname">ThreadGroupScope</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span><a class="headerlink" href="#testbase.util.ThreadGroupScope" title="永久链接至目标">¶</a></dt>
+<dd><p>基类：<code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>指定线程组作用域，进入这个作用域的线程，以及在其作用域内创建的线程都同属于一个线程组</p>
+<p>使用示例如下:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">_thread_proc</span><span class="p">():</span>
+    <span class="n">ThreadGroupLocal</span><span class="p">()</span><span class="o">.</span><span class="n">counter</span> <span class="o">+=</span><span class="mi">1</span>
+    
+<span class="k">with</span> <span class="n">ThreadGroupScope</span><span class="p">(</span><span class="s">&quot;test_group&quot;</span><span class="p">):</span>
+    <span class="n">ThreadGroupLocal</span><span class="p">()</span><span class="o">.</span><span class="n">counter</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">t</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">_thread_proc</span><span class="p">)</span>
+    <span class="n">t</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+    <span class="n">t</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
+    <span class="n">t</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">_thread_proc</span><span class="p">)</span>
+    <span class="n">t</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+    <span class="n">t</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
+    <span class="k">assert</span> <span class="n">ThreadGroupLocal</span><span class="p">()</span><span class="o">.</span><span class="n">counter</span> <span class="o">==</span> <span class="mi">2</span>
+</pre></div>
+</div>
+<dl class="staticmethod">
+<dt id="testbase.util.ThreadGroupScope.current_scope">
+<em class="property">static </em><code class="descname">current_scope</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#testbase.util.ThreadGroupScope.current_scope" title="永久链接至目标">¶</a></dt>
+<dd><p>返回当前线程所在的线程组作用域，如果不存在于任务线程组作用域，则返回None</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="testbase.util.Timeout">
+<em class="property">class </em><code class="descclassname">testbase.util.</code><code class="descname">Timeout</code><span class="sig-paren">(</span><em>timeout=10</em>, <em>interval=0.5</em><span class="sig-paren">)</span><a class="headerlink" href="#testbase.util.Timeout" title="永久链接至目标">¶</a></dt>
+<dd><p>基类：<code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>TimeOut类，实现超时重试逻辑</p>
+<dl class="method">
+<dt id="testbase.util.Timeout.check">
+<code class="descname">check</code><span class="sig-paren">(</span><em>func</em>, <em>expect</em><span class="sig-paren">)</span><a class="headerlink" href="#testbase.util.Timeout.check" title="永久链接至目标">¶</a></dt>
+<dd><p>多次检查func的返回值是否符合expect设定的期望值，如果设定时间内满足，则返回True，否则返回False</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">参数:</th><td class="field-body"><ul class="first simple">
+<li><strong>func</strong> &#8211; 尝试调用的函数</li>
+<li><strong>expect</strong> &#8211; 设定的期望值</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">返回:</th><td class="field-body"><p class="first last">bool - 检查是否符合预期</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="testbase.util.Timeout.retry">
+<code class="descname">retry</code><span class="sig-paren">(</span><em>func</em>, <em>args</em>, <em>exceptions=()</em>, <em>resultmatcher=None</em><span class="sig-paren">)</span><a class="headerlink" href="#testbase.util.Timeout.retry" title="永久链接至目标">¶</a></dt>
+<dd><p>多次尝试调用函数，成功则并返回调用结果，超时则抛出TimeOutError异常。</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">参数:</th><td class="field-body"><ul class="first simple">
+<li><strong>func</strong> &#8211; 尝试调用的函数</li>
+<li><strong>args</strong> (<em>dict或tuple</em>) &#8211; func函数的参数</li>
+<li><strong>exceptions</strong> (<em>tuple类型，tuple元素是异常类定义，如QPathError, 而不是异常实例，如QPathError()</em>) &#8211; 调用func时抛出这些异常，则重试。
+如果是空列表(),则不捕获异常。</li>
+<li><strong>resultmatcher</strong> (<em>函数指针类型</em>) &#8211; <dl class="docutils">
+<dt>函数指针，用于验证第1个参数func的返回值。</dt>
+<dd><blockquote class="first">
+<div>默认值为None，表示不验证func的返回值，直接返回。</div></blockquote>
+<p class="last">其函数原型为:</p>
+</dd>
+<dt>def result_match(ret):  # 参数ret为func的返回值</dt>
+<dd><dl class="first last docutils">
+<dt>pass                                                                                             </dt>
+<dd>当result_match返回True时，直接返回，否则继续retry。</dd>
+</dl>
+</dd>
+</dl>
+</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">返回:</th><td class="field-body"><p class="first last">返回成功调用func的结果</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="testbase.util.Timeout.waitObjectProperty">
+<code class="descname">waitObjectProperty</code><span class="sig-paren">(</span><em>obj</em>, <em>property_name</em>, <em>waited_value</em>, <em>regularMatch=False</em><span class="sig-paren">)</span><a class="headerlink" href="#testbase.util.Timeout.waitObjectProperty" title="永久链接至目标">¶</a></dt>
+<dd><dl class="docutils">
+<dt>通过比较obj.property_name和waited_value，等待属性值出现。 </dt>
+<dd>如果属性值obj.property_name是字符类型则waited_value做为正则表达式进行比较。
+比较成功则返回，超时则抛出TimeoutError异常。</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">参数:</th><td class="field-body"><ul class="first last simple">
+<li><strong>obj</strong> &#8211; 对象</li>
+<li><strong>property_name</strong> &#8211; 要等待的obj对象的属性名</li>
+<li><strong>waited_value</strong> &#8211; 要比较的的属性值，支持多层属性</li>
+<li><strong>regularMatch</strong> &#8211; 参数 property_name和waited_value是否采用正则表达式的比较。
+默认为不采用（False）正则，而是采用恒等比较</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="exception">
+<dt id="testbase.util.TimeoutError">
+<em class="property">exception </em><code class="descclassname">testbase.util.</code><code class="descname">TimeoutError</code><a class="headerlink" href="#testbase.util.TimeoutError" title="永久链接至目标">¶</a></dt>
+<dd><p>基类：<code class="xref py py-class docutils literal"><span class="pre">exceptions.Exception</span></code></p>
+<p>超时异常</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="testbase.util.classproperty">
+<em class="property">class </em><code class="descclassname">testbase.util.</code><code class="descname">classproperty</code><span class="sig-paren">(</span><em>getter</em><span class="sig-paren">)</span><a class="headerlink" href="#testbase.util.classproperty" title="永久链接至目标">¶</a></dt>
+<dd><p>基类：<code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>类属性修饰器</p>
+</dd></dl>
+
+</div>
+
+
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../settingslist.html" class="btn btn-neutral float-right" title="配置项说明文档" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="testresult.html" class="btn btn-neutral" title="testbase.testresult Package" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; 版权所有 2016, QTA.
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'5.0.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+      <script type="text/javascript" src="../_static/translations.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>
