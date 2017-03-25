@@ -122,7 +122,7 @@ class RunTest(Command):
     parser.add_argument('-w', default=None, help="working directory to store all result files", dest="working_dir")
     parser.add_argument('-p', default=None, help="test case priorities filter, separate with '/'", dest="priorities")
     parser.add_argument('-s', default=None, help="test case status filter, separate with '/'", dest="status")
-    parser.add_argument('-o', default='stream', help="test report type, could be xml, stream or online", dest="report_type")
+    parser.add_argument('-o', default='stream', help="test report type, could be xml or stream", dest="report_type")
     parser.add_argument('-x', default='normal', help="test runner type, could be normal, threading or multiprocessing", dest="runner_type")
     parser.add_argument('-j', default=5, help="concurrency to run test case", dest="concurrency")
     parser.add_argument('-r', default=0, help="retry count while test case failed", dest="retries")
@@ -156,8 +156,8 @@ class RunTest(Command):
             report_inst = report.XMLTestReport()
         elif args.report_type == 'stream':
             report_inst = report.StreamTestReport()
-        elif args.report_type == 'online':
-            report_inst = report.OnlineTestReport("调试报告")
+        #elif args.report_type == 'online':
+        #    report_inst = report.OnlineTestReport("调试报告")
         else:
             raise ValueError("非法的报告类型:" + str(args.report_type))
         
@@ -175,8 +175,8 @@ class RunTest(Command):
         os.chdir(args.working_dir)
         runner_inst.run(test_conf)
         os.chdir(prev_dir)
-        if isinstance(report_inst, report.OnlineTestReport):
-            print report_inst.url
+        #if isinstance(report_inst, report.OnlineTestReport):
+        #    print report_inst.url
           
 class InstallLib(Command):
     '''安装扩展库
