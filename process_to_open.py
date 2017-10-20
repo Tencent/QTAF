@@ -69,7 +69,7 @@ RTX_NAME_MAP = {
 
 DELETE_FILES = [
     ("build.py",),
-    ("sync_from_svn.py",)
+    ("sync_from_svn.py",),
     ("testbase", "platform"),
     ("testbase", "_rscitf.py"),
     ("testbase", "resource.py"),
