@@ -39,8 +39,9 @@ import imp
 import qtaf_settings
 from testbase.exlib import ExLibManager
 
-
-class Settings(object):
+_DEFAULT_SETTINSG_MODULE = "settings"
+    
+class _Settings(object):
     '''配置读取接口
     '''
     def __init__(self):
@@ -51,37 +52,66 @@ class Settings(object):
     def _load(self):
         '''加载配置
         :returns: Settings - 设置读取接口
-        '''
-        top_dir=ExLibManager.find_top_dir()
+        '''    
+        #先加载一次项目配置
+        try:
+            pre_settings = self._load_proj_settings_module("testbase.conf.pre_settings")
+        except ImportError:  #非测试项目情况下使用没有项目settings.py
+            pre_settings = None
+        
+        mode = getattr(pre_settings, "PROJECT_MODE", getattr(qtaf_settings, 'PROJECT_MODE', None))
+        
+        #加载扩展库或应用配置
+        if mode == "standard": #Python标准模式
+            installed_apps = getattr(pre_settings, "INSTALLED_APPS",  getattr(qtaf_settings, 'INSTALLED_APPS', []))
+            
+        else: #独立模式
+            proj_root = self._get_standalone_project_root(pre_settings)
+            installed_apps = ExLibManager(proj_root).list_names()
             
         #优先加载QTAF设置
         self._load_setting_from_module(qtaf_settings)
         
-        #加载exlib中其他egg的配置
-        for lib_settings in self._load_libs_settings():
-            self._load_setting_from_module(lib_settings)
+        for appname in installed_apps:
+            modname = "%s.settings" % appname
+            try:
+                __import__(modname)
+            except ImportError:
+                pass
+            else:
+                self._load_setting_from_module(sys.modules[modname])
                 
         #加载用户自定义设置 
         try:
-            user_settings=os.environ.get("QTAF_SETTINGS_MODULE",None)
-            if user_settings:
-                parts=user_settings.split('.')
-                parts_temp=parts[:]
-                dir_path=None
-                while parts_temp:
-                    if dir_path:
-                        fd,dir_path,desc=imp.find_module(parts_temp[0],[dir_path])
-                    else:
-                        fd,dir_path,desc=imp.find_module(parts_temp[0])
-                    del parts_temp[0]
-            else:
-                name="settings"
-                fd, dir_path, desc = imp.find_module(name, [top_dir])
-            mod = imp.load_module("testbase.conf.settings", fd, dir_path, desc)
-            self._load_setting_from_module(mod)
-        except ImportError:
+            proj_settings = self._load_proj_settings_module("testbase.conf.settings")
+        except ImportError: #非测试项目情况下使用没有项目settings.py
             pass
-              
+        else:
+            self._load_setting_from_module(proj_settings)
+        
+        #非标准模式下需要设置项目根目录，标准模式要求项目在settings中显式设置
+        if mode != "standard":
+            self.PROJECT_ROOT = proj_root
+            self.INSTALLED_APPS = ExLibManager(proj_root).list_names()
+        
+    def _load_proj_settings_module(self, import_name ):
+        '''加载项目配置文件
+        '''
+        user_settings = os.environ.get("QTAF_SETTINGS_MODULE", None)
+        if user_settings:
+            parts = user_settings.split('.')
+            parts_temp = parts[:]
+            dir_path = None
+            while parts_temp:
+                if dir_path:
+                    fd, dir_path, desc = imp.find_module(parts_temp[0], [dir_path])
+                else:
+                    fd, dir_path, desc = imp.find_module(parts_temp[0])
+                del parts_temp[0]
+        else:
+            fd, dir_path, desc = imp.find_module(_DEFAULT_SETTINSG_MODULE)
+        return imp.load_module(import_name, fd, dir_path, desc)
+    
     def _load_setting_from_module(self, module ):
         '''从模块中加载设置
         '''
@@ -91,21 +121,36 @@ class Settings(object):
             if name.islower():
                 continue
             setattr(self, name, getattr(module,name))
-                    
-    def _load_libs_settings(self):
-        '''获取已安装的lib的配置文件
-        '''
-        mods = []
-        for libname in ExLibManager().list_names():
-                modname = '%s.settings' % libname
-                try:
-                    __import__(modname)
-                except ImportError:
-                    continue
-                else:
-                    mods.append(sys.modules[modname])
-        return mods    
 
+    def _get_standalone_project_root(self, pre_settings):
+        '''获取独立模式下的项目的根目录
+        '''
+        proj_root = getattr(pre_settings, "PROJECT_ROOT", None)
+        if proj_root:
+            return proj_root
+        if os.path.isfile(__file__): #没使用qtaf.egg包
+            pwd=os.getcwd()
+            #使用外链或拷贝文件的方式
+            dst_path=os.path.realpath(os.path.join(os.path.dirname(__file__), '..'))
+            if pwd.find(dst_path)>=0:
+                return dst_path
+            
+            #eclipse调试使用工程引用的方式
+            if not os.environ.has_key('PYTHONPATH'):
+                return pwd
+            py_paths=os.environ['PYTHONPATH']
+            paths=py_paths.split(";")
+            if len(paths)>2:
+                dst_path=paths[1]
+            if pwd.find(dst_path)>=0:
+                return dst_path
+            
+            #非预期的情况，返回当前工作目录
+            return pwd
+        else: #使用的egg包，qtaf.egg包在exlib目录中
+            qtaf_top_dir = os.path.realpath(os.path.join(os.path.dirname(__file__), '..'))
+            return os.path.realpath(os.path.join(qtaf_top_dir, '..', '..'))
+        
     def get(self, name, *default_value ):
         '''获取配置
         '''
@@ -120,14 +165,14 @@ class Settings(object):
         if not name.startswith('_Settings__') and self.__sealed:
             raise RuntimeError("尝试动态修改配置项\"%s\""%name)
         else:
-            super(Settings,self).__setattr__(name, value)
+            super(_Settings,self).__setattr__(name, value)
                 
     def __getattribute__(self, name):#加上这个是为了使pydev不显示红叉
-        return super(Settings,self).__getattribute__(name)
+        return super(_Settings,self).__getattribute__(name)
            
     def __iter__(self):
         for name in dir(self):
             if not name.startswith('__') and name.isupper():
                 yield name
                 
-settings = Settings()
+settings = _Settings()

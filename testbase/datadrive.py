@@ -75,6 +75,7 @@
 #14/10/30    eeelin       testbase重构修改，TestCase移除execute方法
 #14/10/31    eeelin       bugfix：appointRunAt会影响全部的每个数据驱动用例实例设置的数据
 #15/03/25    eeelin       重构
+#16/11/22    guyingzhao   给DataDrive增加__len__方法
 
 import types
 from testbase.testcase import TestCase
@@ -117,6 +118,9 @@ class DataDrive(object):
         '''获取对应名称的数据
         '''
         return self._case_datas[name]
+    
+    def __len__(self):
+        return len(self._case_datas)
         
 def is_datadrive( obj ):
     '''是否为数据驱动用例

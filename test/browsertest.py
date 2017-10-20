@@ -8,14 +8,13 @@ from qt4w import XPath
 
 
 def test_for_ie():
-    page = IEBrowser().open_url('https://passport.qcloud.com/')
-    print page.title
-    print page.exec_script('location.href')
+    webview = IEBrowser().open_url('https://passport.qcloud.com/')
+    print webview.exec_script('location.href')
     
     account_xpth = r'//iframe[@id="login_frame"]//input[@id="u"]'
     pwd_xpth = r'//iframe[@id="login_frame"]//input[@id="p"]'
-    page.get_element(account_xpth).inner_text = '123456'
-    page.get_element(pwd_xpth).inner_text = '123456'
+    webview.get_element(account_xpth).inner_text = '123456'
+    webview.get_element(pwd_xpth).inner_text = '123456'
 
 def test_chrome():
     import time
@@ -38,5 +37,5 @@ def test_chrome():
     print page.browser_type
     
 if __name__ == "__main__":
-#     test_for_ie()
-    test_chrome()
+    test_for_ie()
+#     test_chrome()

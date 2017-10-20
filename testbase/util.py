@@ -9,21 +9,15 @@
 import re
 import time
 import os, sys
+import traceback
 import zipfile
 import threading
-
-class TimeoutError(Exception):
-    '''超时异常
-    '''
-    pass
+from tuia.exceptions import TimeoutError
 
 
 class Timeout(object):
     '''TimeOut类，实现超时重试逻辑
     '''
-    
-    #2015/02/12 eeelin 新增check函数
-    
     def __init__(self, timeout=10, interval=0.5):
         '''Constructor
         
@@ -37,8 +31,9 @@ class Timeout(object):
         func,
         args,
         exceptions=(),
-        resultmatcher=None):
-        """多次尝试调用函数，成功则并返回调用结果，超时则抛出TimeOutError异常。
+        resultmatcher=None,
+        nothrow=False):
+        """多次尝试调用函数，成功则并返回调用结果，超时则根据选项决定抛出TimeOutError异常。
         
         :param func: 尝试调用的函数
         :type args: dict或tuple
@@ -52,12 +47,15 @@ class Timeout(object):
                                                                                其函数原型为: 
                                   def result_match(ret):  # 参数ret为func的返回值
                                       pass                                                                                             
-                                                                               当result_match返回True时，直接返回，否则继续retry。                                                
-        :returns: 返回成功调用func的结果
+                                                                               当result_match返回True时，直接返回，否则继续retry。
+        :type  nothrow:bool
+        :param nothrow:如果为True，则不抛出TimeOutError异常
+        :return: 返回成功调用func的结果
         """         
         start = time.time()
         waited = 0.0
         try_count = 0
+        ret=None
         while True:
             try:
                 try_count += 1
@@ -79,7 +77,10 @@ class Timeout(object):
             elif try_count ==1 :
                 continue
             else:
-                raise TimeoutError("在%d秒里尝试了%d次" % (self.timeout, try_count))
+                if nothrow:
+                    return ret
+                else:
+                    raise TimeoutError("在%d秒里尝试了%d次" % (self.timeout, try_count))
     
     def waitObjectProperty(self, obj, property_name, waited_value, regularMatch=False):
         '''通过比较obj.property_name和waited_value，等待属性值出现。 
@@ -117,13 +118,13 @@ class Timeout(object):
             else:
                 raise TimeoutError("对象属性值比较超时（%d秒%d次）：期望值:%s，实际值:%s，" 
                                    % (self.timeout, try_count, waited_value, propvalue))
-                
+
     def check(self, func, expect ):
         '''多次检查func的返回值是否符合expect设定的期望值，如果设定时间内满足，则返回True，否则返回False
         
         :param func: 尝试调用的函数
         :param expect: 设定的期望值
-        :returns: bool - 检查是否符合预期
+        :returns bool - 检查是否符合预期
         '''
         start = time.time()
         waited = 0.0
@@ -135,7 +136,7 @@ class Timeout(object):
                 time.sleep(min(self.interval, self.timeout - waited))
             else:
                 return False
-            
+             
         
 class Singleton(type):
     """单实例元类，用于某个类需要实现单例模式。
@@ -358,4 +359,52 @@ class classproperty(object):
     def __get__(self, instance, owner):
         return self.getter(owner)
     
+def _to_unicode( s ):
+    '''将任意字符串转换为unicode编码
+    '''
+    if not isinstance(s, (str,unicode)):
+        raise RuntimeError("data must be basestring type instead of <%s>" % s.__class__.__name__)
+    if isinstance(s,unicode):
+        return s
+    else:
+        try:
+            return s.decode('utf8')
+        except UnicodeDecodeError: # data 可能是gbk编码
+            try:
+                return s.decode('gbk')
+            except UnicodeDecodeError: # data 可能是gbk和utf8混合编码
+                return s
+            
+def _to_utf8( s ):
+    '''将任意字符串转换为UTF-8编码
+    '''
+    if not isinstance(s, (str,unicode)):
+        raise RuntimeError("data must be basestring type instead of <%s>" % s.__class__.__name__)
+    if isinstance(s,unicode):
+        return s.encode('utf8')
+    else:
+        try:
+            return s.decode('utf8').encode('utf8')
+        except UnicodeDecodeError: # data 可能是gbk编码
+            try:
+                return s.decode('gbk').encode('utf8')
+            except UnicodeDecodeError: # data 可能是gbk和utf8混合编码，原样返回
+                return s
     
+def get_thread_traceback(thread):
+    '''获取用例线程的当前的堆栈
+    
+    :param thread: 要获取堆栈的线程
+    :type thread: Thread
+    '''
+    for thread_id, stack in sys._current_frames().items():
+        if thread_id != thread.ident:
+            continue
+        tb = "Traceback ( thread-%d possibly hold at ):\n" % thread_id
+        for filename, lineno, name, line in traceback.extract_stack(stack):
+            tb += '  File: "%s", line %d, in %s\n' % (filename, lineno, name)
+            if line:
+                tb += "    %s\n" % (line.strip())
+        return tb
+    else:
+        raise RuntimeError("thread not found")

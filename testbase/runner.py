@@ -305,7 +305,7 @@ class ThreadingTestRunner(BaseTestRunner):
         :param retries: 用例失败时重试次数
         :type retries: int
         '''
-        self._thread_cnt = thread_cnt
+        self._thread_cnt = int(thread_cnt)
         self._retries = retries
         self._lock = threading.Lock()
         if thread_cnt > 1:
@@ -782,7 +782,7 @@ class MultiProcessTestRunner(BaseTestRunner):
         :param retries: 失败重跑次数上限
         :type retries: int
         '''
-        self._process_cnt = process_cnt
+        self._process_cnt = int(process_cnt)
         self._retries = retries
         super(MultiProcessTestRunner,self).__init__(report)
         

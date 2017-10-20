@@ -6,6 +6,7 @@
 '''
 
 #2015/06/23 eeelin 新建
+#2016/11/04 guyingzhao 新增tcp、udp的jsonrpc
 
 import SocketServer
 import SimpleXMLRPCServer
@@ -19,6 +20,12 @@ import random
 import socket
 import errno
 import traceback
+import select
+import logging
+import time
+import struct
+
+logger = logging.getLogger("JsonRPC")
 
 IDCHARS = string.ascii_lowercase + string.digits
 
@@ -32,9 +39,15 @@ def _byteify(data, encoding):
     '''JSON结构中的字符串都转成对应的编码
     '''
     if isinstance(data, dict):
-        return {_byteify(key, encoding): _byteify(value, encoding) for key,value in data.iteritems()}
+        dic={}
+        for key,value in data.iteritems():
+            dic[_byteify(key, encoding)]=_byteify(value, encoding)
+        return dic
     elif isinstance(data, list):
-        return [_byteify(element, encoding) for element in data]
+        ls=[]
+        for element in data:
+            ls.append(_byteify(element, encoding))
+        return ls
     elif isinstance(data, unicode):
         return data.encode(encoding)
     else:
@@ -84,36 +97,36 @@ class ParseError(Error):
     '''解析请求包错误
     '''
     PREDEFINE_CODE = -32700
-    def __init__(self, message, data ):
+    def __init__(self, message, data, stack=None ):
         super(ParseError, self).__init__(self.PREDEFINE_CODE, message, data)
         
 class InvalidRequestError(Error):
     '''解析请求包结构错误
     '''
     PREDEFINE_CODE = -32600
-    def __init__(self, message, data ):
+    def __init__(self, message, data, stack=None ):
         super(InvalidRequestError, self).__init__(self.PREDEFINE_CODE, message, data)
         
 class MethodNotFoundError(Error):
     '''方法不存在
     '''
     PREDEFINE_CODE = -32601
-    def __init__(self, message, data ):
+    def __init__(self, message, data, stack=None ):
         super(MethodNotFoundError, self).__init__(self.PREDEFINE_CODE, message, data)
 
 class InvalidParamsError(Error):
     '''调用方法的参数错误
     '''
     PREDEFINE_CODE = -32602
-    def __init__(self, message, data ):
+    def __init__(self, message, data, stack=None ):
         super(InvalidParamsError, self).__init__(self.PREDEFINE_CODE, message, data)
     
 class InternalError(Error):
     '''JSON-RPC内部错误
     '''
     PREDEFINE_CODE = -32603
-    def __init__(self, message, data ):
-        super(InternalError, self).__init__(self.PREDEFINE_CODE, message, data)
+    def __init__(self, message, data, stack=None ):
+        super(InternalError, self).__init__(self.PREDEFINE_CODE, message, data, stack)
     
 PREDEFINE_ERRORS = {
     ParseError.PREDEFINE_CODE: ParseError,
@@ -250,6 +263,80 @@ class HTTPTransport(object):
         '''
         req = urllib2.Request(uri, request, {"Content-Type": "application/json-rpc"})
         return self._opener.open(req, timeout=self._timeout).read()
+    
+class TCPTransport(object):
+    '''socket transport
+    '''
+    def __init__(self,addr):
+        self._sock=socket.socket()
+        self._sock.connect(addr)
+        self._timeout=10
+        self._buf=""
+        
+    def close(self):
+        self._sock.close()
+        
+    def settimeout(self,timeout):
+        self._timeout=timeout
+        
+    def request(self,uri,request):
+        buf=json.dumps(request)
+        req=struct.pack("!I",len(buf)+4)+buf
+        self._sock.send(req)
+        start_time=time.time()
+        data=None
+        while time.time()-start_time<self._timeout:
+            try:
+                r,_,x=select.select([self._sock], [], [self._sock],1)
+                if len(r)>0:
+                    buf=self._sock.recv(MAX_BUFSIZE)
+                    self._buf+=buf
+                    if self._buf>=4:
+                        expect_len=struct.unpack("!I",self._buf[0:4])[0]
+                        if len(self._buf)>=expect_len:
+                            data=self._buf[4:expect_len]
+                            self._buf=self._buf[expect_len:]
+                            break
+                if len(x)>0:
+                    self._sock.close()
+            except Exception:
+                data=traceback.format_exc()
+        return data
+    
+class UDPTransport(object):
+    '''socket transport
+    '''
+    def __init__(self,addr):
+        self._sock=socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
+        self._addr=addr
+        self._timeout=10
+        
+    def close(self):
+        self._sock.close()
+        
+    def settimeout(self,timeout):
+        self._timeout=timeout
+        
+    def request(self,uri,request):
+        buf=json.dumps(request)
+        req=struct.pack("!I",len(buf)+4)+buf
+        self._sock.sendto(req,self._addr)
+        start_time=time.time()
+        data=None
+        while time.time()-start_time<self._timeout:
+            try:
+                r,_,x=select.select([self._sock], [], [self._sock],1)
+                if len(r)>0:
+                    buf,_=self._sock.recvfrom(MAX_BUFSIZE)
+                    expect_len=struct.unpack("!I",buf[0:4])[0]
+                    data=buf[4:expect_len]
+                    break
+                if len(x)>0:
+                    self._sock.close()
+            except Exception:
+                data=traceback.format_exc()
+                break
+        return data
         
 class _Method(object):
     '''some magic to bind an JSON-RPC method to an RPC server.
@@ -273,7 +360,7 @@ class _Method(object):
 class ServerProxy(object):
     '''和JSON-RPC服务器的逻辑连接
     '''
-    def __init__(self, uri, transport=None, encoding=None, timeout=10):
+    def __init__(self, uri, transport=None, encoding="utf8", timeout=10):
         '''构造函数
         
         :param uri: RPC URL
@@ -325,7 +412,9 @@ class ServerProxy(object):
             code = response['error']['code']
             err_cls = PREDEFINE_ERRORS.get(code, None)
             if err_cls:
-                raise err_cls(response['error']['message'], response['error'].get('data',None))
+                raise err_cls(response['error']['message'], 
+                              response['error'].get('data',None),
+                              response['error'].get('stack',None))
             if code < ServerError.CODE_MAX and code > ServerError.CODE_MIN:
                 err_cls = ServerError
             else:
@@ -381,7 +470,7 @@ class SimpleJSONRPCDispatcher(object):
             name = function.__name__
         self.funcs[name] = function
         
-    def _construct_error(self, reqid, code, msg, data=None ):
+    def _construct_error(self, reqid, code, msg, data=None, stack=None ):
         '''返回错误给客户端
         '''
         return json.dumps({
@@ -389,7 +478,8 @@ class SimpleJSONRPCDispatcher(object):
             "error": {
                 "code": code,
                 "message": msg,
-                "data": data
+                "data": data,
+                "stack": stack,
             },
             "id": reqid
         })
@@ -460,6 +550,7 @@ class SimpleJSONRPCDispatcher(object):
         except Exception, e:
             return self._construct_error(reqid, InternalError.PREDEFINE_CODE, 
                                          str(type(e).__name__) + ': ' + str(e), 
+                                         None,
                                          traceback.format_exc())
             
             
@@ -545,4 +636,91 @@ class SimpleJSONRPCServer(SocketServer.TCPServer,
                  logRequests=True, bind_and_activate=True):
         self.logRequests = logRequests
         SimpleJSONRPCDispatcher.__init__(self)
-        SocketServer.TCPServer.__init__(self, addr, requestHandler, bind_and_activate)    
+        self.allow_reuse_address=True
+        SocketServer.TCPServer.__init__(self, addr, requestHandler, bind_and_activate)
+        
+MAX_BUFSIZE=4096
+
+class rpc_method():
+    def __init__(self,func):
+        self._func=func
+    
+    @property
+    def func(self):
+        return self._func
+    
+    def __call__(self,*argv,**kwargs):
+        return self.func(*argv,**kwargs)
+
+class TCPJsonRPCHandler(SocketServer.StreamRequestHandler):
+    def handle(self):
+        recv_buf=""
+        while 1:
+            try:
+                r,_,x=select.select([self.request],[],[self.request],1)
+                if len(r)>0:
+                    data=self.request.recv(MAX_BUFSIZE)
+                    if data=="":
+                        self.request.close()
+                        break
+                    recv_buf+=data
+                    if recv_buf>=4:
+                        expect_len=struct.unpack("!I",recv_buf[0:4])[0]
+                        if len(recv_buf)>=expect_len:
+                            real_data=json.loads(recv_buf[4:expect_len])#处理json转义
+                            result=self.server.marshaled_dispatch(real_data)
+                            self.request.send(struct.pack("!I",len(result)+4)+result)
+                            recv_buf=recv_buf[expect_len:]
+                        if self.server.logRequests:
+                            logger.info("msg form %s:%s"  % (self.client_address,real_data))
+                            logger.info("result:%s" % result)
+                if len(x)>0:
+                    self.request.close()
+                    break
+            except Exception as e:
+                logger.info("error:%s",str(e))
+                break
+    
+class UDPJsonRPCHandler(SocketServer.DatagramRequestHandler):
+    def handle(self):
+        data=self.packet[4:]
+        real_data=json.loads(data)#处理json转义
+        result=self.server.marshaled_dispatch(real_data)
+        self.socket.sendto(struct.pack("!I",len(result)+4)+result,self.client_address)
+        if self.server.logRequests:
+            logger.info("msg form %s:%s"  % (self.client_address,real_data))
+            logger.info("result:%s" % result)
+        
+class TCPJsonRPCServer(SocketServer.TCPServer,SimpleJSONRPCDispatcher):
+    '''简单的JSON-RPC服务器
+    '''
+    
+    def __init__(self, addr, requestHandler=TCPJsonRPCHandler,
+                 logRequests=False, bind_and_activate=True):
+        self.logRequests = logRequests
+        SimpleJSONRPCDispatcher.__init__(self)
+        for name in dir(requestHandler):
+            item=getattr(requestHandler,name)
+            if isinstance(item, rpc_method):
+                self.register_function(item.func)
+        self.allow_reuse_address=True
+        SocketServer.TCPServer.__init__(self, addr, requestHandler, bind_and_activate)
+        
+        
+    def stop(self):
+        self.shutdown()
+        
+class UDPJsonRPCServer(SocketServer.UDPServer,SimpleJSONRPCDispatcher):
+    '''简单的JSON-RPC服务器
+    '''
+    
+    def __init__(self, addr, requestHandler=UDPJsonRPCHandler,
+                 logRequests=False, bind_and_activate=True):
+        self.logRequests = logRequests
+        SimpleJSONRPCDispatcher.__init__(self)
+        for name in dir(requestHandler):
+            item=getattr(requestHandler,name)
+            if isinstance(item, rpc_method):
+                self.register_function(item.func)
+        self.allow_reuse_address=True
+        SocketServer.UDPServer.__init__(self, addr, requestHandler, bind_and_activate)

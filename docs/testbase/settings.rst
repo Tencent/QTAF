@@ -27,9 +27,9 @@
    lower_test = 34
    __CONFIG = "XXX"
    
-======
+====
 配置文件
-======
+====
 
 QTA配置文件分为三种：
    
@@ -118,5 +118,31 @@ QTA对配置项的新增没有严格的限制，但是为避免冲突，最好�
   
   * QTA相关组件的配置项目，除了统一增加前缀外，还需要更新到《:doc:`./settingslist`》
   
+================
+自定义settings所在的文件
+================
 
+QTA默认是通过加载Python模块`settings`来读取所有配置，用户可以通过设置环境变量`QTAF_SETTINGS_MODULE`来指定配置项所在的模块名。
+
+比如在测试项目中顶层目录中创建多个配置文件::
+
+用户配置文件存放在测试项目的顶层位置；而QTAF配置文件打包在QTAF的egg包中，在QTAF egg包的顶层位置上；如下::
+
+   test_proj/
+            qt4a/
+            exlib/
+            mqlib/
+            mqtest/
+            settings/
+               __init__.py
+               prod.py #正式环境
+               test.py #测试环境
+               
+比如需要使用正式环境的配置::
+
+   $ QTAF_SETTINGS_MODULE=settings.prod python manage.py shell
+   
+比如需要使用测试环境的配置::
+
+   $ QTAF_SETTINGS_MODULE=settings.test python manage.py shell
 

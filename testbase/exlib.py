@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 '''
-扩展库管理
+扩展库管理（仅独立模式使用）
 '''
 
 #2015/10/30 eeelin 新建
@@ -15,53 +15,10 @@ import xml.dom.minidom as dom
 class ExLibManager(object):
     '''扩展库管理器
     '''
-    def __init__(self):
-        self._top_dir=ExLibManager.find_top_dir()
+    def __init__(self, proj_root ):
+        self._top_dir = proj_root
         self._installed_libs = os.path.join(self._top_dir, 'exlib', 'installed_libs.txt')
     
-    @staticmethod
-    def find_top_dir():
-        '''寻找当前工程的根目录
-        1.非常tricky的手段，通常eclipse调试PYTHONPATH环境变量的第二个路径是工程路径
-        2.如果上面的手段失效，只有从当前目录网上一级一级遍历到工程根目录，最多5层
-        '''
-        #环境变量优先
-        exlib_dir=os.environ.get('QTAF_EXLIB_PATH',None)
-        if exlib_dir:
-            top_dir=os.path.realpath(os.path.join(exlib_dir,'..'))
-            return top_dir
-        
-        #调试执行的情况
-        if os.path.isfile(__file__):
-            pypath=os.environ.get('PYTHONPATH',None)
-            if not pypath:
-                return os.getcwd()
-            paths=pypath.split(';')
-            if len(paths)>1:
-                pseudo_path=paths[1]
-                cwd=os.getcwd()
-                if cwd.find(pseudo_path)==0:
-                    if os.path.exists(os.path.join(pseudo_path,'exlib')):
-                        return pseudo_path
-                
-                for _ in range(5):
-                    pseudo_path=os.path.realpath(os.path.join(cwd,'..'))
-                    items=os.listdir(pseudo_path)
-                    for item in items:
-                        if item.endswith(".project"):
-                            return pseudo_path
-                    cwd=pseudo_path
-                else:
-                    #raise RuntimeError("无法找到工程根目录，当前工作目录：%s" % os.getcwd())
-                    return os.getcwd()
-            else:
-                return os.getcwd()
-            
-        #使用egg的情况
-        qtaf_top_dir = os.path.realpath(os.path.join(os.path.dirname(__file__), '..'))
-        top_dir = os.path.realpath(os.path.join(qtaf_top_dir, '..', '..'))
-        return top_dir
-        
     def _get_egg_name(self, egg_path ):
         '''获取egg包名称
         '''
@@ -161,10 +118,6 @@ class ExLibManager(object):
     def list_names(self):
         '''获取全部的扩展包的名字
         '''
-        libs_list=os.environ.get("QTAF_INSTALLED_LIBS",None)
-        if libs_list:
-            return libs_list.split(';')
-        
         if not os.path.isfile(self._installed_libs):
             return []
         names = []
@@ -175,7 +128,3 @@ class ExLibManager(object):
                     continue
                 names.append(libname)
         return names
-    
-if __name__ == '__main__':
-    ExLibManager().install(r'D:\dist\qt4a\dist\qt4a-1.0.4-py2.7.egg')
-    

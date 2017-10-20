@@ -19,6 +19,7 @@
 #15/03/31 eeelin      重构，用例执行逻辑移到runner
 #16/04/18 guyingzhao  新旧接口风格的兼容性改造
 #16/04/19 guyingzhao  兼容性改造优化
+#17/05/10 guyingzhao  assert接口对传入的unicode统一转换成utf8处理
 
 import os
 import sys
@@ -28,7 +29,8 @@ import threading
 import traceback
 import collections
 
-from testbase.util import Timeout, TimeoutError, Singleton, ForbidOverloadMethods, ThreadGroupLocal, ThreadGroupScope
+from testbase.util import Timeout, TimeoutError, Singleton, ForbidOverloadMethods, \
+ThreadGroupLocal, ThreadGroupScope,_to_utf8
 from testbase.testresult import EnumLogLevel, TestResultCollection
 from testbase.conf import settings
 
@@ -118,6 +120,7 @@ class TestCase(object):
     #15/07/01 eeelin      增加test_dir属性
     
     __metaclass__ = ForbidOverloadMethods(["__init__"])
+    test_extra_info_def = [] #自定义字段
     
     class EnumStatus(object):
         '''测试用例状态枚举类
@@ -248,6 +251,15 @@ class TestCase(object):
             desc = re.sub('\s*$', '', desc)
         return desc
     
+    @property
+    def test_extra_info(self):
+        '''测试用例额外信息
+        '''
+        info = {}
+        for name, _ in self.test_extra_info_def:
+            info[name] = getattr(self, name, None)
+        return info
+            
     def init_test(self, testresult ):
         '''初始化测试用例。慎用此函数，尽量将初始化放到preTest里。
         
@@ -283,8 +295,8 @@ class TestCase(object):
         :param stepinfo: 步骤描述
         :type stepinfo: str
         '''
-        if isinstance(stepinfo, unicode):
-            stepinfo = stepinfo.encode('utf8')
+        if not isinstance(stepinfo, basestring):
+            stepinfo=str(stepinfo)
         self.__testresult.begin_step(stepinfo)
         
     def log_info(self, info ):
@@ -293,9 +305,8 @@ class TestCase(object):
         :type info: string
         :param info: 要Log的信息  
         '''
-        #2014/08/11 aaronlai    增加参数类型判断. bug fix
         if not isinstance(info, basestring):
-            raise TypeError("the parameter 'msg' type must be string, but real type is %s!" % type(info))
+            info=str(info)
         self.__testresult.info(info)
         
     def fail(self, message):
@@ -307,7 +318,7 @@ class TestCase(object):
         #2011/06/13 aaronlai    增加参数
         #2011/06/29 aaronlai    去掉参数
         if not isinstance(message, basestring):
-            raise TypeError("the parameter 'msg' type must be string, but real type is %s!" % type(message))
+            message=str(message)
         self.__testresult.error(message)
         
     def __record_assert_failed( self, message, actual, expect ):
@@ -324,9 +335,13 @@ class TestCase(object):
         err_filepath = inspect.currentframe().f_back.f_back.f_code.co_filename
         err_lineno = inspect.currentframe().f_back.f_back.f_lineno
         err_funcname = inspect.currentframe().f_back.f_back.f_code.co_name
+        if not isinstance(actual,basestring):
+            actual=str(actual)
+        if not isinstance(expect,basestring):
+            expect=str(expect)
         self.__testresult.log_record(EnumLogLevel.ASSERT, message, 
-                                     dict(actual=str(actual), 
-                                          expect=str(expect), 
+                                     dict(actual=_to_utf8(actual), 
+                                          expect=_to_utf8(expect), 
                                           code_location=(err_filepath, err_lineno, err_funcname)))
     
     def assert_equal(self, message, actual, expect=True):
@@ -337,6 +352,10 @@ class TestCase(object):
        :param expect: 期望值(默认：True)
        :return: True or False
         '''
+        if isinstance(actual,unicode):
+            actual=actual.encode('utf8')
+        if isinstance(expect,unicode):
+            expect=expect.encode('utf8')
         if expect != actual:
             self.__record_assert_failed(message, actual, expect)
             return False
@@ -354,6 +373,10 @@ class TestCase(object):
         :param expect: 要匹配的正则表达式 
         :return: 匹配成果
         '''
+        if isinstance(actual,unicode):
+            actual=actual.encode('utf8')
+        if isinstance(expect,unicode):
+            expect=expect.encode('utf8')        
         if re.search(expect, actual):
             return True
         else:
@@ -936,6 +959,18 @@ class SeqTestSuite(TestSuite):
             desc = re.sub('^\s*', '', desc)
             desc = re.sub('\s*$', '', desc)
         return desc
+    
+    @property
+    def test_result(self):
+        '''将最后一个执行的用例结果，作为Suite的结果
+        '''
+        result=None
+        for testcae in self._testcases:
+            if testcae.test_result:
+                result=testcae.test_result
+            else:
+                break
+        return result
     
     def dumps(self):
         '''序列化

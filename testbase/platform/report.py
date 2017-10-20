@@ -15,7 +15,7 @@ if settings.DEBUG:
     SITE_ENDPOINT = "http://exp.imd.com/report/v2"
     SITE_URL = SITE_ENDPOINT + "/cgi"
 else:
-    SITE_ENDPOINT = "http://testing.sng.local/report/v2"
+    SITE_ENDPOINT = settings.QTAF_REPORT_URL
     SITE_URL = SITE_ENDPOINT + "/cgi"
 
 #CGI调用默认超时时间
@@ -33,12 +33,16 @@ def __call_cgi( path, reqdict ):
             reqdict[k] = v.encode('utf8')
     params = urllib.urlencode(reqdict)        
     headers = {"Content-Type": "application/x-www-form-urlencoded"}
+    if settings.DEBUG:
+        print "report >>>> %s %s" % (SITE_URL + path, params)
     req = urllib2.Request( SITE_URL + path, params, headers)
     if __opener is None:
         proxy_handler = urllib2.ProxyHandler({})
         proxy_auth_handler = urllib2.HTTPBasicAuthHandler()
         __opener = urllib2.build_opener(proxy_handler, proxy_auth_handler)
     jsondata = __opener.open(req, timeout=timeout).read()
+    if settings.DEBUG:
+        print "report <<<< %s" % (jsondata)
     rsp = json.loads(jsondata)
     
     if rsp['result'] == "error":
@@ -201,9 +205,7 @@ def upload_testcase( reportid, name, path, author, result, iteration="1",
             reqdict[it] = locals()[it]
     
     reqdict.update(kwargs)
-    
-    print reqdict
-    
+    #print reqdict
     result = __call_cgi('/uploadcase', reqdict)
     return result['case_result_id']
 
@@ -303,11 +305,37 @@ def upload_error_testname( reportid, testname, error, callstack):
     result = __call_cgi('/uploadcase', reqdict)
     return result['case_result_id']
     
+def upload_resource( reportid, resource_info ):
+    """上报报告使用的资源的详情
+   
+    resource_info为数组，格式如下： 
+    [
+        {resource_id: 1, type:'node', attr1: 'ss', attr2: 'ff'},
+        {resource_id: 2, type:'android', attr1: 'aa', attr2: 'bb'}
+    ]
+    """
+    reqdict = {"report_id": reportid, 
+               "resource_info": json.dumps(resource_info)}
+    __call_cgi('/uploadresource', reqdict)
+
 def get_url( reportid ):
     """获取报告的URL
     """
     return SITE_ENDPOINT + "/base/qta/get/report/%s" % reportid
 
+def get_result_url( reportid, resultid ):
+    """获取测试结果的URL
+    """
+    return SITE_ENDPOINT + "/base/qta/get/report/%s/case/%s" % (reportid, resultid)
+    
+def add_report_component_versions(reportid, component_versions ):
+    """设置报告对应的组件版本信息
+    """
+    reqdict = {"id": reportid, 
+               "component_versions": json.dumps(component_versions)}
+    __call_cgi('/add_info_2_report', reqdict)
+    
+    
 if __name__ == '__main__':
     
     import socket

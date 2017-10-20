@@ -14,10 +14,12 @@ DATA_DRIVE = False
 DATA_SOURCE = 'test/data/server.py'
 
 # -----------------------------------
-# 项目名称
+# 项目配置
 # -----------------------------------
 PROJECT_NAME = 'qtaf'
-
+PROJECT_MODE = 'standalone' #choices: standard/standalone
+PROJECT_ROOT = None#os.path.dirname(__file__)
+INSTALLED_APPS = []
 
 # -----------------------------------
 # 资源管理系统配置
@@ -34,6 +36,11 @@ PYQQ_PSKEY_DOMAINS = [
     "qzone.qq.com",
     "qzone.com"
 ]
+
+PYQQ_OSS_SERVER_LIST =  [
+    ('msfwifi.3g.qq.com', 14000),
+]
+
 PYQQ_OIDB_MOCK_CLIENT_IP_LIST = [
     '14.17.22.20',
     '14.17.22.21',
@@ -64,3 +71,6 @@ PYQQ_OIDB_MOCK_CLIENT_IP_LIST = [
     '14.17.22.53',
     '14.17.22.54',                                 
 ]
+
+QTAF_REPORT_URL = "http://testing.sng.local/report/v2"
+QTAF_FILE_HOST = "file.test.sng.local"

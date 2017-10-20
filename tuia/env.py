@@ -4,6 +4,9 @@
 '''
 #11/07/20 jonliang    创建
 
+import warnings
+
+warnings.warn("`tuia.env` will be removed in the future", DeprecationWarning)
 
 class EnumEnvType(object):
     '''测试机运行环境的类型

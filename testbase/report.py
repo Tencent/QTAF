@@ -1293,6 +1293,10 @@ if _fsitf and _reportitf:
                         error_summary = line
                         break
                 _reportitf.upload_error_testname(self._reportid, record["error_testname"], error_summary, error)
+            elif tag == 'resource':
+                _reportitf.upload_resource(self._reportid, record["resources"])
+            elif tag == 'component_versions':
+                _reportitf.add_report_component_versions(self._reportid, record["component_versions"])
             else:
                 if isinstance(msg, unicode): #msg是用户输入的，需要兼容unicode或UTF8字符串
                     msg = msg.encode('utf8')

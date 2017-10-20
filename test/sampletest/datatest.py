@@ -24,6 +24,18 @@ class DataTest(testbase.TestCase):
     def runTest(self):
         self.logInfo(str(self.casedata))
     
+@datadrive.DataDrive(["A", "V", "XX"])
+class ArrayDataTest(testbase.TestCase):
+    '''数据驱动测试用例
+    '''
+    owner = "pillarzou"
+    status = testbase.TestCase.EnumStatus.Ready
+    timeout = 0.1
+    priority = testbase.TestCase.EnumPriority.Normal
+    def runTest(self):
+        self.logInfo(str(self.casedata))
+        
+        
 class ProjDataTest(testbase.TestCase):
     '''项目级别数据驱动测试用例
     '''

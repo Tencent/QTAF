@@ -105,7 +105,7 @@ class App(object):
 class QT4iTest(testbase.TestCase):
     '''QT4i测试用例
     '''
-    #owner = "eeelin"
+    owner = "eeelin"
     status = testbase.TestCase.EnumStatus.Ready
     timeout = 0.1
     priority = testbase.TestCase.EnumPriority.Normal

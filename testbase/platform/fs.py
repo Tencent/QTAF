@@ -13,6 +13,8 @@ import json
 import types
 import traceback
 
+from testbase.conf import settings
+
 class FileSystemError(Exception):
     '''文件操作异常
     '''
@@ -23,9 +25,9 @@ class FileSystem(object):
     
           通过构造函数传入一个目录描述符可得到一个目录路径的映射，用户使用get_file传入一个相对路径即可得到一个完整的文件路径。
     '''
-    _host = "file.test.sng.local"
+    _host = settings.QTAF_FILE_HOST
     _root = "/data/cfs/qta/"
-    _qfm_script = 'http://file.test.sng.local/wsgi/qfm-interface.py'
+    _qfm_script = 'http://%s/wsgi/qfm-interface.py' % _host
     _downloaded_files = []
     
     def __init__(self, dir_descriptor=""):

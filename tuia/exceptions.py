@@ -23,7 +23,3 @@ class TimeoutError(Exception):
     '''超时异常
     '''
     pass
-
-        
-if __name__ == '__main__':
-    pass

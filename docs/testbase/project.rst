@@ -76,3 +76,44 @@
 
    $ python manage.py installlib other.egg
    
+====================
+修改项目以Python库的形式使用QTA
+====================
+以上创建的项目，QTA相关的库都是安装在exlib目录中。如果希望QTA相关的库和其他Python库一样安装到系统目录中，则可以修改测试项目的管理模式为“标准模式”。
+
+设置的方式是修改测试项目的settings.py，增加以下配置::
+
+   PROJECT_MODE = 'standard'
+   
+并将使用easy_install工具安装exlib目录下的所有库，比如::
+
+   $ easy_install exlib/qtaf.egg
+   $ easy_install exlib/other.egg
+   ...
+   
+然后将exlib目录下的installed_libs.txt的内容转换为列表设置到settings.py::
+
+   INSTALLED_APPS = ["other"]
+   
+设置项目的根路径到settings.py::
+   
+   import os
+   PROJECT_ROOT = os.path.realpath(os.path.dirname(__file__))
+   
+=====================
+创建以Python库的形式使用QTA的项目
+=====================
+   
+如果是新创建的项目，也可以直接使用标准模式的方式创建项目。
+
+首先需要安装QTAF::
+
+   $ easy_install qtaf.egg
+   
+使用qta-manage创建项目::
+
+   $ qta-manage createproject footestproj
+   
+
+
+

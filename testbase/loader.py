@@ -56,6 +56,11 @@ class TestLoader(object):
         self._module_errs = {}
         if settings.DATA_DRIVE:
             self._dataset = TestDataLoader().load()
+        if '/' in testname:
+            testname, datakeyname = testname.split('/', 1)
+        else:
+            datakeyname = None 
+            
         obj = self._load(testname)
         testcases = []
         if isinstance(obj, types.ModuleType):
@@ -69,7 +74,10 @@ class TestLoader(object):
         #过滤掉重复的用例
         testcase_dict = {}
         for testcase in testcases:
+            if datakeyname and str(testcase.casedataname) != datakeyname:
+                continue
             testcase_dict[testcase.test_name] = testcase
+            
         return testcase_dict.values()
 
     def _load(self, testname ):
@@ -174,12 +182,12 @@ class TestLoader(object):
                 raise TypeError("__qtaf_seq_tests__必须为list类型")
             if len(seqdef) == 0:
                 raise ValueError("__qtaf_seq_tests__必须至少包含一个测试用例")
-            modulename = mod.__name__
+#            modulename = mod.__name__
             for it in seqdef:
                 if type(it) != type(TestCase) or not issubclass(it, TestCase):
                     raise TypeError("__qtaf_seq_tests__的元素必须为测试用例类")
-                if it.__module__ != modulename:
-                    raise ValueError("__qtaf_seq_tests__中的测试用例类必须在当前模块中定义，'%s'不属于当前模块" % it.__name__)
+#                 if it.__module__ != modulename:
+#                     raise ValueError("__qtaf_seq_tests__中的测试用例类必须在当前模块中定义，'%s'不属于当前模块" % it.__name__)
             test_dict = {}
             for test in tests:
                 test_dict[type(test)] = test

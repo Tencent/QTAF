@@ -12,7 +12,7 @@
     可以使用--target指定生成的目标类型，比如
     * 生成最简目标类型的egg包，运行"python setup.py bdist_qtaf --target testbase"
     * 生成最全目标类型的egg包，运行"python setup.py bdist_qtaf --target all"
-    可以通过修改EXCLUDE_SOURCES_PACKAGES、PREDEF_PACKAGES_BLACKLIST来控制是否打包对应模块的代码文件
+    可以通过修改EXCLUDE_SOURCES_PACKAGES来控制是否打包对应模块的代码文件
     注意：pyc文件不能在不同python版本之间兼容。
 
 4. 打基线：将trunk打tag，用版本号当tag名字
@@ -61,7 +61,6 @@ from setuptools import setup, find_packages
 from setuptools.command import bdist_egg
 from setuptools import Command
 from distutils import log
-import pypredef
 
 NAME        = "qtaf"
 
@@ -69,11 +68,10 @@ try:
     import _qtaf_version_stub
     VERSION = _qtaf_version_stub.VERSION
 except ImportError:
-    VERSION     = "5.0.50"
+    VERSION     = "5.0.0"
 
-EXCLUDE_ALL_SOURCE = True
-EXCLUDE_SOURCES_PACKAGES  = ["pyqq"] #只打包pyc文件的包名，但是会生成对应的pyperdef文件用于支持代码提示
-PREDEF_PACKAGES_BLACKLIST = ["pyqq.protocol", r"pyqq.mqlib"] #不需要生成pypredef文件的包名黑名单
+EXCLUDE_ALL_SOURCE = False
+EXCLUDE_SOURCES_PACKAGES  = ["pyqq.protocol", "pyqq.message", "pyqq.comm"] #只打包pyc文件的包名
 FORCE_BUILD_ALL_PREDEFS = True
 
 def get_open_target_modules():
@@ -109,14 +107,14 @@ def get_open_target_modules():
     
 
 TARGET_PACKAGES_DICT = {
-    "testbase"  : ["browser", "testbase", "tuia", "winlib"],
-    "all"       : ["browser", "testbase", "tuia", "winlib", "pyqq"],
-    "open"      : ["tuia/_autoweb"],
+    "testbase"  : ["testbase", "tuia"],
+    "all"       : ["testbase", "tuia", "pyqq"],
+    "open"      : [],
 }
 
 TARGET_MODULES_DICT = {
-    "testbase"  : ["qtaf_settings", "__main__", "drunentry"],
-    "all"       : ["qtaf_settings", "__main__", "drunentry"],
+    "testbase"  : ["qtaf_settings", "__main__"],
+    "all"       : ["qtaf_settings", "__main__"],
     "open"      : ["qtaf_settings", "__main__"] + get_open_target_modules()
 }
 
@@ -178,31 +176,6 @@ class bdist_qtaf(Command):
         self.distribution.data_files = TARGET_DATA_FILES_DICT.get(self.target, None)
         
         self.distribution.packages = self._list_sub_pkgs(packages)
-        
-        pypredef_packages = []
-        if not FORCE_BUILD_ALL_PREDEFS:
-            if EXCLUDE_SOURCES_PACKAGES:
-                for package in EXCLUDE_SOURCES_PACKAGES:
-                    for it in packages:
-                        if package.startswith(it):
-                            pypredef_packages.append(package)
-                            break
-        else:
-            for package in packages:
-                print package
-                pypredef_packages.append(package)
-        
-        for idx, it in enumerate(pypredef_packages):
-            pypredef_packages[idx] = it.replace('/', '.')
-            
-        if pypredef_packages:
-            log.info("build .pypredef files from source")
-            dst_path = os.path.join(os.getcwd(), 'pypredef')
-            self.distribution.data_files += pypredef.build(os.getcwd(), 
-                                                           dst_path, 
-                                                           pypredef_packages, 
-                                                           PREDEF_PACKAGES_BLACKLIST)
-                
                 
         cmd = self.reinitialize_command("bdist_egg", keep_temp=True, exclude_source_files=EXCLUDE_ALL_SOURCE)
         self.run_command("bdist_egg")
@@ -243,8 +216,9 @@ if __name__ == "__main__":
       include_package_data=True,
       package_data={'':['*.lib', '*.txt', '*.chm', '*.ini', '*.pyd', '*.tlb', '*.exe', '*.html', '*.dll', '*.dylib'], },
       author="Tencent",
-      author_email="t_DBASIC_PQC_QTA@tencent.com",
-      license="Copyright(c)2010-2015 Tencent All Rights Reserved. ",
-      url="http://km.oa.com/group/QTA",
+      author_email="t_QTA@tencent.com",
+      license="Copyright(c)2010-2017 Tencent All Rights Reserved. ",
+      url="http://qta.oa.com",
       requires=["PIL", "comtypes"],
+      entry_points={'console_scripts': ['qta-manage = testbase.management:qta_manage_main'], },
         )
