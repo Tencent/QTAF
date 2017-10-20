@@ -47,12 +47,11 @@ import locale
 import json
 
 from testbase import context
-from testbase.util import _to_unicode,_to_utf8,get_thread_traceback
+from testbase.util import _to_unicode, _to_utf8, get_thread_traceback
 
-try:
-    from testbase.platform import report as _reportitf
-except ImportError:
-    _reportitf = None
+#@ifndef OPENSOURCE
+from testbase.platform import report as _reportitf
+#@endif
     
 os_encoding = locale.getdefaultlocale()[1]
 
@@ -630,167 +629,169 @@ class XmlResult(TestResultBase):
         '''
         return self._xmldoc.toprettyxml(indent="    ", newl="\n")
  
-if _reportitf:
-    class OnlineResult(XmlResult):
-        '''存储在测试报告服务器上的测试用例结果
-        '''
-        
-        def __init__(self, reportid, storage, update_xml=True ):
-            '''构造函数
-            
-            :param reportid: 测试报告ID
-            :type reportid: string
-            :param storage: 网络文件存储接口
-            :type storage: NFStorage
-            :param update_xml: 是否上传XML文件
-            :type update_xml: boolean
-            '''
-            super(OnlineResult, self).__init__()
-            self._reportid = reportid
-            self._nfs = storage
-            
-            self._exp_info = None
-            self._exp_priority = 0
-            self._devices_used = set()
-            self._machine = socket.gethostname()
-            self._update_xml = update_xml
-            self._extra = {}
-            self._resources = {}
-            self._result_id = None
-            
-        @property
-        def storage(self):
-            '''网络文件存储接口
-            
-            :returns: NFStorage - 网络文件存储接口
-            '''
-            return self._nfs
-        
-        @property
-        def extra(self):
-            '''用例附件信息
-            
-            :returns: dict
-            '''
-            return self._extra
-        
-        @property
-        def result_id(self):
-            '''测试结果ID（由在线测试报告分配）
-            '''
-            return self._result_id
-        
-        @property
-        def url(self):
-            '''测试结果对应的URL
-            '''
-            if not self._result_id:
-                raise RuntimeError("test result is not upload yet")
-            return _reportitf.get_result_url(self._reportid, self._result_id)
-        
-        @property
-        def failed_reason_message(self):
-            '''失败原因文本描述
-            '''
-            return self._exp_info
-            
-        def handle_test_end(self, passed ):
-            '''处理一个测试用例执行的结束
-            
-            :param passed: 测试用例是否通过
-            :type passed: boolean
-            '''
-            super(OnlineResult, self).handle_test_end(passed)        
-            xml_data = self.toxml()
-            if self._update_xml:
-                casename = self.testcase.test_class_name
-                if len(casename) > 32:
-                    casename = casename[0:10] + '___' + casename[-10:-1]
-                xml_filepath = '%s_%s.xml'%(casename, time.time())
-                with codecs.open(xml_filepath, 'w') as fd:
-                    fd.write(xml_data)
-                self._nfs.upload(xml_filepath)
-            req = dict( name=self.testcase.test_name, 
-                        path=self.testcase.test_name,
-                        author=self.testcase.owner, 
-                        result={True:0,False:1}[passed], 
-                        iteration="1",
-                        machine_id=self._machine, 
-                        priority=self.testcase.priority, 
-                        timeout=self.testcase.timeout, 
-                        description=self.testcase.test_doc, 
-                        started_time=time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(self.begin_time)), 
-                        finished_time=time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(self.end_time)),
-                        log_content=xml_data, 
-                        log_dir=self._nfs.url, 
-                        reason=self._exp_info, 
-                        callstack=None, 
-                        machine=','.join([str(it) for it in self._devices_used]))
-            req.update(self._extra)
-            if self._resources:
-                self._resources.setdefault("node", [])
-                curr_node = req["machine_id"]
-                if curr_node not in self._resources["node"]:
-                    self._resources["node"].append(curr_node)
-                req["resources"] = json.dumps(self._resources)
-            self._result_id = _reportitf.upload_testcase(self._reportid, **req)
-    
-        def handle_log_record(self, level, msg, record, attachments ):
-            '''处理一个日志记录
-            
-            :param level: 日志级别，参考EnumLogLevel
-            :type level: string
-            :param msg: 日志消息
-            :type msg: string
-            :param record: 日志记录
-            :type record: dict
-            :param attachments: 附件
-            :type attachments: dict
-            '''
-            msg=_to_utf8(msg)
-            if level > EnumLogLevel.ERROR:
-                if self._exp_priority <= 3 and level == EnumLogLevel.APPCRASH:
-                    self._exp_info, self._exp_priority = "Crash", 3
-                        
-                if self._exp_priority <= 2 and level == EnumLogLevel.TESTTIMEOUT:
-                    self._exp_info, self._exp_priority = "用例执行超时", 2
-                      
-                if self._exp_priority <= 1 and level == EnumLogLevel.ASSERT:
-                    exp_info="检查点不通过，[%s]期望值：%s，实际值：%s" % (msg,record['expect'],record['actual'])
-                    self._exp_info, self._exp_priority = exp_info,1
-                        
-                if self._exp_priority <= 1 and record.has_key("traceback"):
-                    if not self._exp_info: #优先记录第一个异常，第一个异常往往比较大可能是问题的原因
-                        self._exp_info, self._exp_priority = record["traceback"].split('\n')[-2], 1
-               
-            if level == EnumLogLevel.Environment:
-                if record.has_key('device'):
-                    self._devices_used.add(record["device"])
-                if record.has_key('devices'):
-                    self._devices_used |= set(record["devices"])
-                if record.has_key('machine'):
-                    self._machine = record["machine"]
-    
-            if level == EnumLogLevel.RESOURCE:
-                res_type = record.get("res_type")
-                res_id = record.get("resource_id")
-                attrs = record.get("resource_attrs",None)
-                if res_type and res_id:
-                    self._resources.setdefault(res_type, [])
-                    self._resources[res_type].append(res_id)
-                    if attrs:
-                        attrs['resource_id']=res_id
-                        attrs['type']=res_type
-                        _reportitf.upload_resource(self._reportid, [attrs])
+#@ifndef OPENSOURCE
 
-            for name in attachments:
-                file_path = attachments[name]
-                if os.path.isfile(_to_unicode(file_path)):
-                    attachments[name] = self._nfs.upload(file_path)
+class OnlineResult(XmlResult):
+    '''存储在测试报告服务器上的测试用例结果
+    '''
     
-            super(OnlineResult, self).handle_log_record(level, msg, record, attachments)
+    def __init__(self, reportid, storage, update_xml=True ):
+        '''构造函数
+        
+        :param reportid: 测试报告ID
+        :type reportid: string
+        :param storage: 网络文件存储接口
+        :type storage: NFStorage
+        :param update_xml: 是否上传XML文件
+        :type update_xml: boolean
+        '''
+        super(OnlineResult, self).__init__()
+        self._reportid = reportid
+        self._nfs = storage
+        
+        self._exp_info = None
+        self._exp_priority = 0
+        self._devices_used = set()
+        self._machine = socket.gethostname()
+        self._update_xml = update_xml
+        self._extra = {}
+        self._resources = {}
+        self._result_id = None
+        
+    @property
+    def storage(self):
+        '''网络文件存储接口
+        
+        :returns: NFStorage - 网络文件存储接口
+        '''
+        return self._nfs
     
+    @property
+    def extra(self):
+        '''用例附件信息
+        
+        :returns: dict
+        '''
+        return self._extra
     
+    @property
+    def result_id(self):
+        '''测试结果ID（由在线测试报告分配）
+        '''
+        return self._result_id
+    
+    @property
+    def url(self):
+        '''测试结果对应的URL
+        '''
+        if not self._result_id:
+            raise RuntimeError("test result is not upload yet")
+        return _reportitf.get_result_url(self._reportid, self._result_id)
+    
+    @property
+    def failed_reason_message(self):
+        '''失败原因文本描述
+        '''
+        return self._exp_info
+        
+    def handle_test_end(self, passed ):
+        '''处理一个测试用例执行的结束
+        
+        :param passed: 测试用例是否通过
+        :type passed: boolean
+        '''
+        super(OnlineResult, self).handle_test_end(passed)        
+        xml_data = self.toxml()
+        if self._update_xml:
+            casename = self.testcase.test_class_name
+            if len(casename) > 32:
+                casename = casename[0:10] + '___' + casename[-10:-1]
+            xml_filepath = '%s_%s.xml'%(casename, time.time())
+            with codecs.open(xml_filepath, 'w') as fd:
+                fd.write(xml_data)
+            self._nfs.upload(xml_filepath)
+        req = dict( name=self.testcase.test_name, 
+                    path=self.testcase.test_name,
+                    author=self.testcase.owner, 
+                    result={True:0,False:1}[passed], 
+                    iteration="1",
+                    machine_id=self._machine, 
+                    priority=self.testcase.priority, 
+                    timeout=self.testcase.timeout, 
+                    description=self.testcase.test_doc, 
+                    started_time=time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(self.begin_time)), 
+                    finished_time=time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(self.end_time)),
+                    log_content=xml_data, 
+                    log_dir=self._nfs.url, 
+                    reason=self._exp_info, 
+                    callstack=None, 
+                    machine=','.join([str(it) for it in self._devices_used]))
+        req.update(self._extra)
+        if self._resources:
+            self._resources.setdefault("node", [])
+            curr_node = req["machine_id"]
+            if curr_node not in self._resources["node"]:
+                self._resources["node"].append(curr_node)
+            req["resources"] = json.dumps(self._resources)
+        self._result_id = _reportitf.upload_testcase(self._reportid, **req)
+
+    def handle_log_record(self, level, msg, record, attachments ):
+        '''处理一个日志记录
+        
+        :param level: 日志级别，参考EnumLogLevel
+        :type level: string
+        :param msg: 日志消息
+        :type msg: string
+        :param record: 日志记录
+        :type record: dict
+        :param attachments: 附件
+        :type attachments: dict
+        '''
+        msg=_to_utf8(msg)
+        if level > EnumLogLevel.ERROR:
+            if self._exp_priority <= 3 and level == EnumLogLevel.APPCRASH:
+                self._exp_info, self._exp_priority = "Crash", 3
+                    
+            if self._exp_priority <= 2 and level == EnumLogLevel.TESTTIMEOUT:
+                self._exp_info, self._exp_priority = "用例执行超时", 2
+                  
+            if self._exp_priority <= 1 and level == EnumLogLevel.ASSERT:
+                exp_info="检查点不通过，[%s]期望值：%s，实际值：%s" % (msg,record['expect'],record['actual'])
+                self._exp_info, self._exp_priority = exp_info,1
+                    
+            if self._exp_priority <= 1 and record.has_key("traceback"):
+                if not self._exp_info: #优先记录第一个异常，第一个异常往往比较大可能是问题的原因
+                    self._exp_info, self._exp_priority = record["traceback"].split('\n')[-2], 1
+           
+        if level == EnumLogLevel.Environment:
+            if record.has_key('device'):
+                self._devices_used.add(record["device"])
+            if record.has_key('devices'):
+                self._devices_used |= set(record["devices"])
+            if record.has_key('machine'):
+                self._machine = record["machine"]
+
+        if level == EnumLogLevel.RESOURCE:
+            res_type = record.get("res_type")
+            res_id = record.get("resource_id")
+            attrs = record.get("resource_attrs",None)
+            if res_type and res_id:
+                self._resources.setdefault(res_type, [])
+                self._resources[res_type].append(res_id)
+                if attrs:
+                    attrs['resource_id']=res_id
+                    attrs['type']=res_type
+                    _reportitf.upload_resource(self._reportid, [attrs])
+
+        for name in attachments:
+            file_path = attachments[name]
+            if os.path.isfile(_to_unicode(file_path)):
+                attachments[name] = self._nfs.upload(file_path)
+
+        super(OnlineResult, self).handle_log_record(level, msg, record, attachments)
+
+#@endif
+
 class TestResultCollection(list):
     '''测试结果集合
     '''

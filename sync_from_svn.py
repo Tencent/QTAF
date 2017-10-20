@@ -18,7 +18,9 @@ BLACKLIST_DIRNAME = r"(\.svn)|(_build)|(pyqq)"
 BLACKLIST_FILENAME = r".*\.pyc"
 
 BASEDIR = os.path.realpath(os.path.dirname(__file__))
-BLACKLIST_DEL_PATHS = [os.path.join(BASEDIR,'.git'), __file__]
+BLACKLIST_DEL_PATHS = [
+    os.path.join(BASEDIR,'.git'), 
+    __file__]
 
 def printf( s ):
     if sys.stdout.encoding:

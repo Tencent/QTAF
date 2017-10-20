@@ -24,7 +24,7 @@
    class InvalidUinTest1(TestCase):
        '''非法测试号码1
        '''
-       owner = "eeelin"
+       owner = "foo"
        status = TestCase.EnumStatus.Ready
        priority = TestCase.EnumPriority.Normal
        timeout = 1
@@ -40,7 +40,7 @@
    class InvalidUinTest2(TestCase):
        '''非法测试号码2
        '''
-       owner = "eeelin"
+       owner = "foo"
        status = TestCase.EnumStatus.Ready
        priority = TestCase.EnumPriority.Normal
        timeout = 1
@@ -57,7 +57,7 @@
    class InvalidUinTest3(TestCase):
        '''非法测试号码3
        '''
-       owner = "eeelin"
+       owner = "foo"
        status = TestCase.EnumStatus.Ready
        priority = TestCase.EnumPriority.Normal
        timeout = 1
@@ -73,7 +73,7 @@
    class InvalidUinTest4(TestCase):
        '''非法测试号码4
        '''
-       owner = "eeelin"
+       owner = "foo"
        status = TestCase.EnumStatus.Ready
        priority = TestCase.EnumPriority.Normal
        timeout = 1
@@ -110,7 +110,7 @@
    class InvalidUinTest(TestCase):
        '''非法测试号码
        '''
-       owner = "eeelin"
+       owner = "foo"
        status = TestCase.EnumStatus.Ready
        priority = TestCase.EnumPriority.Normal
        timeout = 1
