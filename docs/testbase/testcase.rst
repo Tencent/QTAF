@@ -164,7 +164,7 @@
 这个就是QTA提供的测试断言的函数接口，其详细的定义如下::
 
     def assert_equal(self, message, actual, expect=True):
-        '''检查实际值和期望值是否相等，不能则测试用例失败
+        '''检查实际值和期望值是否相等，不同则测试用例失败
         
        :param message: 检查信息
        :param actual: 实际值
