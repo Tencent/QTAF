@@ -1,13 +1,11 @@
 # -*- coding: utf-8 -*-
+'''loader test
 '''
-测试用例加载测试
-'''
-#2015/03/27    eeelin 创建
+#2015/03/27 eeelin created
 
 import unittest
 
 from testbase.loader import TestLoader
-from testbase import datadrive
 
 class TestLoaderTest(unittest.TestCase):
     '''测试用例加载测试
@@ -15,20 +13,55 @@ class TestLoaderTest(unittest.TestCase):
     def test_load_testcase(self):
         '''测试加载一个用例
         '''
+        tests = TestLoader().load("test.sampletest.hellotest.HelloTest")
+        self.assertEqual(len(tests), 1)
         from test.sampletest.hellotest import HelloTest
-        test = HelloTest()
-        data = test.dumps()
-        test2 = TestLoader().load(data)
-        self.assertEqual(type(test2), HelloTest)
+        self.assertEqual(type(tests[0]), HelloTest)
         
     def test_load_datadrive(self):
         '''测试数据驱动用例
         '''
         from test.sampletest.datatest import DataTest
-        tests = TestLoader().load_from_name("test.sampletest.datatest.DataTest")
+        tests = TestLoader().load("test.sampletest.datatest.DataTest")
         self.assertEqual(len(tests), 3)
-        self.assertEqual(type(tests[0]), datadrive.DataDriveTestCase)
-        self.assertEqual(type(tests[0].testcase), DataTest)
+        self.assertEqual(type(tests[0]), DataTest)
+        
+        
+    def test_load_failed_not_found(self):
+        loader = TestLoader()
+        tests = loader.load("test.sampletest.notfound")
+        self.assertEqual(len(tests), 0)
+        errors = loader.get_last_errors()
+        self.assertEqual(len(errors), 1)
+        self.assertIn("test.sampletest.notfound", errors)
+        self.assertIn("No module named notfound", errors.values()[0])
+        
+    def test_load_failed_runtime_error(self):
+        loader = TestLoader()
+        tests = loader.load("test.sampletest.loaderr")
+        self.assertEqual(len(tests), 0)
+        errors = loader.get_last_errors()
+        self.assertEqual(len(errors), 1)
+        self.assertIn("test.sampletest.loaderr", errors)
+        self.assertIn("RuntimeError", errors.values()[0])
+        
+    def test_load_filter(self):
+        filtered_test = 'test.sampletest.hellotest.HelloTest'
+        def filter_func(test):
+            if test.test_class_name == filtered_test:
+                return "hello filtered"
+        loader = TestLoader(filter_func)
+        tests = loader.load("test.sampletest")
+        testnames = [ it.test_class_name for it in tests ]
+        self.assertNotIn(filtered_test, testnames)
+        tests = loader.get_filtered_tests()
+        self.assertEqual(len(tests), 1)
+        self.assertEqual(tests[0].test_class_name, filtered_test)
+        result = loader.get_filtered_tests_with_reason()
+        self.assertEqual(len(tests), 1)
+        self.assertEqual(result.keys()[0].test_class_name, filtered_test)
+        self.assertEqual("hello filtered", result.values()[0])
+        
         
 class SettingWarpper(object):
     
@@ -45,7 +78,7 @@ class SettingWarpper(object):
             return super(SettingWarpper,self).__getattribute__(name)
             
 class DataDriveTestLoaderTest(unittest.TestCase):
-    '''项目级别测试驱动测试加载用例
+    '''global data-drive test loader
     '''  
 
     def setUp(self):
@@ -55,22 +88,22 @@ class DataDriveTestLoaderTest(unittest.TestCase):
         loader.settings = new_settiongs
         conf.settings = new_settiongs
         
-        from testbase import data
-        reload(data)
 
     def tearDown(self):
         from testbase import loader
         from testbase import conf
         loader.settings = loader.settings.real_settings
         conf.settings = loader.settings
-        from testbase import data
-        reload(data)
         
     def test_load_testcase(self):
-        '''测试加载一个用例
+        '''load a test with global data-drive
         '''
-        from test.sampletest.hellotest import HelloTest
-        tests = TestLoader().load_from_name("test.sampletest.hellotest.HelloTest")
+        from test.data import server
+        tests = TestLoader().load("test.sampletest.hellotest.HelloTest")
         self.assertEqual(len(tests), 3)
-        self.assertEqual(type(tests[0]), datadrive.GlobalDataDriveTestCase)
-        self.assertEqual(type(tests[0].testcase), HelloTest)
+        casedatas = set()
+        for test in tests:
+            self.assertEqual(test.test_class_name, "test.sampletest.hellotest.HelloTest")
+            casedatas.add(str(test.casedata))
+        self.assertEqual(casedatas, set([str(it) for it in server.DATASET]))    
+        

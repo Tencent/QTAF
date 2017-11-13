@@ -186,6 +186,7 @@ class RunTest(Command):
                 receivers+=";"
             notification=report.Notification(receivers=receivers)
             report_inst = VerboseOnlineTestReport("调试报告",notification=notification)
+            print "报告url: %s" % report_inst.url
             
         else:
             raise ValueError("非法的报告类型:" + str(args.report_type))
@@ -205,8 +206,8 @@ class RunTest(Command):
         os.chdir(prev_dir)
         if isinstance(report_inst, report.OnlineTestReport):
             if sys.platform == "win32":
-                print "opening online report with IE..."
-                os.system("start iexplore %s" % report_inst.url)
+                print "opening online report url:%s" % report_inst.url
+                os.system("start %s" % report_inst.url)
             else:
                 print "online report generated: %s" % report_inst.url
                 

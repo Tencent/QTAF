@@ -335,13 +335,9 @@ class TestCase(object):
         err_filepath = inspect.currentframe().f_back.f_back.f_code.co_filename
         err_lineno = inspect.currentframe().f_back.f_back.f_lineno
         err_funcname = inspect.currentframe().f_back.f_back.f_code.co_name
-        if not isinstance(actual,basestring):
-            actual=str(actual)
-        if not isinstance(expect,basestring):
-            expect=str(expect)
         self.__testresult.log_record(EnumLogLevel.ASSERT, message, 
-                                     dict(actual=_to_utf8(actual), 
-                                          expect=_to_utf8(expect), 
+                                     dict(actual=actual, 
+                                          expect=expect, 
                                           code_location=(err_filepath, err_lineno, err_funcname)))
     
     def assert_equal(self, message, actual, expect=True):
@@ -352,10 +348,10 @@ class TestCase(object):
        :param expect: 期望值(默认：True)
        :return: True or False
         '''
-        if isinstance(actual,unicode):
-            actual=actual.encode('utf8')
-        if isinstance(expect,unicode):
-            expect=expect.encode('utf8')
+        if isinstance(actual,basestring):
+            actual=_to_utf8(actual)
+        if isinstance(expect,basestring):
+            expect=_to_utf8(expect)
         if expect != actual:
             self.__record_assert_failed(message, actual, expect)
             return False
@@ -706,6 +702,7 @@ class TestCaseRunner(ITestCaseRunner):
         #                        需要重新考虑已独立进程来执行测试用例。
         #2012/06/07 aaronlai    如果测试用例超时，调用postTest，否则无法释放资源，也无法看到申请的帐号资源是什么。
         
+        self._stop_run=False
         self._testcase = testcase
         self._testresult = testresult_factory.create(testcase)
 #         if type(testcase).__dict__.has_key('run_test'): #使用新的代码风格的接口

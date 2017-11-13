@@ -437,9 +437,11 @@ class StreamResult(TestResultBase):
         
         if level == EnumLogLevel.ASSERT:
             if record.has_key("actual"):
-                self._write("   实际值：%s\n" % record["actual"])
+                actual=record["actual"]
+                self._write("   实际值：%s%s\n" % (actual.__class__,repr(actual)))
             if record.has_key("expect"):
-                self._write("   期望值：%s\n" % record["expect"])    
+                expect=record["expect"]
+                self._write("   期望值：%s%s\n" % (expect.__class__,repr(expect)))
             if record.has_key("code_location"):
                 self._write(_to_utf8('  File "%s", line %s, in %s\n' % record["code_location"]))
             

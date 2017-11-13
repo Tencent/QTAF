@@ -23,6 +23,18 @@ class DataTest(testbase.TestCase):
     priority = testbase.TestCase.EnumPriority.Normal
     def runTest(self):
         self.logInfo(str(self.casedata))
+        
+@datadrive.DataDrive([0])
+class SingleDataTest(testbase.TestCase):
+    '''数据驱动测试用例
+    '''
+    owner = "pillarzou"
+    status = testbase.TestCase.EnumStatus.Ready
+    timeout = 0.1
+    priority = testbase.TestCase.EnumPriority.Normal
+    def runTest(self):
+        self.logInfo(str(self.casedata))
+    
     
 @datadrive.DataDrive(["A", "V", "XX"])
 class ArrayDataTest(testbase.TestCase):

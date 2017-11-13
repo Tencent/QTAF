@@ -6,7 +6,6 @@
 #2013-01-15  aaronlai  - 已经没有htmlcontrols和htmlcontrols2模块，修改测试用例
 #2013-01-15  aaronlnai - 空构造函数抛出TypeError
 import testbase
-import tuia.webcontrols as web
 from testbase import logger
 from testbase import context
 import time
@@ -26,40 +25,10 @@ class HelloTest(testbase.TestCase):
     
     def runTest(self):
         #-----------------------------
-        self.startStep("测试webcontrols.WebElement构造函数")
+        self.startStep("测试")
         #-----------------------------
         self.assert_equal('断言失败', False, True)
-        try:
-            web.WebElement()
-        except TypeError:
-            pass
-        except:
-            self.fail("空构造函数没有抛出TypeError")
         
-        #-----------------------------
-        self.startStep("测试webcontrols.WebPage构造函数")
-        #-----------------------------
-        try:
-            web.WebPage()
-        except TypeError:
-            pass
-        except:
-            self.fail("空构造函数没有抛出TypeError")
-            
-        
-        logger.info("QTA日志", extra=dict(attachments={"qq.tlg":__file__, "qta.log": __file__}))
-        
-        #-----------------------------
-        self.startStep("测试webcontrols.WebPage构造函数")
-        #-----------------------------
-        t1 = threading.Thread(target=_some_thread)
-        t2 = threading.Thread(target=_some_thread)
-        t1.start()
-        t2.start()
-        t1.join()
-        t2.join()
-        
-        raise RuntimeError("XX")
     
     def get_extra_record(self):
         return {
@@ -124,6 +93,23 @@ class QT4iTest(testbase.TestCase):
         for app in self._apps:
             attachments[app.name+'的截图'] = app.get_creenshot()
         return {},attachments
+    
+
+class ExtraInfoTest(testbase.TestCase):
+    '''带test_extra_info_def的用例
+    '''
+    owner = "eeelin"
+    status = testbase.TestCase.EnumStatus.Ready
+    timeout = 1
+    priority = testbase.TestCase.EnumPriority.Normal
+    dev_owner = "eeelin"
+    
+    test_extra_info_def = [
+        ("dev_owner", "开发负责人")
+    ]
+    
+    def runTest(self):
+        pass
     
 if __name__ == '__main__':
 #     HelloTest().run()

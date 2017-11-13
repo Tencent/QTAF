@@ -1289,7 +1289,8 @@ class OnlineTestReport(ITestReport):
                 if line:
                     error_summary = line
                     break
-            _reportitf.upload_error_testname(self._reportid, record["error_testname"], error_summary, error)
+            machine_id = socket.gethostname()
+            _reportitf.upload_error_testname(self._reportid, record["error_testname"], error_summary, error, machine_id)
         elif tag == 'resource':
             _reportitf.upload_resource(self._reportid, record["resources"])
         elif tag == 'component_versions':

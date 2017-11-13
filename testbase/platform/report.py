@@ -19,7 +19,7 @@ else:
     SITE_URL = SITE_ENDPOINT + "/cgi"
 
 #CGI调用默认超时时间
-timeout = 30
+timeout = 120
 
 __opener = None
 
@@ -282,7 +282,7 @@ def upload_filtered_testcase( reportid, name, path, author, reason ):
     result = __call_cgi('/uploadcase', reqdict)
     return result['case_result_id']
     
-def upload_error_testname( reportid, testname, error, callstack):
+def upload_error_testname( reportid, testname, error, callstack, machine_id):
     """上报加载失败的模块
     
     :param reportid: 该测试用于属于的报告ID
@@ -293,6 +293,8 @@ def upload_error_testname( reportid, testname, error, callstack):
     :type error: string
     :param callstack: 堆栈信息
     :type callstack: string
+    :param machine_id: 执行加载用例的机器标识符,
+    :type machine_id: string
     """
     reqdict = {"report_id": reportid, 
            "name":testname, 
@@ -301,7 +303,8 @@ def upload_error_testname( reportid, testname, error, callstack):
            "iteration":"1", 
            "result":3,
            "reason":error,
-           "callstack":callstack}
+           "callstack":callstack,
+           "machine_id": machine_id}
     result = __call_cgi('/uploadcase', reqdict)
     return result['case_result_id']
     
