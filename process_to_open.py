@@ -74,7 +74,10 @@ DELETE_FILES = [
     ("testbase", "_rscitf.py"),
     ("testbase", "resource.py"),
     ("pyqq",),
-    ("test",),
+    ("test", "browsertest.py"),
+    ("test", "hellotest.py"),
+    ("test", "pyqqtest.py"),
+    ("test", "testcef.py"),
     ("tuia", "ply"),
     ("docs",u"QTAF打包和发布流程.doc")
 ]
