@@ -1,4 +1,4 @@
-# QTAF
+# QTAF [![Build Status](https://travis-ci.org/Tencent/QTAF.svg?branch=master)](https://travis-ci.org/Tencent/QTAF)
 
 QTA is a cross-platform test automation tool for servers and native, hybrid and applications.
 
