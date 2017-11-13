@@ -1,10 +1,23 @@
 # -*- coding: utf-8 -*-
+#
+# Tencent is pleased to support the open source community by making QTA available.
+# Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
+# Licensed under the BSD 3-Clause License (the "License"); you may not use this 
+# file except in compliance with the License. You may obtain a copy of the License at
+# 
+# https://opensource.org/licenses/BSD-3-Clause
+# 
+# Unless required by applicable law or agreed to in writing, software distributed 
+# under the License is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
+# OF ANY KIND, either express or implied. See the License for the specific language
+# governing permissions and limitations under the License.
+#
 '''
 共用类模块
 '''
-#2013/05/10 terisli created
-#2014/10/28 eeelin  新增EggArchive
-#2015/03/26 eeelin  新增ThreadGroupLocal
+#2013/05/10 tangor created
+#2014/10/28 olive  新增EggArchive
+#2015/03/26 olive  新增ThreadGroupLocal
 
 import re
 import time
@@ -93,7 +106,7 @@ class Timeout(object):
         :param regularMatch: 参数 property_name和waited_value是否采用正则表达式的比较。
                                                                             默认为不采用（False）正则，而是采用恒等比较
         '''
-        #11/09/24    jonliang    增加多层属性支持
+        #11/09/24    persimmon    增加多层属性支持
         start = time.time()
         waited = 0.0
         try_count = 0
@@ -148,7 +161,7 @@ class Singleton(type):
                   pass
     
     """
-    #2013/11/25 aaronlai    created
+    #2013/11/25 pear    created
     _instances = {}
     def __init__(cls, name, bases, dic):
         super(Singleton, cls).__init__(name, bases, dic)

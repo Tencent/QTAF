@@ -1,5 +1,18 @@
 # -*- coding: utf-8 -*-
 #
+# Tencent is pleased to support the open source community by making QTA available.
+# Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
+# Licensed under the BSD 3-Clause License (the "License"); you may not use this 
+# file except in compliance with the License. You may obtain a copy of the License at
+# 
+# https://opensource.org/licenses/BSD-3-Clause
+# 
+# Unless required by applicable law or agreed to in writing, software distributed 
+# under the License is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
+# OF ANY KIND, either express or implied. See the License for the specific language
+# governing permissions and limitations under the License.
+#
+#
 # TUIA documentation build configuration file, created by
 # sphinx-quickstart on Sat Dec 10 17:16:13 2016.
 #
@@ -49,8 +62,8 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'TUIA'
-copyright = u'2016, eeelin'
-author = u'eeelin'
+copyright = u'2016, olive'
+author = u'olive'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -225,7 +238,7 @@ latex_elements = {
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
   (master_doc, 'TUIA.tex', u'TUIA Documentation',
-   u'eeelin', 'manual'),
+   u'olive', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
