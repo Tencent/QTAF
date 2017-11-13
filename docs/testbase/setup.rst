@@ -2,25 +2,33 @@
 =====
 
 =============
-安装Python和相关工具
+Python版本依赖
 =============
 
-Python目前要求为Python 2.7版本，如果是Windows系统，推荐使用ActivePython打包的版本
+目前QTAF在Python 2.7版本上测试，推荐使用Python2.7版本，如果是Windows系统，推荐使用ActivePython打包的版本。
 
-.. note:: 如果使用的是64版本的Windows，也请安装32版本的Python，目前的QTA相关支持库仅支持32位版本。
-    
+.. note:: 如果使用的是64版本的Windows，也请安装32版本的Python，目前的QTA的部分Driver仅支持32位版本。
+
 最新的Mac OSX内置的Python已经为2.7版本，一般无需配置。
 
-如果在Windows或Mac下进行测试脚本开发，推荐使用Eclipse+Pydev
 
-=======
-构建QTAF包
-=======
+=============
+通过pip工具安装
+=============
 
-QTAF推荐的使用方式是打包为Egg包，可以执行以下命令生成egg包::
-
-    python setup.py bdist_egg
+安装方法如下::
+   
+    pip install qtaf
     
-执行成功后会在dist目录下生成对应的egg包。
+
+=======
+通过Git拉取最新代码
+=======
+
+操作方式如下::
+    
+    git clone https://github.com/tencent/qtaf
+
+
    
    

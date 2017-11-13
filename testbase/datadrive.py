@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# 
+#
 # Tencent is pleased to support the open source community by making QTA available.
 # Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
 # Licensed under the BSD 3-Clause License (the "License"); you may not use this 
@@ -11,7 +11,7 @@
 # under the License is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
 # OF ANY KIND, either express or implied. See the License for the specific language
 # governing permissions and limitations under the License.
-# 
+#
 '''数据驱动模块
 
 使用介绍：
@@ -88,7 +88,9 @@
 #14/10/30    olive       testbase重构修改，TestCase移除execute方法
 #14/10/31    olive       bugfix：appointRunAt会影响全部的每个数据驱动用例实例设置的数据
 #15/03/25    olive       重构
+#16/11/22    durian   给DataDrive增加__len__方法
 
+import types
 from testbase.testcase import TestCase
 
 class DataDrive(object):
@@ -116,6 +118,8 @@ class DataDrive(object):
     def __iter__(self):
         '''遍历全部的数据名
         '''
+        if isinstance(self._case_datas, types.GeneratorType):
+            self._case_datas = list(self._case_datas)
         if isinstance(self._case_datas, list) or isinstance(self._case_datas, tuple):
             for it in range(len(self._case_datas)):
                 yield it
@@ -127,6 +131,9 @@ class DataDrive(object):
         '''获取对应名称的数据
         '''
         return self._case_datas[name]
+    
+    def __len__(self):
+        return len(self._case_datas)
         
 def is_datadrive( obj ):
     '''是否为数据驱动用例

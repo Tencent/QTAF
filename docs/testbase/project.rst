@@ -7,16 +7,13 @@
 创建测试项目
 ======
 
-创建测试项目需要使用QTAF Egg，在终端下执行::
+在安装好QTAF后，可以在终端中执行一下命令::
 
-   $ python qtaf.egg createproject foo
+    $ qta-manage createproject footestproj
    
 执行成功后，可以看到当前目录下生成一下结构的文件::
 
    /footestproj/
-               /exlib/
-                     /qtaf.chm
-                     /qtaf.egg
                /foolib/
                       /__init__.py
                       /testcase.py
@@ -28,7 +25,6 @@
                /settings.py
                /manage.py
 
-.. note:: 一般来说，测试项目会由QTA的管理员负责创建
 
 ==============
 导入测试项目到Eclipse
@@ -51,28 +47,9 @@
  
  * 测试业务库，比如foo项目中的foolib包，这里存放所有测试业务Lib层的代码。
  
- * exlib，存放测试项目依赖的是搜索Egg包，这里面中至少会存在一个QTAF Egg。
- 
  * 项目配置文件，即settings.py
  
  * 项目辅助脚本，即manage.py
 
-======
-升级QTAF
-======
-
-测试项目创建后，如果需要升级使用的QTAF Egg的版本::
-
-   $ python qtaf-new.egg upgradeproject footestproj
-
-最后一个参数为测试项目所在的文件路径。上面的脚本其实是拷贝并替换qtaf-new.egg到exlib目录中，同时修改.pydevproject中的相关配置
 
 
-========
-安装依赖的Egg
-========
-
-对于测试项目依赖的Egg，可以直接放置到exlib目录中，但是如果是在Eclipse中，还需要修改测试项目对应的PYTHONPATH配置。manage.py提供了一个命令可以自动完成拷贝和配置的动作::
-
-   $ python manage.py installlib other.egg
-   

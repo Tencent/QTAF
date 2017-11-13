@@ -11,6 +11,17 @@
 
    $ python manage.py runtest zootest.cat.feed
    
+这种方式执行的所有输出都会打印到stdout。
+   
+
+========
+指定测试报告类型
+========
+
+可以通过指定 -o xml将执行的结果输出到xml文件，命令行为::
+
+   $ python manage.py runtest -o xml zootest.cat.feed
+
 执行完成后，可以看到当前目录下生成以下文件::
 
    2016/02/03  08:59               450 zootest.cat.feed.FeedFishTest.xml
@@ -22,19 +33,23 @@
    
 直接双击TestReport.xml用浏览器打开就可以看到测试报告。
 
-========
-指定测试报告类型
-========
-
-刚刚执行生成的报告是xml类型的，可以通过-o选项控制测试报告的类型，比如::
+如果想要生成在线报告，可以指定-o online，比如::
 
    $ python manage.py runtest -o online zootest.cat.feed
+   
+-o online在执行完成后，会发送报告邮件，默认是发给当前登录系统的用户，如果要自行指定，可以联合-n选项，例如::
+
+   $ python manage.py runtest -o online -n "guyingzhao;t_QTA;yboxrunner"
+
+还可以通过--reporttype选项控制在线测试报告的类型，可以是任意的字符串，默认是“个人测试”，比如要生成一个性能报告::
+
+   $ python manage.py runtest -o online --reporttype 性能测试 zootest.cat.feed
 
 执行后输出一个在线报告的链接，例如::
    
    http://www.qta.com/report/9273512
    
-也可以修改为流输出式的测试报告::
+也可以修改为流输出式的测试报告，这个就是不指定-o选项时，采取的方式，全部输出到stdout::
 
    $ python manage.py runtest -o stream zootest.cat.feed
 
@@ -57,11 +72,11 @@
 
 使用多线程的方式并发::
 
-   $ python manage.py runtest -o stream -l threading -n 2 zootest.cat.feed
+   $ python manage.py runtest -o stream -x threading -j 2 zootest.cat.feed
 
 这里我们使用2个线程并发去执行全部用例。也可以使用多进程并发::
 
-   $ python manage.py runtest -o stream -l multiprocessing -n 2 zootest.cat.feed
+   $ python manage.py runtest -o stream -x multiprocessing -j 2 zootest.cat.feed
 
 ======
 指定测试用例

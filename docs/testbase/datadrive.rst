@@ -24,7 +24,7 @@
    class InvalidUinTest1(TestCase):
        '''非法测试号码1
        '''
-       owner = "eeelin"
+       owner = "foo"
        status = TestCase.EnumStatus.Ready
        priority = TestCase.EnumPriority.Normal
        timeout = 1
@@ -40,7 +40,7 @@
    class InvalidUinTest2(TestCase):
        '''非法测试号码2
        '''
-       owner = "eeelin"
+       owner = "foo"
        status = TestCase.EnumStatus.Ready
        priority = TestCase.EnumPriority.Normal
        timeout = 1
@@ -57,7 +57,7 @@
    class InvalidUinTest3(TestCase):
        '''非法测试号码3
        '''
-       owner = "eeelin"
+       owner = "foo"
        status = TestCase.EnumStatus.Ready
        priority = TestCase.EnumPriority.Normal
        timeout = 1
@@ -73,7 +73,7 @@
    class InvalidUinTest4(TestCase):
        '''非法测试号码4
        '''
-       owner = "eeelin"
+       owner = "foo"
        status = TestCase.EnumStatus.Ready
        priority = TestCase.EnumPriority.Normal
        timeout = 1
@@ -110,7 +110,7 @@
    class InvalidUinTest(TestCase):
        '''非法测试号码
        '''
-       owner = "eeelin"
+       owner = "foo"
        status = TestCase.EnumStatus.Ready
        priority = TestCase.EnumPriority.Normal
        timeout = 1
@@ -194,6 +194,28 @@ dict类型测试数据
    True
    
 但dict的键在这里似乎没什么用处？
+
+========
+调试数据驱动用例
+========
+
+数据驱动用例的调试时，可以和一般用例一样使用debug_run接口，例如::
+
+   if __name__ == '__main__':
+      HelloDataTest().debug_run()
+      
+使用debug_run调试时，会执行全部数据驱动的用例，如果需要针对单个数据进行调试，可以使用debug_run_one接口::
+
+   if __name__ == '__main__':
+      HelloDataTest().debug_run_one()
+      
+以上的待会随机使用一个数据驱动用例进行执行调试，如果需要指定某个数据的用例进行调试::
+
+   if __name__ == '__main__':
+      HelloDataTest().debug_run_one("B")
+
+这里的“B”是数据驱动的数据的名字，按照以上HelloDataTest的定义，的对应的数据就是1234234。
+
 
 ==========
 管理数据驱动测试用例

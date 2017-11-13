@@ -1,2 +1,2 @@
-pillow
-comtypes
+PIL
+ply

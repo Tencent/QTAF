@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# 
+#
 # Tencent is pleased to support the open source community by making QTA available.
 # Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
 # Licensed under the BSD 3-Clause License (the "License"); you may not use this 
@@ -11,7 +11,7 @@
 # under the License is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
 # OF ANY KIND, either express or implied. See the License for the specific language
 # governing permissions and limitations under the License.
-# 
+#
 '''
 测试用例基类模块
 '''
@@ -32,6 +32,7 @@
 #15/03/31 olive      重构，用例执行逻辑移到runner
 #16/04/18 durian  新旧接口风格的兼容性改造
 #16/04/19 durian  兼容性改造优化
+#17/05/10 durian  assert接口对传入的unicode统一转换成utf8处理
 
 import os
 import sys
@@ -41,7 +42,8 @@ import threading
 import traceback
 import collections
 
-from testbase.util import Timeout, TimeoutError, Singleton, ForbidOverloadMethods, ThreadGroupLocal, ThreadGroupScope
+from testbase.util import Timeout, TimeoutError, Singleton, ForbidOverloadMethods, \
+ThreadGroupLocal, ThreadGroupScope,_to_utf8
 from testbase.testresult import EnumLogLevel, TestResultCollection
 from testbase.conf import settings
 
@@ -131,6 +133,7 @@ class TestCase(object):
     #15/07/01 olive      增加test_dir属性
     
     __metaclass__ = ForbidOverloadMethods(["__init__"])
+    test_extra_info_def = [] #自定义字段
     
     class EnumStatus(object):
         '''测试用例状态枚举类
@@ -261,6 +264,15 @@ class TestCase(object):
             desc = re.sub('\s*$', '', desc)
         return desc
     
+    @property
+    def test_extra_info(self):
+        '''测试用例额外信息
+        '''
+        info = {}
+        for name, _ in self.test_extra_info_def:
+            info[name] = getattr(self, name, None)
+        return info
+            
     def init_test(self, testresult ):
         '''初始化测试用例。慎用此函数，尽量将初始化放到preTest里。
         
@@ -296,8 +308,8 @@ class TestCase(object):
         :param stepinfo: 步骤描述
         :type stepinfo: str
         '''
-        if isinstance(stepinfo, unicode):
-            stepinfo = stepinfo.encode('utf8')
+        if not isinstance(stepinfo, basestring):
+            stepinfo=str(stepinfo)
         self.__testresult.begin_step(stepinfo)
         
     def log_info(self, info ):
@@ -306,9 +318,8 @@ class TestCase(object):
         :type info: string
         :param info: 要Log的信息  
         '''
-        #2014/08/11 pear    增加参数类型判断. bug fix
         if not isinstance(info, basestring):
-            raise TypeError("the parameter 'msg' type must be string, but real type is %s!" % type(info))
+            info=str(info)
         self.__testresult.info(info)
         
     def fail(self, message):
@@ -320,7 +331,7 @@ class TestCase(object):
         #2011/06/13 pear    增加参数
         #2011/06/29 pear    去掉参数
         if not isinstance(message, basestring):
-            raise TypeError("the parameter 'msg' type must be string, but real type is %s!" % type(message))
+            message=str(message)
         self.__testresult.error(message)
         
     def __record_assert_failed( self, message, actual, expect ):
@@ -338,8 +349,8 @@ class TestCase(object):
         err_lineno = inspect.currentframe().f_back.f_back.f_lineno
         err_funcname = inspect.currentframe().f_back.f_back.f_code.co_name
         self.__testresult.log_record(EnumLogLevel.ASSERT, message, 
-                                     dict(actual=str(actual), 
-                                          expect=str(expect), 
+                                     dict(actual=actual, 
+                                          expect=expect, 
                                           code_location=(err_filepath, err_lineno, err_funcname)))
     
     def assert_equal(self, message, actual, expect=True):
@@ -350,6 +361,10 @@ class TestCase(object):
        :param expect: 期望值(默认：True)
        :return: True or False
         '''
+        if isinstance(actual,basestring):
+            actual=_to_utf8(actual)
+        if isinstance(expect,basestring):
+            expect=_to_utf8(expect)
         if expect != actual:
             self.__record_assert_failed(message, actual, expect)
             return False
@@ -367,6 +382,10 @@ class TestCase(object):
         :param expect: 要匹配的正则表达式 
         :return: 匹配成果
         '''
+        if isinstance(actual,unicode):
+            actual=actual.encode('utf8')
+        if isinstance(expect,unicode):
+            expect=expect.encode('utf8')        
         if re.search(expect, actual):
             return True
         else:
@@ -427,19 +446,56 @@ class TestCase(object):
         #2012/11/01 pear    SDK发布流程商定由自动改为手动方式，不再需要返回值
         from testbase.runner import TestRunner
         from testbase.loader import TestDataLoader
+        from testbase.report import EmptyTestReport, StreamTestReport
+        from testbase.testresult import StreamResult
+        from testbase import datadrive
+        
+        if self.casedata is None:
+            testcls = type(self)
+            if datadrive.is_datadrive(testcls):  #数据驱动用例
+                runner = TestRunner(StreamTestReport(output_testresult=True, output_summary=True))
+                return runner.run([testcls(self.__qtaf_datadrive__[it], str(it)) for it in self.__qtaf_datadrive__ ])
+            elif settings.DATA_DRIVE: #项目级的数据驱动
+                testdataset = TestDataLoader().load()
+                runner = TestRunner(StreamTestReport(output_testresult=True, output_summary=True))
+                return runner.run([testcls(testdataset[it], str(it)) for it in testdataset ])
+        runner = TestRunner(EmptyTestReport(lambda tc: StreamResult()))
+        return runner.run([self])
+     
+    def debug_run_one(self, name=None ):
+        '''本地调试测试用例，给数据驱动的用例使用，只执行一个用例
+        
+        :param name: 测试数据名称，如果不指定，执行第一个数据的用例
+        '''
+        from testbase.runner import TestRunner
+        from testbase.loader import TestDataLoader
         from testbase.report import EmptyTestReport
         from testbase.testresult import StreamResult
         from testbase import datadrive
+
         runner = TestRunner(EmptyTestReport(lambda tc: StreamResult()))
         if self.casedata is None:
             testcls = type(self)
             if datadrive.is_datadrive(testcls):  #数据驱动用例
-                return runner.run([testcls(self.__qtaf_datadrive__[it], str(it)) for it in self.__qtaf_datadrive__ ])
+                for it in self.__qtaf_datadrive__:
+                    if (name is None) or (str(name) == str(it)):
+                        return runner.run([testcls(self.__qtaf_datadrive__[it], str(it))])
+                else:
+                    raise RuntimeError("找不到指定名字的测试数据")
             elif settings.DATA_DRIVE: #项目级的数据驱动
                 testdataset = TestDataLoader().load()
-                return runner.run([testcls(testdataset[it], str(it)) for it in testdataset ])
-        return runner.run([self])
-     
+                for it in testdataset:
+                    if (name is None) or (str(name) == str(it)):
+                        return runner.run([testcls(testdataset[it], str(it))])
+                else:
+                    raise RuntimeError("找不到指定名字的测试数据")
+            else:
+                raise RuntimeError("非数据驱动用例请使用debug_run接口进行调试执行")
+        else:
+            return runner.run([self])
+        
+        
+        
     #----------------------------------------------------   
     #    以下为兼容老的代码风格的接口，新代码请勿再使用
     #----------------------------------------------------
@@ -659,6 +715,7 @@ class TestCaseRunner(ITestCaseRunner):
         #                        需要重新考虑已独立进程来执行测试用例。
         #2012/06/07 pear    如果测试用例超时，调用postTest，否则无法释放资源，也无法看到申请的帐号资源是什么。
         
+        self._stop_run=False
         self._testcase = testcase
         self._testresult = testresult_factory.create(testcase)
 #         if type(testcase).__dict__.has_key('run_test'): #使用新的代码风格的接口
@@ -913,6 +970,18 @@ class SeqTestSuite(TestSuite):
             desc = re.sub('\s*$', '', desc)
         return desc
     
+    @property
+    def test_result(self):
+        '''将最后一个执行的用例结果，作为Suite的结果
+        '''
+        result=None
+        for testcae in self._testcases:
+            if testcae.test_result:
+                result=testcae.test_result
+            else:
+                break
+        return result
+    
     def dumps(self):
         '''序列化
         '''
@@ -930,9 +999,8 @@ def debug_run_all():
     '''    
     from testbase.loader import TestLoader
     from testbase.runner import TestRunner
-    from testbase.report import EmptyTestReport
-    from testbase.testresult import StreamResult
+    from testbase.report import StreamTestReport
     tests = TestLoader().load("__main__")
-    runner = TestRunner(EmptyTestReport(lambda tc: StreamResult()))
+    runner = TestRunner(StreamTestReport(output_testresult=True, output_summary=True))
     runner.run(tests)
     

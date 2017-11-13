@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# 
+#
 # Tencent is pleased to support the open source community by making QTA available.
 # Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
 # Licensed under the BSD 3-Clause License (the "License"); you may not use this 
@@ -11,7 +11,7 @@
 # under the License is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
 # OF ANY KIND, either express or implied. See the License for the specific language
 # governing permissions and limitations under the License.
-# 
+#
 '''测试报告
 '''
 
@@ -35,13 +35,6 @@ from datetime import datetime
 
 from testbase import testresult
 from testbase.testresult import EnumLogLevel
-
-try:
-    from testbase.platform import report as _reportitf
-    from testbase.platform import fs as _fsitf
-except ImportError:
-    _reportitf = _fsitf = None
-    
     
 os_encoding = locale.getdefaultlocale()[1]
 
@@ -280,25 +273,33 @@ class StreamTestResultFactory(ITestResultFactory):
 class StreamTestReport(ITestReport):
     '''流形式的测试报告
     '''
-    def __init__(self, stream=sys.stdout, output_testresult=False ):
+    def __init__(self, stream=sys.stdout, error_stream=sys.stderr, output_testresult=False, output_summary=True ):
         '''构造函数
         :param stream: 指定要输出的流设备
         :type stream: file
         :param output_testresult: 是否输出测试用例执行的日志
         :type output_testresult: boolean
+        :param output_summary: 是否输出执行汇总信息
+        :type output_summary: boolean
         '''
         self._stream = stream
+        self._err_stream = error_stream
         self._output_testresult = output_testresult
+        self._output_summary = output_summary
         if stream.encoding and stream.encoding != 'utf8':
             self._write = lambda x: self._stream.write(x.decode('utf8').encode(stream.encoding))
+            self._write_err = lambda x: self._err_stream.write(x.decode('utf8').encode(stream.encoding))
         else:
             self._write = self._stream.write
+            self._write_err = self._err_stream.write
+        self._passed_testresults = []
+        self._failed_testresults = [] 
             
     def begin_report(self):
         '''开始测试执行
         '''
         self._start_time = datetime.now()
-        self._write("Test Cases runs at:%s.\n" % self._start_time.strftime("%Y-%m-%d %H:%M:%S"))
+        self._write("Test runs at:%s.\n" % self._start_time.strftime("%Y-%m-%d %H:%M:%S"))
     
     def end_report(self):
         '''结束测试执行
@@ -306,9 +307,26 @@ class StreamTestReport(ITestReport):
         :type passed: boolean
         '''
         end_time = datetime.now()
-        self._write("Test Cases ends at:%s.\n" % end_time.strftime("%Y-%m-%d %H:%M:%S"))
-        self._write("Total execution time is :%s\n" % str(end_time-self._start_time).split('.')[0])
+        self._write("Test ends at:%s.\n" % end_time.strftime("%Y-%m-%d %H:%M:%S"))
+        #self._write("Total execution time is :%s\n" % str(end_time-self._start_time).split('.')[0])
     
+        if self._output_summary:
+            self._write("\n" + "="*60 + "\n")
+            self._write("SUMMARY:\n\n")
+            self._write(" Totals: %s\t%0.4fs\n\n" % (len(self._failed_testresults) + len(self._passed_testresults),
+                                                     (end_time-self._start_time).total_seconds()))
+            
+            self._write(" Passed: %s\n" % len(self._passed_testresults))
+            for it in self._passed_testresults:
+                self._write(" \t%s\t%0.4fs\n" % (it.testcase.test_name,
+                                                 it.end_time-it.begin_time))
+            self._write("\n")
+            
+            self._write(" Failed: %s\n" % len(self._failed_testresults))
+            for it in self._failed_testresults:
+                self._write_err(" \t%s\t%0.4fs\n" % (it.testcase.test_name,
+                                                     it.end_time-it.begin_time))
+            
     def log_test_result(self, testcase, testresult ):
         '''记录一个测试结果
         :param testcase: 测试用例
@@ -316,6 +334,10 @@ class StreamTestReport(ITestReport):
         :param testresult: 测试结果
         :type testresult: TestResult
         '''
+        if testresult.passed:
+            self._passed_testresults.append(testresult)
+        else:
+            self._failed_testresults.append(testresult)
         self._write("run test case: %s(pass?:%s)\n" % (testcase.test_name, testresult.passed))
                     
     def log_record(self, level, tag, msg, record={}):
@@ -823,3 +845,4 @@ class XMLTestReport(ITestReport):
         :returns ITestResultFactory
         '''
         return self._result_factory
+    

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# 
+#
 # Tencent is pleased to support the open source community by making QTA available.
 # Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
 # Licensed under the BSD 3-Clause License (the "License"); you may not use this 
@@ -11,7 +11,7 @@
 # under the License is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
 # OF ANY KIND, either express or implied. See the License for the specific language
 # governing permissions and limitations under the License.
-# 
+#
 '''
 QPath解析器
 
@@ -111,7 +111,7 @@ class QPathLexer(object):
     boolean_constant = '(True)|(False)|(true)|(false)'
         
     decimal_constant = '(0)|([1-9][0-9]*)'
-    octal_constant = '0[0-7]*'
+    octal_constant = '0[0-7]+'
     hex_prefix = '0[xX]'
     hex_digits = '[0-9a-fA-F]+'
     hex_constant = hex_prefix+hex_digits
@@ -460,7 +460,7 @@ class QPathParser(object):
     def p_prop(self, p):
         '''prop : prop_name operator prop_value
         '''
-        if p[1].value.upper() in ['INSTANCE', 'MAXDEPTH']:
+        if p[1].value.upper() in self.INT_TYPE_PROPNAMES:
             if p[2].value == '~=':
                 self._error('"%s"属性不可以使用"~="操作符'%(p[1].value), p[2], p[2].lexpos)
             if not isinstance(p[3].value, types.IntType):

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# 
+#
 # Tencent is pleased to support the open source community by making QTA available.
 # Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
 # Licensed under the BSD 3-Clause License (the "License"); you may not use this 
@@ -11,7 +11,7 @@
 # under the License is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
 # OF ANY KIND, either express or implied. See the License for the specific language
 # governing permissions and limitations under the License.
-# 
+#
 '''
 测试结果模块
 
@@ -43,6 +43,8 @@ ITestResultHandler来实现一个新的Handler，详细请参考ITestResultHandl
 #2015/01/26 olive    支持在测试报告中展示附件
 #2015/01/26 olive    测试用例超时时，测试报告中展示对应的错误类型
 #2015/03/27 olive    重构
+#2017/03/23 durian 增加对log内容的输入类型检查
+#2017/06/28 durian 统一转换函数，在输入时转换成utf8，而不是to_xml内，防止解码错误
 
 import sys
 import traceback
@@ -50,19 +52,16 @@ import time
 import xml.dom.minidom as dom
 import xml.parsers.expat as xmlexpat
 import xml.sax.saxutils as saxutils
-import types
 import socket
 import threading
 import codecs
 import os
 import locale
+import json
 
 from testbase import context
+from testbase.util import _to_unicode, _to_utf8, get_thread_traceback
 
-try:
-    from testbase.platform import report as _reportitf
-except ImportError:
-    _reportitf = None
     
 os_encoding = locale.getdefaultlocale()[1]
 
@@ -73,6 +72,7 @@ class EnumLogLevel(object):
     INFO = 20
     Environment = 21  #测试环境相关信息， device/devices表示使用的设备、machine表示执行的机器
     ENVIRONMENT = Environment
+    RESOURCE = 22
     
     WARNING = 30
     ERROR = 40
@@ -95,25 +95,7 @@ def _convert_timelength(sec):
     sec -= m * 60
     return (h, m, sec)
 
-def _to_unicode( s ):
-    '''将任意字符串转换为unicode编码
-    '''
-    if isinstance(str, unicode):
-        return s
-    try:
-        return s.decode('utf8')
-    except UnicodeDecodeError:
-        return s.decode(os_encoding)
-    
-def _to_utf8( s ):
-    '''将任意字符串转换为UTF-8编码
-    '''
-    if isinstance(str, unicode):
-        return s.encode('utf-8')
-    try:
-        return s.decode('utf8').encode('utf8')
-    except UnicodeDecodeError:
-        return s.decode(os_encoding).encode('utf8')
+
     
 def _to_utf8_by_lines( s ):
     '''将任意字符串转换为UTF-8编码
@@ -241,30 +223,24 @@ class TestResultBase(object):
             record = {}
         if attachments is None:
             attachments = {}
+        if not isinstance(msg,(str,unicode)):
+            raise ValueError("msg必须是unicode或str类型")
         if isinstance(msg, unicode):
             msg = msg.encode('utf8')
-        with self.__lock:
-            if not self.__accept_result:
-                return
-            if level >= EnumLogLevel.ERROR:
+        if level >= EnumLogLevel.ERROR:
                 self.__steps_passed[self.__curr_step] = False
                 if level > self.__error_level:
                     self.__error_level = level
-                if level == EnumLogLevel.TESTTIMEOUT:
-                    extra_record, extra_attachments = self._get_extra_fail_record_safe() #超时时调用这个可能会卡死，所以要这样处理
-                    record.update(extra_record)
-                    attachments.update(extra_attachments)    
-                else:
-                    try:
-                        extra_record, extra_attachments = context.current_testcase().get_extra_fail_record()
-                        record.update(extra_record)
-                        attachments.update(extra_attachments)
-                    except:
-                        self.handle_log_record(EnumLogLevel.ERROR, '测试失败时获取测试用例上下文失败', 
-                                          {'traceback':traceback.format_exc()}, {})
+                extra_record, extra_attachments = self._get_extra_fail_record_safe()
+                record.update(extra_record)
+                attachments.update(extra_attachments)
+                
+        with self.__lock:
+            if not self.__accept_result:
+                return
             self.handle_log_record(level, msg, record, attachments)
         
-    def _get_extra_fail_record_safe(self):
+    def _get_extra_fail_record_safe(self,timeout=300):
         '''使用线程调用测试用例的get_extra_fail_record
         '''
         def _run(outputs, errors):
@@ -279,16 +255,20 @@ class TestResultBase(object):
         t = threading.Thread(target=_run, args=(outputs, errors))
         t.daemon = True
         t.start()
-        t.join(10)
+        t.join(timeout)
         extra_record, extra_attachments = {}, {}
-        if t.is_alive():
-            self.handle_log_record(EnumLogLevel.ERROR, '测试失败时获取测试用例上下文超时',  {}, {})
-        else:
-            if errors:
-                self.handle_log_record(EnumLogLevel.ERROR, '测试失败时获取测试用例上下文失败', 
-                                      {'traceback':errors[0]}, {})
+        with self.__lock:
+            if t.is_alive():
+                stack=get_thread_traceback(t)
+                self.handle_log_record(EnumLogLevel.ERROR, '测试失败时获取其他额外错误信息超过了指定时间：%ds' % timeout,
+                                       {'traceback':stack}, 
+                                       {})
             else:
-                extra_record, extra_attachments = outputs[0]
+                if errors:
+                    self.handle_log_record(EnumLogLevel.ERROR, '测试失败时获取其他额外错误信息失败', 
+                                          {'traceback':errors[0]}, {})
+                else:
+                    extra_record, extra_attachments = outputs[0]
         return extra_record, extra_attachments
 
     def debug(self, msg, record=None, attachments=None):
@@ -436,6 +416,9 @@ class StreamResult(TestResultBase):
         :param msg: 测试步骤名称
         :type msg: string
         '''
+        if not isinstance(msg,(str,unicode)):
+            raise ValueError("msg必须是unicode或str类型")
+        
         self._write(self._seperator1)
         self._write("步骤%s: %s\n" % (len(self._step_results) + 1, msg))
     
@@ -464,9 +447,11 @@ class StreamResult(TestResultBase):
         
         if level == EnumLogLevel.ASSERT:
             if record.has_key("actual"):
-                self._write("   实际值：%s\n" % record["actual"])
+                actual=record["actual"]
+                self._write("   实际值：%s%s\n" % (actual.__class__,repr(actual)))
             if record.has_key("expect"):
-                self._write("   期望值：%s\n" % record["expect"])    
+                expect=record["expect"]
+                self._write("   期望值：%s%s\n" % (expect.__class__,repr(expect)))
             if record.has_key("code_location"):
                 self._write(_to_utf8('  File "%s", line %s, in %s\n' % record["code_location"]))
             
@@ -506,21 +491,6 @@ class XmlResult(TestResultBase):
         '''
         return self._file_path
         
-    def _decode(self, data):
-        #2011/05/23 pear    可能的编码错误
-        #2013/01/10 pear    若出现编码错误，则通过repr转换
-        if data and isinstance(data, basestring):
-            if not isinstance(data, types.UnicodeType):
-                try:
-                    return data.decode('utf8')
-                except UnicodeDecodeError: # data 可能是gbk编码
-                    pass
-                try:
-                    return data.decode('gbk')
-                except UnicodeDecodeError: # data 可能是gbk编码
-                    return repr(data)
-        return data
-        
     def handle_test_begin(self, testcase ):
         '''处理一个测试用例执行的开始
         
@@ -532,8 +502,8 @@ class XmlResult(TestResultBase):
         priority = getattr(testcase, 'priority', None)
         timeout = getattr(testcase, 'timeout', None)
         self._testnode = self._xmldoc.createElement('TEST')
-        self._testnode.setAttribute("name", _to_unicode(saxutils.escape(testcase.test_name)))
-        self._testnode.setAttribute("owner", _to_unicode(saxutils.escape(owner)))
+        self._testnode.setAttribute("name", _to_utf8(saxutils.escape(testcase.test_name)))
+        self._testnode.setAttribute("owner", _to_utf8(saxutils.escape(str(owner))))
         self._testnode.setAttribute("priority", str(priority))
         self._testnode.setAttribute("timeout", str(timeout))
         self._testnode.setAttribute('begintime', time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(self.begin_time)))
@@ -560,8 +530,10 @@ class XmlResult(TestResultBase):
         :param msg: 测试步骤名称
         :type msg: string
         '''
+        if not isinstance(msg, (str,unicode)):
+            raise ValueError("msg必须是str或unicode类型")
         self._stepnode = self._xmldoc.createElement("STEP")
-        self._stepnode.setAttribute('title', self._decode(msg))
+        self._stepnode.setAttribute('title', _to_utf8(msg))
         self._stepnode.setAttribute('time', time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time())))
         self._testnode.appendChild(self._stepnode)
         
@@ -607,13 +579,13 @@ class XmlResult(TestResultBase):
         #由于目前的报告系统仅支持部分级别的标签，所以这里先做转换
         if level >= EnumLogLevel.ERROR:
             tagname = levelname[EnumLogLevel.ERROR]
-        elif level == EnumLogLevel.Environment:
+        elif level == EnumLogLevel.Environment or level == EnumLogLevel.RESOURCE:
             tagname = levelname[EnumLogLevel.INFO]
         else:
             tagname = levelname[level]
             
         infonode = self._xmldoc.createElement(tagname)
-        textnode = self._xmldoc.createTextNode(self._decode(msg))
+        textnode = self._xmldoc.createTextNode(_to_utf8(msg))
         infonode.appendChild(textnode)
         self._stepnode.appendChild(infonode)
         
@@ -626,11 +598,11 @@ class XmlResult(TestResultBase):
                 try:
                     if isinstance(record["actual"], basestring):
                         dom.parseString("<a>%s</a>" % record["actual"])
-                    acttxt = self._decode(record["actual"])
+                    acttxt = _to_utf8(record["actual"])
                 except xmlexpat.ExpatError:
-                    acttxt = self._decode(repr(record["actual"]))
+                    acttxt = _to_utf8(repr(record["actual"]))
                 except UnicodeEncodeError:
-                    acttxt = self._decode(repr(record["actual"]))
+                    acttxt = _to_utf8(repr(record["actual"]))
                     
                 node.appendChild(self._xmldoc.createTextNode(acttxt))
                 infonode.appendChild(node)
@@ -642,24 +614,24 @@ class XmlResult(TestResultBase):
                         #2013/06/27 pear 这里对self.record.expect进行格式化，加入a标签（其实，可使用能被xml解释接受的任一合法标签），
                         #                    是为了使dom.parseString函数在解释self.record.expect时，不会抛异常。
                         dom.parseString("<a>%s</a>" % record["expect"])
-                    exptxt = self._decode(str(record["expect"]))
+                    exptxt = _to_utf8(str(record["expect"]))
                 except xmlexpat.ExpatError:
-                    exptxt = self._decode(repr(record["expect"]))
+                    exptxt = _to_utf8(repr(record["expect"]))
                 except UnicodeEncodeError:
-                    exptxt = self._decode(repr(record["expect"]))
+                    exptxt = _to_utf8(repr(record["expect"]))
                 node.appendChild(self._xmldoc.createTextNode(exptxt))
                 infonode.appendChild(node)
 
         if record.has_key("traceback"):
             excnode = self._xmldoc.createElement('EXCEPT')
-            excnode.appendChild(self._xmldoc.createTextNode(self._decode(record["traceback"])))
+            excnode.appendChild(self._xmldoc.createTextNode(_to_utf8(record["traceback"])))
             infonode.appendChild(excnode)
 
         for name in attachments:
             file_path = attachments[name]
             attnode = self._xmldoc.createElement('ATTACHMENT')
-            attnode.setAttribute('filepath', self._decode(file_path))
-            attnode.appendChild(self._xmldoc.createTextNode(self._decode(name)))
+            attnode.setAttribute('filepath', _to_utf8(file_path))
+            attnode.appendChild(self._xmldoc.createTextNode(_to_utf8(name)))
             infonode.appendChild(attnode)
                                 
     def toxml(self):
@@ -667,127 +639,9 @@ class XmlResult(TestResultBase):
         
         :returns string - xml文本
         '''
-        return self._xmldoc.toprettyxml(indent="    ", newl="\n", encoding='utf-8')
+        return self._xmldoc.toprettyxml(indent="    ", newl="\n")
+ 
 
-if _reportitf:
-    class OnlineResult(XmlResult):
-        '''存储在测试报告服务器上的测试用例结果
-        '''
-        
-        def __init__(self, reportid, storage, update_xml=True ):
-            '''构造函数
-            
-            :param reportid: 测试报告ID
-            :type reportid: string
-            :param storage: 网络文件存储接口
-            :type storage: NFStorage
-            :param update_xml: 是否上传XML文件
-            :type update_xml: boolean
-            '''
-            super(OnlineResult, self).__init__()
-            self._reportid = reportid
-            self._nfs = storage
-            
-            self._exp_info = None
-            self._exp_priority = 0
-            self._devices_used = set()
-            self._machine = socket.gethostname()
-            self._update_xml = update_xml
-            self._extra = {}
-            
-        @property
-        def storage(self):
-            '''网络文件存储接口
-            
-            :returns: NFStorage - 网络文件存储接口
-            '''
-            return self._nfs
-        
-        @property
-        def extra(self):
-            '''用例附件信息
-            
-            :returns: dict
-            '''
-            return self._extra
-        
-        def handle_test_end(self, passed ):
-            '''处理一个测试用例执行的结束
-            
-            :param passed: 测试用例是否通过
-            :type passed: boolean
-            '''
-            super(OnlineResult, self).handle_test_end(passed)        
-            xml_data = self.toxml()
-            if self._update_xml:
-                casename = self.testcase.test_class_name
-                if len(casename) > 32:
-                    casename = casename[0:10] + '___' + casename[-10:-1]
-                xml_filepath = '%s_%s.xml'%(casename, time.time())
-                with codecs.open(xml_filepath, 'w') as fd:
-                    fd.write(xml_data)
-                self._nfs.upload(xml_filepath)
-            req = dict( name=self.testcase.test_name, 
-                        path=self.testcase.test_name,
-                        author=self.testcase.owner, 
-                        result={True:0,False:1}[passed], 
-                        iteration="1",
-                        machine_id=self._machine, 
-                        priority=self.testcase.priority, 
-                        timeout=self.testcase.timeout, 
-                        description=self.testcase.test_doc, 
-                        started_time=time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(self.begin_time)), 
-                        finished_time=time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(self.end_time)),
-                        log_content=xml_data, 
-                        log_dir=self._nfs.url, 
-                        reason=self._exp_info, 
-                        callstack=None, 
-                        machine=','.join([str(it) for it in self._devices_used]))
-            req.update(self._extra)
-            _reportitf.upload_testcase(self._reportid, **req)
-    
-        def handle_log_record(self, level, msg, record, attachments ):
-            '''处理一个日志记录
-            
-            :param level: 日志级别，参考EnumLogLevel
-            :type level: string
-            :param msg: 日志消息
-            :type msg: string
-            :param record: 日志记录
-            :type record: dict
-            :param attachments: 附件
-            :type attachments: dict
-            '''
-            if level > EnumLogLevel.ERROR:
-                if self._exp_priority <= 3 and level == EnumLogLevel.APPCRASH:
-                    self._exp_info, self._exp_priority = "Crash", 3
-                        
-                if self._exp_priority <= 2 and level == EnumLogLevel.TESTTIMEOUT:
-                    self._exp_info, self._exp_priority = "用例执行超时", 2
-                      
-                if self._exp_priority <= 1 and level == EnumLogLevel.ASSERT:
-                    self._exp_info, self._exp_priority = "检查点不通过", 1
-                        
-                if self._exp_priority <= 1 and record.has_key("traceback"):
-                    if not self._exp_info: #优先记录第一个异常，第一个异常往往比较大可能是问题的原因
-                        self._exp_info, self._exp_priority = record["traceback"].split('\n')[-2], 1
-               
-            if level == EnumLogLevel.Environment:
-                if record.has_key('device'):
-                    self._devices_used.add(record["device"])
-                if record.has_key('devices'):
-                    self._devices_used |= set(record["devices"])
-                if record.has_key('machine'):
-                    self._machine = record["machine"]
-    
-            for name in attachments:
-                file_path = attachments[name]
-                if os.path.isfile(_to_unicode(file_path)):
-                    attachments[name] = self._nfs.upload(file_path)
-    
-            super(OnlineResult, self).handle_log_record(level, msg, record, attachments)
-    
-    
 class TestResultCollection(list):
     '''测试结果集合
     '''

@@ -26,7 +26,7 @@
    class ExceptTest(TestCase):
        '''异常测试
        '''
-       owner = "eeelin"
+       owner = "foo"
        status = TestCase.EnumStatus.Ready
        priority = TestCase.EnumPriority.Normal
        timeout = 1
@@ -40,7 +40,7 @@
 以上的用例有问题，执行比如有会有异常抛出，因此测试结果是不通过的::
 
    ============================================================
-   测试用例:ExceptTest 所有者:eeelin 优先级:Normal 超时:1分钟
+   测试用例:ExceptTest 所有者:foo 优先级:Normal 超时:1分钟
    ============================================================
    ----------------------------------------
    步骤1: 异常测试
@@ -65,7 +65,7 @@
    class LogErrorTest(TestCase):
        '''异常测试
        '''
-       owner = "eeelin"
+       owner = "foo"
        status = TestCase.EnumStatus.Ready
        priority = TestCase.EnumPriority.Normal
        timeout = 1
@@ -82,7 +82,7 @@
 上面的用例是调用日志的接口，记录一个错误的日志，因此测试也不通过::
 
    ============================================================
-   测试用例:LogErrorTest 所有者:eeelin 优先级:Normal 超时:1分钟
+   测试用例:LogErrorTest 所有者:foo 优先级:Normal 超时:1分钟
    ============================================================
    ----------------------------------------
    步骤1: 异常测试
@@ -224,7 +224,7 @@ APPCRASH用于记录被测对象的Crash，比如::
    class EnvLogOnExceptTest(TestCase):
        '''异常时记录IP和时间
        '''
-       owner = "eeelin"
+       owner = "foo"
        status = TestCase.EnumStatus.Ready
        priority = TestCase.EnumPriority.Normal
        timeout = 1

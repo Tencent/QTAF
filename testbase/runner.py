@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# 
+#
 # Tencent is pleased to support the open source community by making QTA available.
 # Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
 # Licensed under the BSD 3-Clause License (the "License"); you may not use this 
@@ -11,7 +11,7 @@
 # under the License is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
 # OF ANY KIND, either express or implied. See the License for the specific language
 # governing permissions and limitations under the License.
-# 
+#
 '''
 TestRunner负责多个测试用例，目前提供三种方式:
 
@@ -318,7 +318,7 @@ class ThreadingTestRunner(BaseTestRunner):
         :param retries: 用例失败时重试次数
         :type retries: int
         '''
-        self._thread_cnt = thread_cnt
+        self._thread_cnt = int(thread_cnt)
         self._retries = retries
         self._lock = threading.Lock()
         if thread_cnt > 1:
@@ -415,7 +415,7 @@ class TestResultFunctionProxy(object):
 class TestResultProxy(object):
     '''测试结果代理
     '''
-    def __init__(self, from_worker, obj_id, passed ):
+    def __init__(self, from_worker, obj_id, passed, testcase ):
         '''构造函数
         
         :param from_worker: 来源的工作者
@@ -424,20 +424,21 @@ class TestResultProxy(object):
         :type obj_id: int
         :param passed: 测试是否通过
         :type passed: boolean
-        :param rpc_tx: 测试结果代理RPC请求发送端
-        :type rpc_tx: multiprocessing.Queue
-        :param rpc_rx: 测试结果代理RPC结果接收端
-        :type rpc_rx: multiprocessing.Queue
+        :param testcase: 对应测试用例
+        :type testcase: TestCase
         '''
         self.__worker = from_worker
         self.__passed = passed
         self.__objid = obj_id
+        self.__testcase = testcase
 
     def __getattr__(self, name ):
         if name.startswith('_TestResultProxy__'):
             return super(TestResultProxy,self).__getattr__(name)
         if name == 'passed': #shortcut
             return self.__passed
+        if name == 'testcase':
+            return self.__testcase
         self.__worker.send_message((EnumProcessMsgType.Result_GetAttr, self.__objid, name))
         msg = self.__worker.recv_message(5)
         msg_type = msg[0]
@@ -795,7 +796,7 @@ class MultiProcessTestRunner(BaseTestRunner):
         :param retries: 失败重跑次数上限
         :type retries: int
         '''
-        self._process_cnt = process_cnt
+        self._process_cnt = int(process_cnt)
         self._retries = retries
         super(MultiProcessTestRunner,self).__init__(report)
         
@@ -829,7 +830,7 @@ class MultiProcessTestRunner(BaseTestRunner):
                 worker = workers_dict[msg[1]]
                 testcase = serialization.loads(msg[2])
                 objid, passed = msg[3], msg[4]
-                self.report.log_test_result(testcase, TestResultProxy(worker, objid, passed))
+                self.report.log_test_result(testcase, TestResultProxy(worker, objid, passed, testcase))
             
             elif msg_type == EnumProcessMsgType.Report_LogRecord:
                 self.report.log_record(msg[1], msg[2], msg[3], msg[4])
