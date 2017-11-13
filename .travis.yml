@@ -15,4 +15,4 @@ python:
 install:
   - pip install -r requirements.txt
 script:
-  - pytest # or py.test for Python versions 3.5 and below
+  - python test/__init__.py
