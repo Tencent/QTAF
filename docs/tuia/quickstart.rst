@@ -4,10 +4,10 @@
 在编写UI自动化测试之前，您需要先准备好以下的工具和开发环境：
    
    * Python运行环境
-   * QTAF(`testbase <http://qta.oa.com/static/doc/testbase/>`_ & `tuia <http://qta.oa.com/static/doc/tuia/>`_)
+   * QTAF(`testbase <http://qta-testbase.readthedocs.io/zh/latest/>`_ & `tuia <http://qta-tuia.readthedocs.io/zh/latest/>`_)
    * 一个适用于对应平台QTA测试驱动器，如QT4A
    
-在开始之前，您需要先创建一个QTA测试自动化项目，并掌握基本的测试用例组织形式和设计方法，详情请参考《`QTA Testbase文档 <http://qta.oa.com/static/doc/testbase/>`_》。
+在开始之前，您需要先创建一个QTA测试自动化项目，并掌握基本的测试用例组织形式和设计方法，详情请参考《`QTA Testbase文档 <http://qta-testbase.readthedocs.io/zh/latest/>`_》。
 
 .. note:: 为了简单，下文示例代码使用QTA的一个驱动器————QT4X，QT4X是一个示例的QTA测试驱动器，支持对“QT4X SUT UI框架”实现的应用的自动化测试。“QT4X SUT UI框架”其实并不是一个真正的UI应用框架，而只是用于QTA驱动器的测试和学习目的设计，基于Python的XML etree实现的“伪”框架。实际使用时，可以针对测试的平台选择对应的驱动器进行替换。
 
@@ -17,12 +17,11 @@
 --------
 可以使用QTAF包创建一个空测试项目，比如::
    
-   $ python qtaf.egg createproject foo
+   $ qta-manage createproject foo
 
 创建成功后，安装对应平台的“测试驱动器”::
 
-   $ python manage.py installlib qt4x.egg
-
+   $ pip install qt4x
 
 -------
 封装一个App

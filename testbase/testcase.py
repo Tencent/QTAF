@@ -1,25 +1,38 @@
 # -*- coding: utf-8 -*-
+#
+# Tencent is pleased to support the open source community by making QTA available.
+# Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
+# Licensed under the BSD 3-Clause License (the "License"); you may not use this 
+# file except in compliance with the License. You may obtain a copy of the License at
+# 
+# https://opensource.org/licenses/BSD-3-Clause
+# 
+# Unless required by applicable law or agreed to in writing, software distributed 
+# under the License is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
+# OF ANY KIND, either express or implied. See the License for the specific language
+# governing permissions and limitations under the License.
+#
 '''
 测试用例基类模块
 '''
-#10/11/09 allenpan    增加TestCaseStatus和TestCasePriority类，修改TestCase.run函数
-#10/11/16 allenpan    用多线程实现超时结束测试用例
-#10/12/02 aaronlai    修改TestCase.waitForEqual函数的参数
-#10/12/07 allenpan    增加TestCase.Log属性
-#10/12/12 aaronlai    修改TestCase.assertEqual函数的参数
-#10/12/13 aaronlai    修改TestCase.assertEqual函数的参数
-#10/12/22 allenpan    添加TestCase.logInfo函数
-#10/12/23 allenpan    将assertEqual和waitForEqual的正则匹配由assertMatch和waitForMatch代替
-#10/12/30 allenpan    添加initTest和cleanTest函数
-#11/05/27 jonliang    修改run方法，本地执行用例后把当前log handler去掉
-#13/01/21 pillarzou   TestCase类增加__Environ类，用于访问用例环境变量
-#13/05/10 terisli     platform support
-#13/11/11 aaronlai    增加对环境变量的用法说明
-#15/01/13 eeelin      规避大部分用例超时，postTest可能被执行两次的情况
-#15/03/31 eeelin      重构，用例执行逻辑移到runner
-#16/04/18 guyingzhao  新旧接口风格的兼容性改造
-#16/04/19 guyingzhao  兼容性改造优化
-#17/05/10 guyingzhao  assert接口对传入的unicode统一转换成utf8处理
+#10/11/09 banana    增加TestCaseStatus和TestCasePriority类，修改TestCase.run函数
+#10/11/16 banana    用多线程实现超时结束测试用例
+#10/12/02 pear    修改TestCase.waitForEqual函数的参数
+#10/12/07 banana    增加TestCase.Log属性
+#10/12/12 pear    修改TestCase.assertEqual函数的参数
+#10/12/13 pear    修改TestCase.assertEqual函数的参数
+#10/12/22 banana    添加TestCase.logInfo函数
+#10/12/23 banana    将assertEqual和waitForEqual的正则匹配由assertMatch和waitForMatch代替
+#10/12/30 banana    添加initTest和cleanTest函数
+#11/05/27 persimmon    修改run方法，本地执行用例后把当前log handler去掉
+#13/01/21 organse   TestCase类增加__Environ类，用于访问用例环境变量
+#13/05/10 tangor     platform support
+#13/11/11 pear    增加对环境变量的用法说明
+#15/01/13 olive      规避大部分用例超时，postTest可能被执行两次的情况
+#15/03/31 olive      重构，用例执行逻辑移到runner
+#16/04/18 durian  新旧接口风格的兼容性改造
+#16/04/19 durian  兼容性改造优化
+#17/05/10 durian  assert接口对传入的unicode统一转换成utf8处理
 
 import os
 import sys
@@ -42,7 +55,7 @@ class TestCaseStatus(object):
     :attention: 此类将会被移除，请使用TestCase.EnumStatus
     '''
     
-    #11/09/19    jonliang    增加TestCaseStatus的Suspend字段
+    #11/09/19    persimmon    增加TestCaseStatus的Suspend字段
     Design, Implement, Review, Ready, Suspend = ('Design', 'Implement', 'Review', 'Ready', 'Suspend')
 
 class TestCasePriority(object):
@@ -50,7 +63,7 @@ class TestCasePriority(object):
     
     :attention: 此类将会被移除，请使用TestCase.EnumPriority
     '''
-    #2011/07/05 aaronlai    加上BVT(Build Verification Test)优先级
+    #2011/07/05 pear    加上BVT(Build Verification Test)优先级
     BVT, High, Normal, Low = ('BVT', 'High', 'Normal', 'Low')
 
 
@@ -93,14 +106,14 @@ env保存了用例运行时的一些测试环境变量。
     print env['YourEnvKey']
 
     """
-    #2013/11/25 aaronlai    实现为单例模式
+    #2013/11/25 pear    实现为单例模式
     __metaclass__ = Singleton
     def __init__(self):
         """构造函数。判断系统环境变量中是否存在由测试计划中传入的环境变量，有则加载。
         
         """
-        #2013/11/04 aaronlai    created
-        #2013/12/12 aaronlai    修改类名称，去掉线程保护
+        #2013/11/04 pear    created
+        #2013/12/12 pear    修改类名称，去掉线程保护
         super(Environ, self).__init__()
         for key in os.environ.keys():
             if key.startswith("QTAF_") and key[5:]:
@@ -113,11 +126,11 @@ class TestCase(object):
             所有测试用例都最终从此基类继承。测试用例的测试脚本主要实现在"runTest()"中，
            而当用例需要初始化和清理测试环境时则分别重写"preTest()"和"postTest()"函数。
     '''
-    #11/01/12 allenpan     添加EnumStatus和EnumPriority
-    #11/04/04 allenpan    使用新的log方式
-    #12/02/02 jonliang    去除不用的attribute
-    #13/11/04 aaronlai    修改environ的赋值
-    #15/07/01 eeelin      增加test_dir属性
+    #11/01/12 banana     添加EnumStatus和EnumPriority
+    #11/04/04 banana    使用新的log方式
+    #12/02/02 persimmon    去除不用的attribute
+    #13/11/04 pear    修改environ的赋值
+    #15/07/01 olive      增加test_dir属性
     
     __metaclass__ = ForbidOverloadMethods(["__init__"])
     test_extra_info_def = [] #自定义字段
@@ -128,8 +141,8 @@ class TestCase(object):
         :attention: 如果因为特殊原因需要暂时屏蔽某个用例的任务执行（比如有功能缺陷从而导致执行失败），
                                                      则可以先置为该字段为Suspend,等到可用的时候再将该字段置为Ready
         '''
-        #11/09/19 jonliang    增加EnumStatus的Suspend字段
-        #12/11/15 aaronlai    引用TestCaseStatus定义
+        #11/09/19 persimmon    增加EnumStatus的Suspend字段
+        #12/11/15 pear    引用TestCaseStatus定义
         Design, Implement, Review, Ready, Suspend = (TestCaseStatus.Design, 
                                                      TestCaseStatus.Implement,
                                                      TestCaseStatus.Review,
@@ -139,8 +152,8 @@ class TestCase(object):
     class EnumPriority(object):
         '''测试用例优先级枚举类
         '''
-        #2011/07/05 aaronlai    加上BVT(Build Verification Test)优先级
-        #2012/11/15 aaronlai    引用TestCasePriority
+        #2011/07/05 pear    加上BVT(Build Verification Test)优先级
+        #2012/11/15 pear    引用TestCasePriority
         BVT, High, Normal, Low = (TestCasePriority.BVT,
                                   TestCasePriority.High,
                                   TestCasePriority.Normal,
@@ -158,9 +171,9 @@ class TestCase(object):
         :param testdataname: 测试数据标识
         :type testdataname: str
         '''
-        #2013/09/05 aaronlai    将测试用例信息设置到测试环境中
-        #2013/12/12 aaronlai    修改实例化
-        #2015/03/31 eeelin      增加testdata参数
+        #2013/09/05 pear    将测试用例信息设置到测试环境中
+        #2013/12/12 pear    修改实例化
+        #2015/03/31 olive      增加testdata参数
         self.__casedata = testdata
         self.__testdataname = testdataname
         self.__environ = Environ()
@@ -212,8 +225,8 @@ class TestCase(object):
         
         :rtype: str
         '''
-        #11/2/24    dadalin    测试名包含模块名
-        #2012/05/31 aaronlai    修改编码
+        #11/2/24    sorgo    测试名包含模块名
+        #2012/05/31 pear    修改编码
         cls = type(self)
         if cls.__module__ == '__main__':
             type_name =  cls.__name__.decode('gbk').encode('utf8')
@@ -242,7 +255,7 @@ class TestCase(object):
         
         :rtype: str
         '''
-        #2013/08/21 aaronlai    新建
+        #2013/08/21 pear    新建
         desc = self.__class__.__doc__
 #        if desc:
 #            desc = cgi.escape(desc)
@@ -276,7 +289,7 @@ class TestCase(object):
     def run_test(self):
         '''运行测试用例
         '''
-        #2013/08/01 aaronlai    若子类不重载此函数，则抛出异常
+        #2013/08/01 pear    若子类不重载此函数，则抛出异常
         raise NotImplementedError("请在%s类中实现runTest方法" % type(self))
 
     def post_test(self):
@@ -315,8 +328,8 @@ class TestCase(object):
         :type message: string
         :param message: 要Log的信息  
         '''
-        #2011/06/13 aaronlai    增加参数
-        #2011/06/29 aaronlai    去掉参数
+        #2011/06/13 pear    增加参数
+        #2011/06/29 pear    去掉参数
         if not isinstance(message, basestring):
             message=str(message)
         self.__testresult.error(message)
@@ -429,8 +442,8 @@ class TestCase(object):
     def debug_run(self):
         '''本地调试测试用例
         '''
-        #2012/08/22 aaronlai    期望这里能返回测试用例的执行结果
-        #2012/11/01 aaronlai    SDK发布流程商定由自动改为手动方式，不再需要返回值
+        #2012/08/22 pear    期望这里能返回测试用例的执行结果
+        #2012/11/01 pear    SDK发布流程商定由自动改为手动方式，不再需要返回值
         from testbase.runner import TestRunner
         from testbase.loader import TestDataLoader
         from testbase.report import EmptyTestReport, StreamTestReport
@@ -539,7 +552,7 @@ class TestCaseRunner(ITestCaseRunner):
     自定义一个测试用例的执行逻辑，以下是TestCaseRunner的接口定义
     '''
     
-    #2015/05/20 eeelin TestCaseRunner增加setup/teardown扩展接口
+    #2015/05/20 olive TestCaseRunner增加setup/teardown扩展接口
     
     CLEANUP_TIMEOUT = 300
     
@@ -612,12 +625,12 @@ class TestCaseRunner(ITestCaseRunner):
     def _thread_run(self):
         '''测试用例线程过程
         '''
-        #11/11/07 jonliang    增加判断各个test是否成功的标志位
-        #12/09/28 aaronlai    修改类属性置空时并不能提示的bug、增加对用例描述是否空的判断
-        #12/10/17 aaronlai    修改当用例描述未填写时，不能提示用例注释错误的bug
-        #13/03/01 aaronlai    注释掉pythoncom.CoUninitialize，因使用windbg查看被hang住的python进程时，发现是在调用CoUninitialize
+        #11/11/07 persimmon    增加判断各个test是否成功的标志位
+        #12/09/28 pear    修改类属性置空时并不能提示的bug、增加对用例描述是否空的判断
+        #12/10/17 pear    修改当用例描述未填写时，不能提示用例注释错误的bug
+        #13/03/01 pear    注释掉pythoncom.CoUninitialize，因使用windbg查看被hang住的python进程时，发现是在调用CoUninitialize
         #                     函数时发生了死锁，故注释掉。观察一段时间，看修改是否会影响测试。
-        #13/09/05 aaronlai    使用TestDoc属性
+        #13/09/05 pear    使用TestDoc属性
         try:
             try:
                 self._check_testcase(self._testcase)
@@ -696,11 +709,11 @@ class TestCaseRunner(ITestCaseRunner):
         :type testresult_factory: ITestResultFactory
         :rtype: TestResult/TestResultCollection - 测试结果
         '''
-        #2011/08/31 aaronlai    is_alive是一个方法，非变量
-        #2012/01/05 allenpan    当被测程序hang住，python的垃圾回收释放远程COM对象也会hang。
+        #2011/08/31 pear    is_alive是一个方法，非变量
+        #2012/01/05 banana    当被测程序hang住，python的垃圾回收释放远程COM对象也会hang。
         #                       临时方案是disable gc后kill掉程序，在enable gc。后续这里
         #                        需要重新考虑已独立进程来执行测试用例。
-        #2012/06/07 aaronlai    如果测试用例超时，调用postTest，否则无法释放资源，也无法看到申请的帐号资源是什么。
+        #2012/06/07 pear    如果测试用例超时，调用postTest，否则无法释放资源，也无法看到申请的帐号资源是什么。
         
         self._stop_run=False
         self._testcase = testcase
@@ -800,7 +813,7 @@ class RepeatTestCaseRunner(ITestCaseRunner):
         class HelloRepeatTest(TestCase):
             '示例用例'
             case_runner = RepeatTestCaseRunner()
-            owner = "eeelin"
+            owner = "olive"
             timeout = 1
             status = TestCase.EnumStatus.Ready
             priority = TestCase.EnumPriority.Normal
@@ -930,8 +943,8 @@ class SeqTestSuite(TestSuite):
         
         :rtype: str
         '''
-        #11/2/24    dadalin    测试名包含模块名
-        #2012/05/31 aaronlai    修改编码
+        #11/2/24    sorgo    测试名包含模块名
+        #2012/05/31 pear    修改编码
         cls = type(self._testcases[0])
         return cls.__module__.decode('gbk').encode('utf8')
                         

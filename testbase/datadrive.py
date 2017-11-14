@@ -1,4 +1,17 @@
 # -*- coding: utf-8 -*-
+#
+# Tencent is pleased to support the open source community by making QTA available.
+# Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
+# Licensed under the BSD 3-Clause License (the "License"); you may not use this 
+# file except in compliance with the License. You may obtain a copy of the License at
+# 
+# https://opensource.org/licenses/BSD-3-Clause
+# 
+# Unless required by applicable law or agreed to in writing, software distributed 
+# under the License is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
+# OF ANY KIND, either express or implied. See the License for the specific language
+# governing permissions and limitations under the License.
+#
 '''数据驱动模块
 
 使用介绍：
@@ -56,7 +69,7 @@
         """test
         """
         
-        owner = 'pillarzou'
+        owner = 'organse'
         priority = tc.TestCase.EnumPriority.High
         status = tc.TestCase.EnumStatus.Ready
         timeout = 5       
@@ -70,12 +83,12 @@
         
 '''
 
-#12/11/26    pillarzou    创建
-#14/06/23    pillarzou    支持字典数据
-#14/10/30    eeelin       testbase重构修改，TestCase移除execute方法
-#14/10/31    eeelin       bugfix：appointRunAt会影响全部的每个数据驱动用例实例设置的数据
-#15/03/25    eeelin       重构
-#16/11/22    guyingzhao   给DataDrive增加__len__方法
+#12/11/26    organse    创建
+#14/06/23    organse    支持字典数据
+#14/10/30    olive       testbase重构修改，TestCase移除execute方法
+#14/10/31    olive       bugfix：appointRunAt会影响全部的每个数据驱动用例实例设置的数据
+#15/03/25    olive       重构
+#16/11/22    durian   给DataDrive增加__len__方法
 
 import types
 from testbase.testcase import TestCase

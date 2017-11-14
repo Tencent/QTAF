@@ -1,9 +1,22 @@
 # -*- coding: UTF8 -*-
+#
+# Tencent is pleased to support the open source community by making QTA available.
+# Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
+# Licensed under the BSD 3-Clause License (the "License"); you may not use this 
+# file except in compliance with the License. You may obtain a copy of the License at
+# 
+# https://opensource.org/licenses/BSD-3-Clause
+# 
+# Unless required by applicable law or agreed to in writing, software distributed 
+# under the License is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
+# OF ANY KIND, either express or implied. See the License for the specific language
+# governing permissions and limitations under the License.
+#
 """用于访问支持IAccessible接口的控件
 
 """
-#2012/12/27 aaronlai    创建
-#2013/03/14 aaronlai    使用InvokeTypes方法获取属性，将更具有兼容性
+#2012/12/27 pear    创建
+#2013/03/14 pear    使用InvokeTypes方法获取属性，将更具有兼容性
 
 import win32com.client
 import win32con
@@ -126,7 +139,7 @@ class _AccessibleObjectWrapper_win32com(object):
     """使用win32com模块实现IAccessible接口的包裹类
     
     """
-    #2013/11/12 aaronlai    新增
+    #2013/11/12 pear    新增
     def __init__(self, acc_disp):
         self._acc_disp = acc_disp
         self._childID = win32con.CHILDID_SELF
@@ -185,7 +198,7 @@ class _AccessibleObjectWrapper_comtypes(object):
     """使用comtypes模块实现IAccessible接口的包裹类
     
     """
-    #2013/11/12 aaronlai    新增
+    #2013/11/12 pear    新增
     def __init__(self, acc_disp):
         """Constructor
         :type acc_disp: comtypes.gen.Accessibility.IAccessible or
@@ -337,8 +350,8 @@ class AccessibleObject(object):
         :param acc_disp: acc_disp指定类型的实例
         :raise: TypeError
         """
-        #2013/03/14 aaronlai    修改类型判断
-        #2013/11/12 aaronlai    增加使用ctypes模块封装IAccessible，以支持win32和web类型的控件。
+        #2013/03/14 pear    修改类型判断
+        #2013/11/12 pear    增加使用ctypes模块封装IAccessible，以支持win32和web类型的控件。
         if isinstance(acc_disp, win32com.client.dynamic.CDispatch) or\
            isinstance(acc_disp, win32com.client.DispatchBaseClass):
             self._acc_disp = _AccessibleObjectWrapper_win32com(acc_disp)
@@ -370,9 +383,9 @@ class AccessibleObject(object):
                                              返回类型为AccessibleObject，则代表其获得焦点的子控件实例；
                                              返回为None，代表未实现此接口。  
         """
-        #2013/03/06 aaronlai    修改实现
-        #2013/03/14 aaronlai    应QQ测试人员需要，先回滚回以前的代码，支持QQ1.90sp3的冒烟测试，待下周一版本发布后再修改回来
-        #2013/03/26 aaronlai    返回正确的类型
+        #2013/03/06 pear    修改实现
+        #2013/03/14 pear    应QQ测试人员需要，先回滚回以前的代码，支持QQ1.90sp3的冒烟测试，待下周一版本发布后再修改回来
+        #2013/03/26 pear    返回正确的类型
         childFocus = self._acc_disp.accFocus
         if isinstance(childFocus, int) or isinstance(childFocus, long):
             return childFocus
