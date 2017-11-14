@@ -204,6 +204,7 @@ class RunTest(Command):
         else:
             raise ValueError("非法的报告类型:" + str(args.report_type))
         
+        args.retries=int(args.retries)
         if args.runner_type == 'normal':
             runner_inst = runner.TestRunner(report_inst, args.retries)
         elif args.runner_type == 'threading':
@@ -217,14 +218,14 @@ class RunTest(Command):
         os.chdir(args.working_dir)
         runner_inst.run(test_conf)
         os.chdir(prev_dir)
-        if isinstance(report_inst, report.OnlineTestReport):
+        if args.report_type == 'online':
             if sys.platform == "win32":
                 print "opening online report url:%s" % report_inst.url
                 os.system("start %s" % report_inst.url)
             else:
                 print "online report generated: %s" % report_inst.url
                 
-        elif isinstance(report_inst, report.XMLTestReport):
+        elif args.report_type == 'xml':
             if sys.platform == "win32":
                 print "opening XML report with IE..."
                 os.system("start iexplore %s" % os.path.realpath("TestReport.xml"))
