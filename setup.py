@@ -21,7 +21,7 @@ from setuptools import setup, find_packages
 if __name__ == "__main__":
     
     setup(
-      version="5.0.0",
+      version="5.0.124",
       name="qtaf",
       packages=find_packages(),
       py_modules=["__main__", "qtaf_settings"],
