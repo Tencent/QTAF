@@ -19,14 +19,14 @@ QTAF (QTA Framework) is a base framework for QTA, including,
 
 Testbase is a test framework providing test execution, reporting and management, and is the common base for each platform-specific QTA driver.
 
-For more inforamtion about quick startup, usage and API reference, please read [testbase's document](http://qta-testbase.readthedocs.io/zh/latest/) and [TUIA's document](http://qta-tuia.readthedocs.io/zh/latest/).
+For more inforamtion about quick startup, usage and API reference, please read [testbase's document](http://qta-testbase.readthedocs.io/zh/latest/).
 
 
 ### TUIA
 
 TUIA (Tencent UI Automation) is a base framework for UI test automation, which is used by each platform-specific QTA driver for client.
 
-
+For more inforamtion about quick startup, usage and API reference, please read [TUIA's document](http://qta-tuia.readthedocs.io/zh/latest/).
 
 
 ------------------------------
@@ -51,13 +51,14 @@ QTAF (QTA Framework)是QTA的基础框架，包括以下模块：
 
 Testbase是测试框架基础，提供包括测试执行、报告和用例管理等基础功能。Testbase会被各个平台的QTA Driver所使用。
 
-快速入门、使用和接口文档请参考《[Testbase文档](http://qta-testbase.readthedocs.io/zh/latest/)》和《[TUIA文档](http://qta-tuia.readthedocs.io/zh/latest/index.html)》
+快速入门、使用和接口文档请参考《[Testbase文档](http://qta-testbase.readthedocs.io/zh/latest/)》。
 
 
 ### TUIA
 
 TUIA (Tencent UI Automation)是UI自动化基础库，为QTA各个平台下的客户端UI测试Driver所使用。
 
+快速入门、使用和接口文档请参考《[TUIA文档](http://qta-tuia.readthedocs.io/zh/latest/index.html)》。
 
 ------------------------------
 
