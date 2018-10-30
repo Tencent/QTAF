@@ -15,7 +15,6 @@
 '''
 测试环境模块
 '''
-#11/07/20 persimmon    创建
 
 import warnings
 

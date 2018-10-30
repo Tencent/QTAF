@@ -146,3 +146,51 @@ QTA默认是通过加载Python模块`settings`来读取所有配置，用户可�
 
    $ QTAF_SETTINGS_MODULE=settings.test python manage.py shell
 
+
+使用SettingsMixin
+===============
+
+SettingsMixin是一个混合类，用于方便地跟用户定义的类进行复合，在定义配置项的时候，
+将定义放到lib层，而不是孤立地放在settings.py或配置模块中，再人工进行关联。
+
+=====
+定义配置项
+=====
+
+一个简单的使用例子如下::
+
+   from qt4s.service import Channel
+   from qt4s.conn2 import HttpConn
+   from testbase.conf import SettingsMixin
+   
+   class MyChannel(Channel, SettingsMixin):
+       """define a pseudo channel
+       """
+       class Settings(object):
+           MYCHANNEL_URL = "http://www.xxxx.com"
+           
+       def __init__(self):
+           self._conn = HttpConn()
+           
+       def get(self, uri, params):
+           return self._conn.get(self.settings.MYCHANNEL_URL + uri, params)
+           
+MyChannel多重继承了Channel和SettingsMixin，SettingsMixin要求类的内部定义一个Settings类，
+这个类定义配置项的规则如下：
+
+* 配置项必须以当前类的名字大写+下划线开头，例如这里的"MYCHANNEL_"；
+* 配置项的每个字母都必须大写；
+* 访问配置项，使用self.settings访问，例如self.settings.MYCHANNEL_URL
+
+=====
+重载配置项
+=====
+
+上面，我们已经知道如何在lib层定义配置项，当需要重载某个配置项的值的时候，在全局配置项里面定义该配置就可以了，
+即testbase.conf.settings包含该配置项。lib层的定义跟上面的定义保持一致，而settings.py配置如下
+
+settings.py::
+
+   MYCHANNEL_URL = "http://www.oooo.com"
+   
+那么在访问self.settings.MYCHANNEL_URL的时候，会优先获取testbase.conf.settings中的配置项。

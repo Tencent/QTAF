@@ -27,7 +27,6 @@ TestRunner负责多个测试用例，目前提供三种方式:
         report.end_test(test, result)
 
 '''
-#2014/10/29    olive 创建
 
 import threading
 import multiprocessing
@@ -36,17 +35,28 @@ import collections
 import random
 import types
 import sys
+import argparse
+import pkg_resources
+import socket
+import uuid
+import itertools
 from Queue import Empty
 from testbase.loader import TestLoader
 from testbase import serialization
 from testbase.testcase import TestCase, TestCaseRunner
 from testbase.report import ITestReport
 from testbase.testresult import TestResultCollection
+from testbase.resource import TestResourceManager, LocalResourceManagerBackend
+from testbase.plan import TestPlan
             
+RUNNER_ENTRY_POINT = "qtaf.runner"
+runner_usage = 'runtest <test ...> --runner-type <runner-type> [--runner-args "<runner-args>"]'
+runner_types = {}
+
 class TestCaseSettings(object):
     '''目标测试用例配置
     '''
-    def __init__(self, names=[], excluded_names=[], priorities=None, status=None ):
+    def __init__(self, names=None, excluded_names=None, priorities=None, status=None, owners=None, tags=None, excluded_tags=None):
         '''构造函数
         
         :param names: 测试用例名
@@ -57,17 +67,37 @@ class TestCaseSettings(object):
         :type priorities: list
         :param status: 指定用例状态，如果不指定则默认全部状态
         :type status: list
+        :param owners: 指定用户名进行过滤
+        :type owners: list
+        :param tags: 指定标签选择用例
+        :type tags: list
+        :param excluded_tags: 指定标签排除用例
+        :type tags: list
         '''
-        self.names = list(names)
+        if names is None:
+            self.names = []
+        else:
+            self.names = list(names)
+        if owners is None:
+            self.owners = []
+        else:
+            self.owners = list(owners)
+
+        if excluded_names is None:
+            excluded_names = []
+        else:
+            excluded_names = list(excluded_names)
         self.excluded_names = []
         for it in excluded_names:
             if it:
                 self.excluded_names.append(it)
+
         if priorities is None:
             priorities = [TestCase.EnumPriority.BVT,
                           TestCase.EnumPriority.High,
                           TestCase.EnumPriority.Normal,
                           TestCase.EnumPriority.Low]
+
         if status is None:
             status = [TestCase.EnumStatus.Design,
                       TestCase.EnumStatus.Implement,
@@ -84,6 +114,9 @@ class TestCaseSettings(object):
                 self.excluded_cls_names.append(it)
             else:
                 self.excluded_mod_names.append(it)
+
+        self.tags = set(tags) if tags else None
+        self.excluded_tags = set(excluded_tags) if excluded_tags else None
                         
     def _is_test_class(self, name ):
         '''判断路径是否是一个类名
@@ -123,19 +156,28 @@ class TestCaseSettings(object):
             return "testcase with status '%s' is excluded" % testcase.status
         if testcase.priority not in self.priorities:
             return "testcase with priority '%s' is excluded" % testcase.priority
+        if self.owners and testcase.owner not in self.owners:
+            return "testcase with owner '%s' is excluded" % testcase.owner
+        if self.tags and self.tags.isdisjoint(testcase.tags):
+            return "testcase is not tag with %s" % ( "/".join(self.tags) )
+        if self.excluded_tags and not self.excluded_tags.isdisjoint(testcase.tags):
+            return "testcase is tag with %s" % ( "/".join(self.excluded_tags) )
         return False
         
 class BaseTestRunner(object):
     '''测试执行器基类
     '''
-    def __init__(self, report ):
+    def __init__(self, report,  resmgr_backend=None):
         '''构造函数
         
         :param report: 测试报告
         :type report: ITestReport
         '''
         self.__report = report
-        
+        if resmgr_backend is None:
+            resmgr_backend = LocalResourceManagerBackend()
+        self._resmgr = TestResourceManager(resmgr_backend)
+
     @property
     def report(self):
         '''对应的测试报告
@@ -144,36 +186,81 @@ class BaseTestRunner(object):
         '''
         return self.__report
         
-    def run(self, target ):
-        '''运行测试
-        
+    def load(self, target ):
+        '''加载测试用例
+
         :param target: 指定要执行的测试用例
-        :type target: list/string/TestCaseSettings
-        '''
-        self.__report.begin_report()
-        
+        :type target: list(TestCase) or list(string) or string or TestCaseSettings
+        :returns: 测试用例列表
+        '''  
         if isinstance(target, str):
             target = TestCaseSettings(names=target.split(" "))
+        elif isinstance(target, list) and len(target) and isinstance(target[0], basestring):
+            target = TestCaseSettings(names=target)
             
         if isinstance(target, TestCaseSettings):
             loader = TestLoader(target.filter)
-            filtered_tests = []
-            tests = []            
-            for it in target.names:
-                tests += loader.load(it)
-                load_errs = loader.get_last_errors()
-                filtered_tests += loader.get_filtered_tests_with_reason().items()
-                for testname in load_errs:
-                    self.__report.error('Loader', '"%s" load error:%s'%(testname,load_errs[testname]), dict(error_testname=testname, error=load_errs[testname]))
-            
-            self.__report.info('Loader', 'filter %s testcases totally' % len(filtered_tests), dict(filtered_testcases=filtered_tests))
-            self.__report.info("Loader", 'load %s testcases totally' % len(tests), dict(testcases=tests))
+            tests = loader.load(target.names)
+            self.__report.log_loaded_tests(loader,tests)
+            filtered_tests = loader.get_filtered_tests_with_reason().items()
+            for test, reason in filtered_tests:
+                self.__report.log_filtered_test(loader, test, reason)
+            for testname, error in loader.get_last_errors().items():
+                self.__report.log_load_error(loader, testname, error)
+            self.__report.info('Loader', 'filter %s testcases totally' % len(filtered_tests))
+            self.__report.info("Loader", 'load %s testcases totally' % len(tests))
         else:
             tests = target
+        return tests
 
-        self.run_all_tests(tests)
-        self.__report.end_report()
+    def run(self, target):
+        '''运行测试
         
+        :param target: 指定要执行的测试
+        :type target: list(TestCase) or list(string) or string or TestCaseSettings or TestPlan
+        '''
+        if isinstance(target, TestPlan):
+            plan = target
+            target = plan.get_tests()
+        else:
+            class SimplePlan(TestPlan):
+                tests = target
+                test_target_args = {}
+            plan = SimplePlan()
+        self.__report.begin_report()
+        plan.test_setup(self.__report)
+        self.__report.log_test_target(plan.get_test_target())
+        self.resource_setup(plan)
+        self.run_all_tests(self.load(target))
+        self.resource_teardown(plan)
+        plan.test_teardown(self.__report)
+        self.__report.end_report()
+        self.clean_up()
+        return self.__report
+    
+    def resource_setup(self, plan):
+        '''资源初始化
+
+        :param plan: 测试计划
+        :type plan: TestPlan
+        '''
+        for res_type, resource in itertools.chain([("node", {"host": socket.gethostname(), "id": uuid.getnode() })], 
+                                                  self._resmgr.iter_managed_resource()):
+            ret_resource = plan.resource_setup(self.__report, res_type, resource)
+            if ret_resource:
+                resource = ret_resource
+            self.__report.log_resource(res_type, resource)
+
+    def resource_teardown(self, plan):
+        '''资源清理
+
+        :param plan: 测试计划
+        :type plan: TestPlan
+        '''
+        for res_type, resource in self._resmgr.iter_managed_resource():
+            plan.resource_teardown(self.__report, res_type, resource)   
+        plan.resource_teardown(self.__report, "node", {"host": socket.gethostname(), "id": uuid.getnode() })
+
     def run_all_tests(self, tests ):
         '''执行全部的测试用例
         
@@ -191,6 +278,7 @@ class BaseTestRunner(object):
         :type test: TestCase
         :returns: boolean - 测试是否通过
         '''
+        test.test_resmgr = self._resmgr
         runner = getattr(test, 'case_runner', TestCaseRunner())
         result = runner.run(test, self.__report.get_testresult_factory())
         if isinstance(result, TestResultCollection):
@@ -198,6 +286,11 @@ class BaseTestRunner(object):
         else:
             self.__report.log_test_result(result.testcase, result)
         return result.passed
+    
+    def clean_up(self):
+        '''执行清理动作
+        '''
+        pass
     
     def _log_collection_result(self, result_collection ):
         '''记录结果集合
@@ -208,13 +301,29 @@ class BaseTestRunner(object):
             else:
                 self.__report.log_test_result(it.testcase, it)
             
+    @classmethod
+    def get_parser(cls):
+        '''获取命令行参数解析器（如果实现）
+
+        :returns: 解析器对象
+        :rtype: argparse.ArgumentParser
+        '''
+        raise NotImplementedError()
+
+    @classmethod
+    def parse_args(cls, args_string, report, resmgr_backend):
+        '''通过命令行参数构造对象
         
+        :returns: 测试报告
+        :rtype: cls
+        '''
+        raise NotImplementedError()
     
             
 class TestRunner(BaseTestRunner):
     '''测试执行器
     '''
-    def __init__(self, report, retries=0 ):
+    def __init__(self, report, retries=0, resmgr_backend=None):
         '''构造函数
         
         :param result: 测试报告
@@ -222,7 +331,7 @@ class TestRunner(BaseTestRunner):
         :param retries: 用例失败时重试次数
         :type retries: int
         '''
-        super(TestRunner, self).__init__(report)
+        super(TestRunner, self).__init__(report,  resmgr_backend)
         self._retries = retries
 
     def run_all_tests(self, tests ):
@@ -242,7 +351,27 @@ class TestRunner(BaseTestRunner):
                 if tests_retry_dict[test] < self._retries:
                     tests_retry_dict[test] += 1
                     tests_queue.append(test)
-                    
+
+    @classmethod
+    def get_parser(cls):
+        '''获取命令行参数解析器（如果实现）
+
+        :returns: 解析器对象
+        :rtype: argparse.ArgumentParser
+        '''
+        parser = argparse.ArgumentParser(usage=runner_usage)
+        parser.add_argument("--retries", type=int, default=0, help="retry count while test case failed")
+        return parser
+
+    @classmethod
+    def parse_args(cls, args_string, report, resmgr_backend):
+        '''通过命令行参数构造对象
+        
+        :returns: 测试报告
+        :rtype: cls
+        '''
+        args = cls.get_parser().parse_args(args_string)
+        return cls(report, args.retries, resmgr_backend)
                     
 class ThreadSafetyReport(ITestReport):
     '''TestReport修饰器，保证线程安全
@@ -282,6 +411,41 @@ class ThreadSafetyReport(ITestReport):
         with self._lock:
             return self._report.log_test_result(testcase, testresult)
     
+    def log_loaded_tests(self, loader, testcases):
+        '''记录加载成功的用例
+
+        :param loader: 用例加载器
+        :type loader: TestLoader
+        :param testcases: 测试用例列表
+        :type testcases: list
+        '''
+        with self._lock:
+            return self._report.log_loaded_tests(loader, testcases)
+
+    def log_filtered_test(self, loader, testcase, reason):
+        '''记录一个被过滤的测试用例
+        :param loader: 用例加载器
+        :type loader: TestLoader
+        :param testcase: 测试用例
+        :type testcase: TestCase
+        :param reason: 过滤原因
+        :type reason: str
+        '''
+        with self._lock:
+            return self._report.log_filtered_test(loader, testcase, reason)
+
+    def log_load_error(self, loader, name, error):
+        '''记录一个加载失败的用例或用例集
+        :param loader: 用例加载器
+        :type loader: TestLoader
+        :param name: 名称
+        :type name: str
+        :param error: 错误信息
+        :type error: str
+        '''
+        with self._lock:
+            return self._report.log_load_error(loader, name, error)
+        
     def get_testresult_factory(self):
         '''获取对应的TestResult工厂
         
@@ -308,7 +472,7 @@ class ThreadSafetyReport(ITestReport):
 class ThreadingTestRunner(BaseTestRunner):
     '''使用多线程并发执行用例
     '''
-    def __init__(self, report, thread_cnt=5, retries=0 ):
+    def __init__(self, report, thread_cnt=0, retries=0,  resmgr_backend=None):
         '''构造函数
         
         :param report: 测试报告
@@ -318,12 +482,12 @@ class ThreadingTestRunner(BaseTestRunner):
         :param retries: 用例失败时重试次数
         :type retries: int
         '''
-        self._thread_cnt = int(thread_cnt)
+        self.concurrency = int(thread_cnt) or multiprocessing.cpu_count()
         self._retries = retries
         self._lock = threading.Lock()
-        if thread_cnt > 1:
+        if self.concurrency > 1:
             report = ThreadSafetyReport(report)
-        super(ThreadingTestRunner, self).__init__(report)
+        super(ThreadingTestRunner, self).__init__(report, resmgr_backend)
         
     def run_all_tests(self, tests ):
         '''执行全部的测试用例
@@ -335,7 +499,7 @@ class ThreadingTestRunner(BaseTestRunner):
         tests_queue = collections.deque(tests)
         tests_retry_dict = {}
         threads = []
-        for _ in range(self._thread_cnt):
+        for _ in range(self.concurrency):
             thread = threading.Thread(target=self._run_test_from_queue, args=(tests_queue, tests_retry_dict))
             thread.start()
             threads.append(thread)
@@ -362,6 +526,28 @@ class ThreadingTestRunner(BaseTestRunner):
                     if tests_retry_dict[test] < self._retries:
                         tests_retry_dict[test] += 1
                         tests_queue.append(test)
+
+    @classmethod
+    def get_parser(cls):
+        '''获取命令行参数解析器（如果实现）
+
+        :returns: 解析器对象
+        :rtype: argparse.ArgumentParser
+        '''
+        parser = argparse.ArgumentParser(usage=runner_usage)
+        parser.add_argument("--retries", type=int, default=0, help="retry count while test case failed")
+        parser.add_argument("--concurrency", type=int, default=0, help="number of concurrent thread")
+        return parser
+
+    @classmethod
+    def parse_args(cls, args_string, report, resmgr_backend):
+        '''通过命令行参数构造对象
+        
+        :returns: 测试报告
+        :rtype: cls
+        '''
+        args = cls.get_parser().parse_args(args_string)
+        return cls(report, args.concurrency, args.retries, resmgr_backend)
 
 
 class EnumProcessMsgType(object):
@@ -530,7 +716,7 @@ class _EmptyClass(object):
 
     
 class TestResultStubManager(object):
-    '''测试结果残根管理器
+    '''测试结果桩管理器
     '''
     def __init__(self, rsp_queue ):
         '''构造函数
@@ -596,7 +782,7 @@ def _log_collection_result( testreport, result_collection ):
         else:
             testreport.log_test_result(it.testcase, it)
                 
-def _run_test_thread( worker_id, ctrl_msg_queue, testcase, testreport ):
+def _run_test_thread( worker_id, ctrl_msg_queue, testcase, testreport, resmgr ):
     '''执行测试用例的线程
     
     :param worker_id: 工作者ID
@@ -607,9 +793,12 @@ def _run_test_thread( worker_id, ctrl_msg_queue, testcase, testreport ):
     :type testcase: TestCase
     :param testreport: 测试报告
     :type testreport: ITestReport
+    :param resmgr: 资源管理器
+    :type resmgr: TestResourceManager
     '''
     try:
         runnner = getattr(testcase, 'case_runner', TestCaseRunner())
+        testcase.test_resmgr = resmgr
         result = runnner.run(testcase, testreport.get_testresult_factory())
         if isinstance(result, TestResultCollection):
             _log_collection_result(testreport, result)
@@ -623,7 +812,7 @@ def _run_test_thread( worker_id, ctrl_msg_queue, testcase, testreport ):
    
 def _worker_process( worker_id, 
                      ctrl_msg_queue, msg_queue, rsp_queue,
-                     result_factory_type, result_factory_data):
+                     result_factory_type, result_factory_data, resmgr):
     '''执行测试的子进程过程
     
     :param worker_id: 工作者ID，全局唯一
@@ -638,6 +827,8 @@ def _worker_process( worker_id,
     :type result_factory_type: type
     :param result_factory_data: 测试结果工厂序列化后数据
     :type result_factory_data: object
+    :param resmgr: 资源管理器
+    :type resmgr: TestResourceManager
     '''
     try:
         result_factory = _EmptyClass()
@@ -656,7 +847,7 @@ def _worker_process( worker_id,
             elif msg_type == EnumProcessMsgType.Worker_RunTest:
                 testcase = serialization.loads(msg_data[0])
                 t = threading.Thread(target=_run_test_thread, 
-                                     args=(worker_id, ctrl_msg_queue, testcase, report))
+                                     args=(worker_id, ctrl_msg_queue, testcase, report, resmgr))
                 t.daemon = True
                 t.start()
                 
@@ -673,7 +864,7 @@ def _worker_process( worker_id,
 class TestWorker(object):
     '''多进程执行用例时，执行测试的子进程
     '''    
-    def __init__(self, worker_id, ctrl_msg_queue, result_factory ):
+    def __init__(self, worker_id, ctrl_msg_queue, result_factory, resmgr ):
         '''构造函数
         
         :param worker_id: 工作者ID，全局唯一
@@ -682,10 +873,13 @@ class TestWorker(object):
         :type msg_queue: multiprocessing.Queue
         :param result_factory: 测试结果工厂
         :type result_factory: ITestResultFactory
+        :param resmgr: 资源管理器
+        :type resmgr: TestResourceManager
         '''
         self._worker_id = worker_id
         self._result_factory = result_factory
         self._ctrl_msg_queue = ctrl_msg_queue
+        self._resmgr = resmgr
         self._reset()
         
     def _reset(self):
@@ -699,7 +893,8 @@ class TestWorker(object):
                                                       self._msg_queue,
                                                       self._rsp_queue,
                                                       type(self._result_factory),
-                                                      self._result_factory.dumps()))
+                                                      self._result_factory.dumps(),
+                                                      self._resmgr))
         self._monitor = threading.Thread(target=self._process_monitor)
         self._monitor.daemon = True
         self._testcase = None
@@ -786,7 +981,7 @@ class MultiProcessTestRunner(BaseTestRunner):
     的信息
            
     '''
-    def __init__(self, report, process_cnt=5, retries=0):
+    def __init__(self, report, process_cnt=0, retries=0, resmgr_backend=None):
         '''构造函数
         
         :param report: 测试报告
@@ -796,9 +991,10 @@ class MultiProcessTestRunner(BaseTestRunner):
         :param retries: 失败重跑次数上限
         :type retries: int
         '''
-        self._process_cnt = int(process_cnt)
+        self.concurrency= int(process_cnt) or multiprocessing.cpu_count()
         self._retries = retries
-        super(MultiProcessTestRunner,self).__init__(report)
+        self._workers_dict = {}
+        super(MultiProcessTestRunner,self).__init__(report,resmgr_backend)
         
     def run_all_tests(self, tests ):
         '''执行全部的测试用例
@@ -806,28 +1002,28 @@ class MultiProcessTestRunner(BaseTestRunner):
         :param test: 测试用例对象列表
         :type tests: list
         '''         
-        if len(tests) < self._process_cnt:
-            self._process_cnt = len(tests)
+        if len(tests) < self.concurrency:
+            self.concurrency = len(tests)
                          
         random.shuffle(tests)
         tests_queue = collections.deque(tests)
         tests_retry_dict = {}
         msg_queue = multiprocessing.Queue()
-        workers_dict = {}
         result_factory = self.report.get_testresult_factory()
-        for i in range(self._process_cnt):
-            worker = TestWorker(i, msg_queue, result_factory)
+        for i in range(self.concurrency):
+            worker = TestWorker(i, msg_queue, result_factory, self._resmgr)
             worker.start()
             worker.run_testcase(tests_queue.popleft())
-            workers_dict[i] = worker
+            self._workers_dict[i] = worker
         
         idle_workers = []
+        error_counts = {}
         while True:
             msg = msg_queue.get()
             msg_type = msg[0]
                         
             if msg_type == EnumProcessMsgType.Report_LogTestResult:
-                worker = workers_dict[msg[1]]
+                worker = self._workers_dict[msg[1]]
                 testcase = serialization.loads(msg[2])
                 objid, passed = msg[3], msg[4]
                 self.report.log_test_result(testcase, TestResultProxy(worker, objid, passed, testcase))
@@ -836,7 +1032,7 @@ class MultiProcessTestRunner(BaseTestRunner):
                 self.report.log_record(msg[1], msg[2], msg[3], msg[4])
                 
             elif msg_type == EnumProcessMsgType.Worker_Idle:
-                worker = workers_dict[msg[1]]
+                worker = self._workers_dict[msg[1]]
                 test = serialization.loads(msg[2])
                 passed = msg[3]
                 if not passed:
@@ -849,17 +1045,67 @@ class MultiProcessTestRunner(BaseTestRunner):
                     worker.run_testcase(tests_queue.popleft())
                 else:
                     idle_workers.append(worker)
-                    if len(idle_workers) == len(workers_dict):
+                    if len(idle_workers) == len(self._workers_dict):
                         break
                 
             elif msg_type == EnumProcessMsgType.Worker_Error:
-                worker = workers_dict[msg[1]]
+                if msg[1] not in self._workers_dict:
+                    continue
+                worker = self._workers_dict[msg[1]]
                 err_msg = msg[2]
-                self.report.error('RUNNER', 'runner process %s error occur: %s' % (msg[1], err_msg), record=dict(err_msg=err_msg))
-                if worker not in idle_workers:
-                    tests_queue.append(worker.current_testcase())
-                    worker.restart()
-                    worker.run_testcase(tests_queue.popleft())
-                
-        for it in workers_dict.values():
+                self.report.error('RUNNER', 'runner process %s error occurred: %s' % (msg[1], err_msg), record=dict(err_msg=err_msg))
+                error_count = error_counts.get(msg[1], 0)
+                if error_count >= 4:
+                    self.report.error('RUNNER', 'worker with id=%s failed to run for up 3 times' % msg[1])
+                    worker.stop()
+                    del self._workers_dict[msg[1]]
+                    if len(idle_workers) == len(self._workers_dict):
+                        break
+                else:
+                    error_counts[msg[1]] = error_count + 1
+                    if worker not in idle_workers:
+                        tests_queue.append(worker.current_testcase())
+                        worker.restart()
+                        worker.run_testcase(tests_queue.popleft())
+        
+    def clean_up(self):
+        BaseTestRunner.clean_up(self)
+        for it in self._workers_dict.values():
             it.stop()
+
+    @classmethod
+    def get_parser(cls):
+        '''获取命令行参数解析器（如果实现）
+
+        :returns: 解析器对象
+        :rtype: argparse.ArgumentParser
+        '''
+        parser = argparse.ArgumentParser(usage=runner_usage)
+        parser.add_argument("--retries", type=int, default=0, help="retry count while test case failed")
+        parser.add_argument("--concurrency", type=int, default=0, help="number of concurrent thread")
+        return parser
+
+    @classmethod
+    def parse_args(cls, args_string, report, resmgr_backend):
+        '''通过命令行参数构造对象
+        
+        :returns: 测试报告
+        :rtype: cls
+        '''
+        args = cls.get_parser().parse_args(args_string)
+        return cls(report, args.concurrency, args.retries, resmgr_backend)
+
+
+def __init_runner_types():
+    global runner_types
+    if runner_types:
+        return
+    runner_types["basic"] = TestRunner
+    runner_types["multithread"] = ThreadingTestRunner
+    runner_types["multiprocess"] = MultiProcessTestRunner
+    for ep in pkg_resources.iter_entry_points(RUNNER_ENTRY_POINT):
+        if ep.name not in runner_types:
+            runner_types[ep.name] = ep.load()
+
+__init_runner_types()
+del __init_runner_types

@@ -12,26 +12,29 @@
 # OF ANY KIND, either express or implied. See the License for the specific language
 # governing permissions and limitations under the License.
 #
-'''conf test
-'''
-#2015/03/27 olive created
+"""utils for unittest
+"""
 
 from testbase.conf import settings
-import unittest
 
-
-class SettingTest(unittest.TestCase):
-    
-    def test_get(self):
-        '''get settings
-        '''
-        self.assertEqual(settings.DEBUG, False)
-        self.assertEqual(settings.get('DEBUG'), False)
-        self.assertEqual(settings.get('NOT_EXIST', False), False)
+class modify_settings(object):
+    def __init__(self, **kwargs):
+        self.new_conf = kwargs
+        self.old_conf = {}
         
-    def test_set(self):
-        '''set settings failed
-        '''
-        self.assertRaises(RuntimeError, setattr, settings, 'DEBUG', False)
+    def __enter__(self):
+        settings._Settings__sealed = False
+        for key in self.new_conf:
+            self.old_conf[key] = getattr(settings, key)
+            setattr(settings, key, self.new_conf[key])
         
-
+    def __exit__(self, *args):
+        for key in self.old_conf:
+            setattr(settings, key, self.old_conf[key])
+        settings._Settings__sealed = True
+        
+if __name__ == "__main__":
+    with modify_settings(QTAF_REWRITE_ASSERT=False):
+        print settings.QTAF_REWRITE_ASSERT
+    print settings.QTAF_REWRITE_ASSERT
+    setattr(settings, "xxxx", 111)

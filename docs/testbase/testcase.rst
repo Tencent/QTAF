@@ -90,221 +90,57 @@
    测试用例最终结果: 通过
    ============================================================
       
-====
-测试断言
-====
+======
+测试用例标签
+======
 
-上面的测试代码没有任何测试的逻辑，并不算是一个完整的测试用例。下面我们通过一个例子来介绍QTA的两个测试检查接口。
+测试用例除了owner、timeout、status和priority之外，还有一个自定义的标签属性“tags”。测试标签的作用是，在批量执行用例的时候，用来指定或排除对应的测试用例，相关详情可以参考《:doc:`./testrun`》。
 
-假设我们需要测试一个字符串拼接的函数::
+设置标签的方式十分简单::
 
-   def string_combine(a,b):
-      return a+b
-      
-测试用例的代码如下::
 
    from testbase.testcase import TestCase
 
-   class StrCombineTest(TestCase):
-       '''测试字符串拼接接口
+   class HelloTest(TestCase):
+       '''第一个测试用例
        '''
        owner = "foo"
        status = TestCase.EnumStatus.Ready
        priority = TestCase.EnumPriority.Normal
        timeout = 1
+       tags = "Demo"
    
        def run_test(self):
            #---------------------------
-           self.start_step("测试字符串拼接")
-           #---------------------------
-           result = string_combine("xxX", "yy")
-           self.assert_equal("检查string_combine调用结果", result, "xxXyy")
-      
-以上的代码执行结果如下::
-
-   ============================================================
-   测试用例:StrCombineTest 所有者:foo 优先级:Normal 超时:1分钟
-   ============================================================
-   ----------------------------------------
-   步骤1: 测试字符串拼接
-   ============================================================
-   测试用例开始时间: 2016-02-02 14:10:21
-   测试用例结束时间: 2016-02-02 14:10:21
-   测试用例执行时间: 00:00:0.00
-   测试用例步骤结果:  1:通过
-   测试用例最终结果: 通过
-   ============================================================
-   
-可以看到结果是测试通过的，但是如果string_combine实现有问题，比如我们新定义一个string_combine2::
-
-   def string_combine2(a,b):
-      return a+'b'
-      
-以为以上的实现是有问题，执行结果必然是不通过的::
-
-   ============================================================
-   测试用例:StrCombineTest 所有者:foo 优先级:Normal 超时:1分钟
-   ============================================================
-   ----------------------------------------
-   步骤1: 测试字符串拼接
-   ASSERT: 检查string_combine2调用结果
-      实际值：xxXb
-      期望值：xxXyy
-     File "D:\workspace\qtaf5\test\hellotest.py", line 87, in run_test
-   ============================================================
-   测试用例开始时间: 2016-02-02 14:11:45
-   测试用例结束时间: 2016-02-02 14:11:45
-   测试用例执行时间: 00:00:0.00
-   测试用例步骤结果:  1:失败
-   测试用例最终结果: 失败
-   ============================================================
-   
-可以看到除了测试不通过外，测试结果还显示了断言失败的详细信息，包括预期值、实际值和对应的代码行。
-
-这个就是QTA提供的测试断言的函数接口，其详细的定义如下::
-
-    def assert_equal(self, message, actual, expect=True):
-        '''检查实际值和期望值是否相等，不同则测试用例失败
-        
-       :param message: 检查信息
-       :param actual: 实际值
-       :param expect: 期望值(默认：True)
-       :return: True or False
-        '''
-
-除了这个，QTA还提供另一个版本的断言函数::
-
-    def assert_match(self, message, actual, expect):
-        '''检查actual和expect是否模式匹配，不匹配则记录一个检查失败
-        
-        :type message: string
-        :param message: 失败时记录的消息
-        :type actual: string
-        :param actual: 需要匹配的字符串
-        :type expect: string
-        :param expect: 要匹配的正则表达式 
-        :return: True or False
-        '''
-assert_match和assert_equal的区别是，assert_match使用的是正则匹配而不是严格匹配，比如::
-
-   self.assert_equal("严格匹配断言", "XXX", "X*")
-   
-以上的断言是不通过的，但是对于下面的正则断言是通过的::
-
-   self.assert_match("正则匹配断言", "XXX", "X*")
-   
-assert_match和assert_equal相比，还有一个区别就是，assert_match只支持字符串或字符串兼容的类型的值的检查；但是assert_equal可以支持大部分类型的值的检查。
-
-=====
-忙等待检查
-=====
-
-以上的两个断言的检查的接口，都是检查某个时刻的被测系统的状态。但是对于一些系统，特别是UI，如果仅仅调用assert_equal和assert_match接口去检查当前的状态其实是不恰当的。
-
-例如，一个表单的UI界面，如果点击“提交”后，我们需要检查“提交”按钮变为不可点击的状态，测试用例可能是这样的::
-
-   form.controls['提交按钮'].click()
-   self.assert_equal("检查“提交”按钮变为不可点击的状态", form.controls['提交按钮'].enable, False)
-   
-上面的测试用例，存在一个问题，就是点击“提交”之后，“提交”按钮的状态的更新并不是同步的，可能由于被测系统响应慢了一点点，就会导致测试检查不通过，所以上面的测试用例代码段应该修改为::
-
-   form.controls['提交按钮'].click()
-   start = time.time()
-   while time.time()-start > 2:
-      if not form.controls['提交按钮'].enable:
-         break
-      else:
-         time.sleep(0.2)
-   else:
-      raise RuntimeError("等待超过2秒还是可以点击")
-      
-以上的测试代码是在2秒之内，多次去检查“提交”按钮的状态是否符合预期。通过这样的“平滑”的方式，就可以避免由于被测系统状态同步问题而导致测试不稳定。
-
-但是上面的测试代码还是相当复杂的，因此QTA测试用例提供了两个接口来帮忙解决这类问题::
-
-    def wait_for_equal(self, message, obj, prop_name, expected, timeout=10, interval=0.5):
-        '''每隔interval检查obj.prop_name是否和expected相等，如果在timeout时间内都不相等，则测试用例失败
-
-        :param message: 失败时的输出信息
-        :param obj: 需要检查的对象
-        :type prop_name: string 
-        :param prop_name: 需要检查的对象的属性名，支持多层属性
-        :param expected: 期望的obj.prop_name值
-        :param timeout: 超时秒数
-        :param interval: 重试间隔秒数
-        :return: True or False
-        '''
-        
-    def wait_for_match(self, message, obj, prop_name, expected, timeout=10, interval=0.5):
-        '''每隔interval检查obj.prop_name是否和正则表达式expected是否匹配，如果在timeout时间内都不相等，则测试用例失败
-
-        :param message: 失败时的输出信息
-        :param obj: 需要检查的对象
-        :type prop_name: string 
-        :param prop_name: 需要检查的对象的属性名, obj.prop_name返回字符串
-        :param expected: 需要匹配的正则表达式
-        :param timeout: 超时秒数
-        :param interval: 重试间隔秒数
-        :return: True or False
-        '''
-        
-这两个其实就是assert_equal和assert_match的忙等待检查版本，通过wait_for系列的接口，上面的测试代码就可以简化为::
-
-   form.controls['提交按钮'].click()
-   self.wait_for_equal("检查提交按钮变为不可点击", form.controls['提交按钮'], "enable", False,
-                       timeout=2, interval=0.2)
-
-
-======
-测试执行控制
-======
-
-QTA测试用例的代码的执行控制逻辑和一般Python的代码是类似的，所以除了执行过程中出现Python异常或用例执行超时，测试用例会一直执行。而且，即使是assert_和wait_for_系列的接口失败了，也会继续执行，比如下面的例子::
-
-   class CtrlTest(TestCase):
-       '''流程控制测试
-       '''
-       owner = "foo"
-       status = TestCase.EnumStatus.Ready
-       priority = TestCase.EnumPriority.Normal
-       timeout = 1
-   
-       def run_test(self):
-           #---------------------------
-           self.start_step("断言失败")
-           #---------------------------
-           self.assert_equal("检查断言", True, False)
-           
-           #---------------------------
-           self.start_step("第二个步骤")
+           self.start_step("第一个测试步骤")
            #---------------------------
            self.log_info("hello")
 
-上面的第一个测试步骤中，有一个断言是必然失败的，但是第二个测试步骤还是会被正常执行::
+标签支持一个或多个，下面的例子也是正确的::
 
-   ============================================================
-   测试用例:CtrlTest 所有者:foo 优先级:Normal 超时:1分钟
-   ============================================================
-   ----------------------------------------
-   步骤1: 断言失败
-   ASSERT: 检查断言
-      实际值：True
-      期望值：False
-     File "D:\workspace\qtaf5\test\hellotest.py", line 86, in run_test
-   ----------------------------------------
-   步骤2: 第二个步骤
-   INFO: hello
-   ============================================================
-   测试用例开始时间: 2016-02-02 15:27:29
-   测试用例结束时间: 2016-02-02 15:27:29
-   测试用例执行时间: 00:00:0.00
-   测试用例步骤结果:  1:失败 2:通过
-   测试用例最终结果: 失败
-   ============================================================
+   from testbase.testcase import TestCase
 
-.. note:: 对于断言失败的执行逻辑处理，这个是QTA测试框架和其他一般测试框架比较大的差异点，设计测试用例是需要注意。
+   class HelloTest(TestCase):
+       '''第一个测试用例
+       '''
+       owner = "foo"
+       status = TestCase.EnumStatus.Ready
+       priority = TestCase.EnumPriority.Normal
+       timeout = 1
+       tags = "Demo", "Help"
+   
+       def run_test(self):
+           #---------------------------
+           self.start_step("第一个测试步骤")
+           #---------------------------
+           self.log_info("hello")
 
-       
+
+需要注意的是，测试用例标签经过框架处理后，会变成set类型，比如上面的用例::
+
+    assert HelloTest.tags == set("Demo", "Help")
+
+
 ==========
 测试环境初始化和清理
 ==========
@@ -441,3 +277,6 @@ pre_test这个接口的一个作用是可以提高测试用例代码的复用，
 可以看到EnvTest4和EnvTest5的基类都是为EnvTestBase，也就是他们本身会继承基类的pre_test和post_test的实现，因此也会进行环境的初始化和清理的动作。
 
 .. note:: 可以看到EnvTestBase的pre_test和post_test方法都调用的super接口，对于Python语言的含义表示的是调用基类的方法，虽然不是必定需要的，但是大部分情况下还是推荐这样做；因为这样做可以保证基类的初始化和清理的接口会被执行。
+
+
+

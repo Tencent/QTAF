@@ -69,7 +69,7 @@
         """test
         """
         
-        owner = 'organse'
+        owner = 'foo'
         priority = tc.TestCase.EnumPriority.High
         status = tc.TestCase.EnumStatus.Ready
         timeout = 5       
@@ -82,13 +82,6 @@
         MyTest().run()
         
 '''
-
-#12/11/26    organse    创建
-#14/06/23    organse    支持字典数据
-#14/10/30    olive       testbase重构修改，TestCase移除execute方法
-#14/10/31    olive       bugfix：appointRunAt会影响全部的每个数据驱动用例实例设置的数据
-#15/03/25    olive       重构
-#16/11/22    durian   给DataDrive增加__len__方法
 
 import types
 from testbase.testcase import TestCase
@@ -152,3 +145,27 @@ def get_datadrive( obj ):
     :returns DataDrive
     '''
     return obj.__qtaf_datadrive__
+
+def load_datadrive_tests( cls, name=None ):
+    '''加载对应数据驱动测试用例类的数据驱动用例
+    '''
+    dd = get_datadrive(cls)
+    if name:
+        if name not in dd:
+            raise ValueError("找不到对应名字'%s'的数据驱动用例"%name)
+        testdata = dd[name]
+        if isinstance(testdata, dict) and "__attrs__" in testdata:
+            attrs = testdata["__attrs__"]
+        else:
+            attrs = None
+        tests = [cls(dd[name], str(name), attrs)]
+    else:
+        tests = []
+        for name in dd:
+            testdata = dd[name]
+            if isinstance(testdata, dict) and "__attrs__" in testdata:
+                attrs = testdata["__attrs__"]
+            else:
+                attrs = None
+            tests.append(cls(dd[name], str(name), attrs))
+    return tests

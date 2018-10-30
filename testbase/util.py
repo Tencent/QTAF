@@ -15,16 +15,17 @@
 '''
 共用类模块
 '''
-#2013/05/10 tangor created
-#2014/10/28 olive  新增EggArchive
-#2015/03/26 olive  新增ThreadGroupLocal
 
-import re
-import time
+import copy
+import copy_reg
+import operator
 import os, sys
+import re
+import threading
+import time
 import traceback
 import zipfile
-import threading
+import inspect
 from tuia.exceptions import TimeoutError
 
 
@@ -106,7 +107,6 @@ class Timeout(object):
         :param regularMatch: 参数 property_name和waited_value是否采用正则表达式的比较。
                                                                             默认为不采用（False）正则，而是采用恒等比较
         '''
-        #11/09/24    persimmon    增加多层属性支持
         start = time.time()
         waited = 0.0
         try_count = 0
@@ -161,7 +161,6 @@ class Singleton(type):
                   pass
     
     """
-    #2013/11/25 pear    created
     _instances = {}
     def __init__(cls, name, bases, dic):
         super(Singleton, cls).__init__(name, bases, dic)
@@ -386,7 +385,7 @@ def _to_unicode( s ):
             try:
                 return s.decode('gbk')
             except UnicodeDecodeError: # data 可能是gbk和utf8混合编码
-                return s
+                return repr(s)
             
 def _to_utf8( s ):
     '''将任意字符串转换为UTF-8编码
@@ -401,9 +400,9 @@ def _to_utf8( s ):
         except UnicodeDecodeError: # data 可能是gbk编码
             try:
                 return s.decode('gbk').encode('utf8')
-            except UnicodeDecodeError: # data 可能是gbk和utf8混合编码，原样返回
-                return s
-    
+            except UnicodeDecodeError: # data 可能是gbk和utf8混合编码，repr返回
+                return repr(s)
+
 def get_thread_traceback(thread):
     '''获取用例线程的当前的堆栈
     
@@ -421,3 +420,175 @@ def get_thread_traceback(thread):
         return tb
     else:
         raise RuntimeError("thread not found")
+    
+def get_method_defined_class(method):
+    method_name = method.__name__
+    need_prefix = False
+    if method_name.startswith("__"):
+        if method_name != "__init__":
+            need_prefix = True
+    if getattr(method, "__self__", None):    
+        classes = [method.__self__.__class__]
+    else:
+        #unbound method
+        if hasattr(method, "im_class"):
+            classes = [method.im_class]
+        else:
+            classes = [getattr(method, "__class__", object)]
+    while classes:
+        c = classes.pop()
+        if c == object:
+            if len(classes) > 0:
+                continue
+        if need_prefix:
+            target_name = "_" + c.__name__ + method_name
+        else:
+            target_name = method_name
+        if target_name in c.__dict__:
+            return c
+        else:
+            classes = list(c.__bases__) + classes
+    raise RuntimeError("cannot find implement class for method: %s" % method)
+
+def get_last_frame_stack(back_count=2):
+    frame = inspect.currentframe()
+    for _ in range(back_count):
+        frame = frame.f_back
+    stack = "".join(traceback.format_stack(frame, 1))
+    return stack
+
+empty = object()
+
+
+def new_method_proxy(func):
+    def inner(self, *args):
+        if self._wrapped is empty:
+            self._setup()
+        return func(self._wrapped, *args)
+    return inner
+
+
+class LazyBase(object):
+    """base class of lazy inited object
+    """
+
+    # Avoid infinite recursion for __init__.
+    _wrapped = None
+
+    def __init__(self):
+        self._wrapped = empty
+
+    __getattr__ = new_method_proxy(getattr)
+
+    def __setattr__(self, name, value):
+        if name == "_wrapped":
+            # Avoid infinite recursion for setattr.
+            self.__dict__["_wrapped"] = value
+        else:
+            if self._wrapped is empty:
+                self._setup()
+            setattr(self._wrapped, name, value)
+
+    def __delattr__(self, name):
+        if name == "_wrapped":
+            raise TypeError("can't delete _wrapped.")
+        if self._wrapped is empty:
+            self._setup()
+        delattr(self._wrapped, name)
+
+    def _setup(self):
+        """to be overridden by subclasses.
+        """
+        raise NotImplementedError('subclasses of LazyInit must provide a _setup() method')
+
+    #avoid __reduce__ failure cause __class__ method is messed.
+    def __getstate__(self):
+        if self._wrapped is empty:
+            self._setup()
+        return self._wrapped.__dict__
+
+    # Python 3.3 will call __reduce__ when pickling; this method is needed
+    # to serialize and deserialize correctly.
+    @classmethod
+    def __newobj__(cls, *args):
+        return cls.__new__(cls, *args)
+
+    def __reduce_ex__(self, proto):
+        if proto >= 2:
+            return (self.__newobj__, (self.__class__,), self.__getstate__())
+        else:
+            return (copy_reg._reconstructor, (self.__class__, object, None), self.__getstate__())
+
+    def __deepcopy__(self, memo):
+        if self._wrapped is empty:
+            # We have to use type(self), not self.__class__, because the
+            # latter is proxied.
+            result = type(self)()
+            memo[id(self)] = result
+            return result
+        return copy.deepcopy(self._wrapped, memo)
+
+    if sys.version_info[0]==3:#py3
+        __bytes__ = new_method_proxy(bytes)
+        __str__ = new_method_proxy(str)
+        __bool__ = new_method_proxy(bool)
+    else:
+        __str__ = new_method_proxy(str)
+        __unicode__ = new_method_proxy(unicode)
+        __nonzero__ = new_method_proxy(bool)
+
+    # Introspection support
+    __dir__ = new_method_proxy(dir)
+
+    # Need to pretend to be the wrapped class, for the sake of objects that
+    # care about this (especially in equality tests)
+    __class__ = property(new_method_proxy(operator.attrgetter("__class__")))
+    __eq__ = new_method_proxy(operator.eq)
+    __ne__ = new_method_proxy(operator.ne)
+    __hash__ = new_method_proxy(hash)
+
+    # Dictionary methods support
+    __getitem__ = new_method_proxy(operator.getitem)
+    __setitem__ = new_method_proxy(operator.setitem)
+    __delitem__ = new_method_proxy(operator.delitem)
+
+    __len__ = new_method_proxy(len)
+    __contains__ = new_method_proxy(operator.contains)
+
+# Workaround for http://bugs.python.org/issue12370
+_super = super
+
+class LazyObject(LazyBase):
+    """A lazy object initialized from any function.
+    """
+    def __init__(self, func):
+        """
+        :param func:init function for lazy object with no extra argument
+        :type  func:function or object with __call__
+        """
+        self.__dict__['_setupfunc'] = func
+        _super(LazyObject, self).__init__()
+
+    def _setup(self):
+        self._wrapped = self._setupfunc()
+
+    #representation for debugging before object is caculated.
+    def __repr__(self):
+        if self._wrapped is empty:
+            repr_attr = self._setupfunc
+        else:
+            repr_attr = self._wrapped
+        return '<%s: %r>' % (type(self).__name__, repr_attr)
+
+    def __deepcopy__(self, memo):
+        if self._wrapped is empty:
+            #__class__ is proxied,using LazyObject instead.
+            result = LazyObject(self._setupfunc)
+            memo[id(self)] = result
+            return result
+        return copy.deepcopy(self._wrapped, memo)
+    
+
+if __name__ == "__main__":
+    pass
+    

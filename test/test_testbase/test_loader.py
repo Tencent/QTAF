@@ -14,17 +14,18 @@
 #
 '''loader test
 '''
-#2015/03/27 olive created
 
 import unittest
 
 from testbase.loader import TestLoader
 
+TestLoader.__test__ = False # for nauseated Nose
+
+
 class TestLoaderTest(unittest.TestCase):
-    '''测试用例加载测试
-    '''
+    
     def test_load_testcase(self):
-        '''测试加载一个用例
+        '''load test cases from class path
         '''
         tests = TestLoader().load("test.sampletest.hellotest.HelloTest")
         self.assertEqual(len(tests), 1)
@@ -32,7 +33,7 @@ class TestLoaderTest(unittest.TestCase):
         self.assertEqual(type(tests[0]), HelloTest)
         
     def test_load_datadrive(self):
-        '''测试数据驱动用例
+        '''load test cases from a data-driver class path
         '''
         from test.sampletest.datatest import DataTest
         tests = TestLoader().load("test.sampletest.datatest.DataTest")
@@ -78,6 +79,8 @@ class TestLoaderTest(unittest.TestCase):
         
 class SettingWarpper(object):
     
+    __test__ = False # for nauseated Nose
+        
     def __init__(self, settings):
         self.real_settings = settings
     
