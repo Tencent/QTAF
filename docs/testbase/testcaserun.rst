@@ -21,8 +21,8 @@
        case_runner = RepeatTestCaseRunner()
        repeat = 2
        
-       def runTest(self):
-           self.logInfo('第%s次测试执行'%self.iteration)
+       def run_test(self):
+           self.log_info('第%s次测试执行' % self.iteration)
    
    
    if __name__ == '__main__':

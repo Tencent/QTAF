@@ -42,14 +42,11 @@ print settings.CONFIG_OPTION
 3、用户自定义配置          固定为：test_proj/settings.py
 '''
 
-#2015/03/18 olive 新建
-#2015/03/19 olive 简化代码结构
-#2015/10/30 olive 支持加载lib的默认配置文件
-
 import os
 import sys
 import imp
 import qtaf_settings
+import types
 from testbase.exlib import ExLibManager
 
 _DEFAULT_SETTINSG_MODULE = "settings"
@@ -58,6 +55,7 @@ class _Settings(object):
     '''配置读取接口
     '''
     def __init__(self):
+        self.__keys = set()
         self.__sealed = False
         self._load()
         self.__sealed = True
@@ -133,6 +131,7 @@ class _Settings(object):
                 continue
             if name.islower():
                 continue
+            self.__keys.add(name)
             setattr(self, name, getattr(module,name))
 
     def _get_standalone_project_root(self, pre_settings):
@@ -184,8 +183,54 @@ class _Settings(object):
         return super(_Settings,self).__getattribute__(name)
            
     def __iter__(self):
-        for name in dir(self):
-            if not name.startswith('__') and name.isupper():
-                yield name
+        return self.__keys.__iter__()
+                
+    def __contain__(self, key):
+        return key in self.__keys
                 
 settings = _Settings()
+
+class _InnerSettings(object):
+    """
+    """
+    def __init__(self, inner_settings_cls, defined_class):
+        self.__sealed = False
+        prefix = defined_class.__name__.upper() + "_"
+        class_path = defined_class.__module__ + "." + defined_class.__name__
+        for key in dir(inner_settings_cls):
+            if key.startswith(prefix) and key.isupper():
+                setattr(self, key,  getattr(inner_settings_cls, key))
+            elif not key.startswith("_"):
+                if not key.startswith(prefix):
+                    raise RuntimeError("%s's Settings item `%s` must start with %s like %s%s" % (class_path, key, prefix, prefix, key.upper()))
+                elif not key.isupper():
+                    raise RuntimeError("%s's Settings item `%s` must be upper like %s" % (class_path, key, key.upper()))
+            
+                    
+        self.__sealed = True
+        
+    def __setattr__(self, name, value):
+        if not name.startswith('_InnerSettings__') and self.__sealed:
+            raise RuntimeError("dynamicly modifying value is not allowed.")
+        super(_InnerSettings, self).__setattr__(name, value)
+        
+    def __getattribute__(self, name):
+        if name in settings:
+            return settings.get(name)
+        return super(_InnerSettings, self).__getattribute__(name)
+        
+class SettingsMixin(object):
+    """a mixin class coordinate with qtaf settings
+    """    
+    @property
+    def settings(self):
+        if not hasattr(self, "_settings"):
+            inner_settings_cls = getattr(self, "Settings", None)
+            if inner_settings_cls.__name__ == "Settings":
+                inner_settings = _InnerSettings(inner_settings_cls, self.__class__)
+                setattr(self, "_settings", inner_settings)
+            else:
+                raise RuntimeError("no inner class Settings defined")
+        return self._settings
+            
+        

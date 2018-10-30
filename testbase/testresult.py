@@ -32,19 +32,6 @@
 ITestResultHandler来实现一个新的Handler，详细请参考ITestResultHandler接口
 
 '''
-#2010/11/10 banana    重新整理本模块
-#2010/11/16 banana    使TextLog是Thread-safe的
-#2010/12/16 banana    增加logInfo方法
-#2011/06/02 persimmon    增加XmlResultHandler类的CurrentClassName属性
-#2011/06/29 persimmon    将判断log是否属于运行当前用例的线程的逻辑放到BaseHandler的emit方法中
-#2013/05/10 tangor   add platform detect
-#2013/07/21 pear  增加平台检测，支持linux系统使用
-#2014/11/21 olive    更好支持非Windows系统
-#2015/01/26 olive    支持在测试报告中展示附件
-#2015/01/26 olive    测试用例超时时，测试报告中展示对应的错误类型
-#2015/03/27 olive    重构
-#2017/03/23 durian 增加对log内容的输入类型检查
-#2017/06/28 durian 统一转换函数，在输入时转换成utf8，而不是to_xml内，防止解码错误
 
 import sys
 import traceback
@@ -60,7 +47,7 @@ import locale
 import json
 
 from testbase import context
-from testbase.util import _to_unicode, _to_utf8, get_thread_traceback
+from testbase.util import _to_unicode, _to_utf8, get_thread_traceback, get_method_defined_class
 
     
 os_encoding = locale.getdefaultlocale()[1]
@@ -268,7 +255,16 @@ class TestResultBase(object):
                     self.handle_log_record(EnumLogLevel.ERROR, '测试失败时获取其他额外错误信息失败', 
                                           {'traceback':errors[0]}, {})
                 else:
-                    extra_record, extra_attachments = outputs[0]
+                    record_info = outputs[0]
+                    if isinstance(record_info, (tuple,list)) and len(record_info) == 2:
+                        extra_record, extra_attachments = record_info
+                    else:
+                        cls = get_method_defined_class(self.testcase.get_extra_fail_record)
+                        if cls.__module__ == '__main__':
+                            class_path = cls.__name__
+                        else:
+                            class_path = "%s.%s" % (cls.__module__,cls.__name__)
+                        raise RuntimeError("%s.get_extra_fail_record must return a 2 elements tuple" % class_path)
         return extra_record, extra_attachments
 
     def debug(self, msg, record=None, attachments=None):
@@ -354,8 +350,6 @@ class EmptyResult(TestResultBase):
 class StreamResult(TestResultBase):
     '''测试用例stream输出
     '''
-    #11/04/04 banana    创建
-    #15/03/30 olive      修改自StreamHandler
     
     _seperator1 = "-" * 40 + "\n"
     _seperator2 = "=" * 60 + "\n"
@@ -442,16 +436,15 @@ class StreamResult(TestResultBase):
         :param attachments: 附件
         :type attachments: dict
         '''
-        #2012/10/23 pear    修改显示的异常信息
         self._write("%s: %s\n" % (levelname[level], msg))
         
         if level == EnumLogLevel.ASSERT:
             if record.has_key("actual"):
                 actual=record["actual"]
-                self._write("   实际值：%s%s\n" % (actual.__class__,repr(actual)))
+                self._write("   实际值：%s%s\n" % (actual.__class__,actual))
             if record.has_key("expect"):
                 expect=record["expect"]
-                self._write("   期望值：%s%s\n" % (expect.__class__,repr(expect)))
+                self._write("   期望值：%s%s\n" % (expect.__class__,expect))
             if record.has_key("code_location"):
                 self._write(_to_utf8('  File "%s", line %s, in %s\n' % record["code_location"]))
             
@@ -467,11 +460,6 @@ class StreamResult(TestResultBase):
 class XmlResult(TestResultBase):
     '''xml格式的测试用例结果
     '''
-    #11/04/04 banana    创建
-    #11/06/02 persimmon    增加XmlResultHandler类的CurrentClassName属性
-    #2012/05/31 pear    open的参数不支持utf8编码，需修改为gbk
-    #2013/04/01 pear    增加对检查点失败情况下的自动分析功能
-    #2015/03/30 olive      从XmlResultHandler修改
     
     def __init__(self, file_path=None ):
         '''构造函数
@@ -557,24 +545,8 @@ class XmlResult(TestResultBase):
         :param attachments: 附件
         :type attachments: dict
         '''
-        #2011/06/13 pear    增加对crashfiles属性的处理
-        #2012/02/24 pear    添加对异常类型的处理
-        #2012/05/16 pear    优化在测试报告显示的异常信息，取完整的最后一行
-        #2012/05/17 pear    callstack如果找不到raise，则默认最后一行
-        #2012/10/22 pear    获取堆栈信息；去除异常原因信息字符串中左右两边的空格和换行符
-        #2012/10/23 pear    修改显示的异常信息
-        #2012/10/23 pear    若脚本不通过，则提示"检查点不通过"
-        #2013/06/21 pear    对用户传入的expect的值进行有效性检查，看能否被xml解释
-        #2013/08/27 pear    对实际值进行有效性检查，看能否被xml解释
-        #2013/08/28 pear    qtfa(rambutan)需要期望值存在非正常字符时也不抛异常
-        #2015/01/26 olive      优化用例超时时的报告展示
-        #2015/01/26 olive      报告展示错误类型增加优先级
-        #2016/01/26 olive      支持非str类型的消息
         if not isinstance(msg, basestring):
             msg = str(msg)
-        
-        if level == EnumLogLevel.ASSERT and record.has_key("code_location"):
-            msg += ' [File "%s", line %s, in %s]' % record["code_location"]
             
         #由于目前的报告系统仅支持部分级别的标签，所以这里先做转换
         if level >= EnumLogLevel.ERROR:
@@ -592,17 +564,15 @@ class XmlResult(TestResultBase):
         if level == EnumLogLevel.ASSERT:
             if record.has_key("actual"):
                 node = self._xmldoc.createElement("ACTUAL")
-                #2013/08/27 pear 这里对self.record.actual进行格式化，加入a标签（其实，可使用能被xml解释接受的任一合法标签），
-                #                    是为了使dom.parseString函数在解释self.record.expect时，不会抛异常。
-                #2014/05/14 pear 若actual是unicode类型，需要catch此异常，并显示出来
                 try:
-                    if isinstance(record["actual"], basestring):
-                        dom.parseString("<a>%s</a>" % record["actual"])
-                    acttxt = _to_utf8(record["actual"])
+                    actual=record["actual"]
+                    if isinstance(actual, basestring):
+                        dom.parseString("<a>%s</a>" % actual)
+                    acttxt = "%s%s" % (actual.__class__,actual)
                 except xmlexpat.ExpatError:
-                    acttxt = _to_utf8(repr(record["actual"]))
+                    acttxt = "%s%s" % (actual.__class__,repr(actual))
                 except UnicodeEncodeError:
-                    acttxt = _to_utf8(repr(record["actual"]))
+                    acttxt = "%s%s" % (actual.__class__,repr(actual))
                     
                 node.appendChild(self._xmldoc.createTextNode(acttxt))
                 infonode.appendChild(node)
@@ -610,15 +580,14 @@ class XmlResult(TestResultBase):
             if record.has_key("expect"):   
                 node = self._xmldoc.createElement("EXPECT")
                 try:
-                    if isinstance(record["expect"], basestring):
-                        #2013/06/27 pear 这里对self.record.expect进行格式化，加入a标签（其实，可使用能被xml解释接受的任一合法标签），
-                        #                    是为了使dom.parseString函数在解释self.record.expect时，不会抛异常。
-                        dom.parseString("<a>%s</a>" % record["expect"])
-                    exptxt = _to_utf8(str(record["expect"]))
+                    expect=record["expect"]
+                    if isinstance(expect, basestring):
+                        dom.parseString("<a>%s</a>" % expect)
+                    exptxt = "%s%s" % (expect.__class__,expect)
                 except xmlexpat.ExpatError:
-                    exptxt = _to_utf8(repr(record["expect"]))
+                    exptxt = "%s%s" % (expect.__class__,repr(expect))
                 except UnicodeEncodeError:
-                    exptxt = _to_utf8(repr(record["expect"]))
+                    exptxt = "%s%s" % (expect.__class__,repr(expect))
                 node.appendChild(self._xmldoc.createTextNode(exptxt))
                 infonode.appendChild(node)
 
@@ -641,6 +610,88 @@ class XmlResult(TestResultBase):
         '''
         return self._xmldoc.toprettyxml(indent="    ", newl="\n")
  
+class JSONResult(TestResultBase):
+    '''JSON格式的结果
+    '''
+    def __init__(self, testcase):
+        super(JSONResult, self).__init__()
+        self._steps = []
+        self._data = {
+            "testcase": testcase.test_name,
+            "description": testcase.test_doc,
+            "owner": testcase.owner,
+            "priority": testcase.priority,
+            "status": testcase.status,
+            "steps": self._steps
+        }
+        
+    def get_data(self):
+        return self._data
+    
+    def handle_test_begin(self, testcase ):
+        '''处理一个测试用例执行的开始
+        
+        :param testcase: 测试用例
+        :type testcase: TestCase
+        '''
+        self.begin_step("测试用例初始化步骤")
+
+    def handle_test_end(self, passed ):
+        '''处理一个测试用例执行的结束
+        
+        :param passed: 测试用例是否通过
+        :type passed: boolean
+        '''
+        self._data["succeed"] = passed
+        self._data["start_time"] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(self.begin_time)), 
+        self._data["end_time"] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(self.begin_time)), 
+
+    def handle_step_begin(self, msg ):
+        '''处理一个测试步骤的开始
+        
+        :param msg: 测试步骤名称
+        :type msg: string
+        '''
+        self._steps.append({
+            "name": msg,
+            "start_time": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), 
+            "logs": []
+        })
+        
+    def handle_step_end(self, passed ):
+        '''处理一个测试步骤的结束
+        
+        :param passed: 测试步骤是否通过
+        :type passed: boolean
+        '''
+        curr_step = self._steps[-1]
+        curr_step["succeed"] = passed
+        curr_step["end_time"] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), 
+
+    def handle_log_record(self, level, msg, record, attachments ):
+        '''处理一个日志记录
+        
+        :param level: 日志级别，参考EnumLogLevel
+        :type level: string
+        :param msg: 日志消息
+        :type msg: string
+        :param record: 日志记录
+        :type record: dict
+        :param attachments: 附件
+        :type attachments: dict
+        '''
+        print self._steps
+        print level, msg, record, attachments
+        curr_step = self._steps[-1]
+        curr_step["logs"].append({
+            "timestamp": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
+            "level": level,
+            "message": msg,
+            "record": record,
+            "attachments": attachments
+        })
+
+
 
 class TestResultCollection(list):
     '''测试结果集合
@@ -665,3 +716,4 @@ class TestResultCollection(list):
         return self.__passed
     
     
+from xml.dom import minidom

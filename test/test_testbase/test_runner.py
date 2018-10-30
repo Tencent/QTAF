@@ -14,7 +14,6 @@
 #
 '''runner test
 '''
-#2017/11/13 olive created
 
 from testbase import runner
 from testbase import report
@@ -22,7 +21,9 @@ from testbase import testresult
 import unittest
 
 class TestResult(testresult.TestResultBase):
-
+    
+    __test__ = False # for nauseated Nose
+    
     def __init__(self):
         super(TestResult, self).__init__()
         self.logs = []
@@ -44,6 +45,8 @@ class TestResult(testresult.TestResultBase):
     
 class TestResultFactory(report.ITestResultFactory):
     
+    __test__ = False # for nauseated Nose
+    
     def create(self, testcase ):
         return TestResult()
     
@@ -54,6 +57,8 @@ class TestResultFactory(report.ITestResultFactory):
         pass
 
 class TestReport(report.ITestReport):
+    
+    __test__ = False # for nauseated Nose
     
     def __init__(self):
         self.logs = []
@@ -72,24 +77,24 @@ class TestReport(report.ITestReport):
 
     def get_testresult_factory(self):
         return TestResultFactory()
-        
+
+    def log_loaded_tests(self, loader, testcases):
+        self.logs.append(["log_loaded_tests", loader, testcases])
+
+    def log_filtered_test(self, loader, testcase, reason):
+        self.logs.append(["log_filtered_test", loader, testcase, reason])
+
+    def log_load_error(self, loader, name, error):
+        self.logs.append(["log_load_error", loader, name, error])
+
+    def log_test_target(self, test_target):
+        self.logs.append(["log_test_target", test_target])
+
+    def log_resource(self, res_type, resource):
+        self.logs.append(["log_resource", res_type, resource])
+
 class RunnerTest(unittest.TestCase):
     
-    def test_run(self):
-        report = TestReport()
-        r = runner.TestRunner(report)
-        self._run_runner_test(report, r)
-        
-    def test_run_threading(self):
-        report = TestReport()
-        r = runner.ThreadingTestRunner(report,2)
-        self._run_runner_test(report, r)
-        
-    def test_run_multiprocessing(self):
-        report = TestReport()
-        r = runner.MultiProcessTestRunner(report,2)
-        self._run_runner_test(report, r)
-        
     def _run_runner_test(self, report, r):
         r.run("test.sampletest.runnertest")
         self.assertEqual(report.logs[0][0], "begin_report")
@@ -101,8 +106,18 @@ class RunnerTest(unittest.TestCase):
 
         for tc, testresult in testresults.items():
             self.assertEqual(tc, testresult.testcase)
-            self.assertEqual(tc.expect_passed, testresult.passed)
+            self.assertEqual(tc.expect_passed, testresult.passed, msg=str(tc))
             
+    def test_run(self):
+        report = TestReport()
+        r = runner.TestRunner(report)
+        self._run_runner_test(report, r)
+         
+    def test_run_threading(self):
+        report = TestReport()
+        r = runner.ThreadingTestRunner(report,2)
+        self._run_runner_test(report, r)
+         
     def test_retry(self):
         report = TestReport()
         r = runner.TestRunner(report, retries=1)
@@ -117,7 +132,7 @@ class RunnerTest(unittest.TestCase):
                 self.assertEqual(len(testresult), 1)
             else:
                 self.assertEqual(len(testresult), 2)
-                
+                 
     def test_seq_and_repeat_test(self):
         report = TestReport()
         r = runner.TestRunner(report)
@@ -128,6 +143,63 @@ class RunnerTest(unittest.TestCase):
                 results.append(type(it[1]).__name__)
         self.assertEqual(results, ["TestA"] + ["TestB"] * 4 +["TestC"])
         
+    def test_run_multiprocessing(self):
+        # To fix the Windows forking system it's necessary to point __main__ to
+        # the module we want to execute in the forked process
+        # https://stackoverflow.com/questions/33128681/how-to-unit-test-code-that-uses-python-multiprocessing
+        import sys        
+        old_main =                          sys.modules["__main__"]
+        old_main_file =                     sys.modules["__main__"].__file__
+        sys.modules["__main__"] =           sys.modules[__name__]
+        sys.modules["__main__"].__file__ =  sys.modules[__name__].__file__
         
+        #-----------------
+        # real test logic begin
         
+        report = TestReport()
+        r = runner.MultiProcessTestRunner(report,2)
+        self._run_runner_test(report, r)
         
+        # real test logic end
+        #------------------
+        
+        sys.modules["__main__"] =           old_main
+        sys.modules["__main__"].__file__ =  old_main_file
+
+    def test_run_plan(self):
+        import uuid
+        from test.sampletestplan.hello import HelloTestPlan
+        report = TestReport()
+        r = runner.TestRunner(report)
+        r.run(HelloTestPlan())
+        ops = []
+        for it in report.logs:
+            if it[0] == "log_test_target":
+                ops.append(it[0])
+            elif it[0] == "log_loaded_tests":
+                ops.append(it[0])
+            elif it[0] == "log_record" and it[2] == 'plan':
+                ops.append(it[3])
+        self.assertEqual(ops, [ "test_setup", "log_test_target",
+                "resource_setup-node-%s" % uuid.getnode(),
+                "resource_setup-hello-1", 
+                "resource_setup-hello-2",
+                "log_loaded_tests", 
+                "resource_teardown-hello-1",
+                "resource_teardown-hello-2",
+                "resource_teardown-node-%s" % uuid.getnode(),
+                "test_teardown"])
+
+    def test_run_testcasesettings(self):
+        report = TestReport()
+        r = runner.TestRunner(report)
+        r.run(runner.TestCaseSettings(["test.sampletest"], tags=["mod"], excluded_tags=["test2"]))
+        tcs = []
+        for it in report.logs:
+            if it[0] == 'log_test_result':
+                tcs.append(it[1])
+        self.assertEqual(len(tcs), 1)
+        tc = tcs[0]
+        from test.sampletest.tagtest import TagTest
+        self.assertIsInstance(tc, TagTest)
+
