@@ -15,6 +15,7 @@ script:
   - python test/__init__.py
 before_deploy: "echo $TRAVIS_TAG | sed 's/^.//' > version.txt"
 deploy:
+  skip_cleanup: true
   provider: pypi
   user: "qta"
   password:
