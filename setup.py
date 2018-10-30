@@ -37,6 +37,10 @@ def parse_requirements():
                 if line:
                     reqs.append(line)
 
+def get_description():
+    with open(os.path.join(BASE_DIR, "README.md"), "r") as fh:
+        return fh.read()
+
 class bdist_egg(Command):
     """automatically update version number before build
     """
@@ -68,8 +72,14 @@ if __name__ == "__main__":
       include_package_data=True,
       package_data={'':['*.txt', '*.TXT'], },
       data_files=[(".", ["requirements.txt", "version.txt"])],
+      long_description=get_description(),
+      long_description_content_type="text/markdown",
       author="Tencent",
       license="Copyright(c)2010-2018 Tencent All Rights Reserved. ",
       install_requires=parse_requirements(),
       entry_points={'console_scripts': ['qta-manage = testbase.management:qta_manage_main'], },
+      classifiers=[
+        "Programming Language :: Python :: 2.7",
+        "Operating System :: OS Independent",
+      ]
     )
