@@ -18,13 +18,18 @@ Testbase是所有QTA测试项目的基础，主要提供测试用例管理和执
    setup
    project
    testcase
+   testcheck
    testcaserun
    testresult
    testmgr
    datadrive
    testrun
+   testplan
    settings
-   
+   resource
+   dist
+   extension
+
 ====
 接口文档
 ====

@@ -13,8 +13,11 @@
    api/management
    api/project
    api/report
+   api/resource
    api/runner
    api/serialization
    api/testcase
    api/testresult
+   api/dist
+   api/plan
    api/util

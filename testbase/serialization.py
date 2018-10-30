@@ -15,8 +15,6 @@
 '''
 测试用例序列化和反序列化
 '''
-#2015/03/31 olive 新建
-#2016/01/27 olive 对测试数据进行pickle化处理，方式出现不可以序列化的对象
 
 import sys
 import pickle

@@ -12,385 +12,668 @@
 # OF ANY KIND, either express or implied. See the License for the specific language
 # governing permissions and limitations under the License.
 #
-'''
-请勿使用！此模块正在建设中
+"""assert机制实现
+"""
 
-测试用例验证函数
-方案一::
+from __future__ import print_function
 
-    verify("验证变量x是否为True", By.True_(x))  
-    verify("验证obj.getX()==123", By.Equal(obj.getX, 123))
-    verify("验证xx里是否匹配正则表达式QQ\d+", By.Match(xx, "QQ\d+"))
-    verify("验证0<yy<5", By.Function(yy, lambda yy: yy>0 and yy<10))
-    verify("验证10秒内obj.getX()==123", By.Wait(By.Equal(obj.getX, 123), 10))
+import ast, copy, inspect, itertools, sys, types, pprint
+import threading, traceback
 
-方案二::
+from testbase.util import Singleton, get_method_defined_class
 
-    verifyTrue("检查actual的值是否为True",actual)
-    verifyTrueWait("验证3秒内obj.getTrue(x1,x2)的值是否为True",obj.getTrue,{'x1':1,'x2':2},3,1)
-    verifyEqual("检查b==c",b,c)
-    verifyEqualWait("验证10秒内obj.getplus(b,c)的值等于3",a.getplus,{'x1':b,'x2':c},3,10,1)
-    verifyMatch("验证'abcd'里是否匹配正则表达式'^a'","abcd","^a")
-    verifyMatchWait("验证10秒内obj.getstr()返回的字符串是否匹配正则表达式'^a'",obj.getstr,{},"^a")
-    verifyCompareFunc("检查0<d<5",d,lambda x:x>0 and x<5)
-    verifyCompareFuncWait("验证10秒内obj.getplus(b,c)的值大于等于3",obj.getplus,{'x1':b,'x2':c},lambda x:x>=4)
-    verifyPropertyWait("验证10秒内obj.Top的值等于10",obj,'Top',10)
+unary_map = {ast.Not: "not %s", ast.Invert: "~%s", ast.USub: "-%s", ast.UAdd: "+%s"}
+
+binop_map = {
+    ast.BitOr: "|",
+    ast.BitXor: "^",
+    ast.BitAnd: "&",
+    ast.LShift: "<<",
+    ast.RShift: ">>",
+    ast.Add: "+",
+    ast.Sub: "-",
+    ast.Mult: "*",
+    ast.Div: "/",
+    ast.FloorDiv: "//",
+    ast.Mod: "%%",  # escaped for string formatting
+    ast.Eq: "==",
+    ast.NotEq: "!=",
+    ast.Lt: "<",
+    ast.LtE: "<=",
+    ast.Gt: ">",
+    ast.GtE: ">=",
+    ast.Pow: "**",
+    ast.Is: "is",
+    ast.IsNot: "is not",
+    ast.In: "in",
+    ast.NotIn: "not in",
+}
+
+if sys.version_info >= (3, 5):
+    ast_Call = ast.Call
+else:
+
+    def ast_Call(a, b, c):
+        return ast.Call(a, b, c, None, None)
     
-'''
-#2012/06/18 banana 创建接口
-#2012/06/18 strawberry  接口实现
-#2013/05/17 pear 去掉不必要的import
-import re
-import time
-import types
-import logger
+if hasattr(ast, "NameConstant"):
+    _NameConstant = ast.NameConstant
+else:
 
-       
-#def assert_(msg, compare_object):
-#    """断言。如果不通过，则抛出AssertionError。此方法会中断测试用例执行。
-#    如果需要不中断用例，请使用verify函数。
-#    """
-#    raise NotImplementedError()
-
-def isFunType(obj):
-    '''判断obj是否为函数对象和lambda对象
-    '''
-    return isinstance(obj,types.MethodType) or isinstance(obj,types.LambdaType)
-
-class By(object):
-    class CompareBase(object):
-        def compare(self):
-            '''
-            
-            :rtype: boolean'''
-            raise NotImplementedError("please implement in subclass")
-        
-        @property
-        def Actual(self):
-            return self._act
-            
-        @property
-        def Expect(self):
-            return self._exp
-        
-    class Equal(CompareBase):
-        '''等值判断类
-        '''
-        def __init__(self,act,exp):
-            self._actemp = act
-            self._exptemp = exp 
-            
-        def compare(self):
-            '''检查实际值和期望值是否相等，相等返回True,不等则返回False
-            
-               :return: True or False
-            '''
-            if isFunType(self._exptemp):
-                self._exp = self._exptemp()
-            else:
-                self._exp = self._exptemp
-            if isFunType(self._actemp):
-                self._act = self._actemp()
-            else:
-                self._act = self._actemp
-            if self._exp != self._act: 
-                return False
-            else:
-                return True
-   
-    class Match(CompareBase):
-        '''字符串模式匹配类
-        '''
-        def __init__(self,act,regexp):
-            self._actemp = act
-            self._exp = regexp
-              
-        def compare(self):
-            '''检查Actual和Expect是否匹配，匹配返回True,否则返回False
-            
-               :return: True or False
-            '''
-            if isFunType(self._exptemp):
-                self._act = self._actemp()
-            else:
-                self._act = self._actemp
-            if re.search(self._exp, self._act):
-                return True
-            else:
-                return False
-        
-    class True_(CompareBase):
-        '''布尔值比较类
-        '''
-        def __init__(self,act):
-            self._actemp = act
-            self._exp = True 
-             
-        def compare(self):
-            '''检查变量Actual的值是否为True
-            
-               :return: True or False
-            '''
-            if isFunType(self._actemp):
-                self._act = self._actemp()
-            else:
-                self._act = self._actemp
-            return self._act
-        
-    class CompareFunc(CompareBase):
-        '''自定义函数比较类
-        
-           :param exp:用户指定的期望值
-        '''
-        def __init__(self,act,match_func):
-            self._actemp = act
-            self._exp = True 
-            self._comparefunc = match_func
-        
-        @property
-        def Actual(self):
-            if isFunType(self._actemp):
-                return self._comparefunc(self._actemp())
-            else:
-                return self._comparefunc(self._actemp)        
-        
-        def compare(self):
-            '''获取自定义比较函数的执行结果
-            
-               :return: True or False
-            '''
-            if isFunType(self._actemp):
-                self._act = self._comparefunc(self._actemp())
-            else:
-                self._act = self._comparefunc(self._actemp)  
-            return self._act==self._exp
-        
-    class Wait(CompareBase):
-        '''等待函数比较类
-        '''
-        def __init__(self,compareobject,timeout=10,interval=0.5):
-            self._compareobject = compareobject
-            self._timeout = timeout 
-            self._interval = interval
-            
-        def compare(self):
-            '''函数对象的比较结果为True则立即返回True，超时则返回False。
-            
-               :return: True or False
-            '''
-            start = time.time()
-            waited = 0.0
-            try_count = 0
-            while True:
-                result = self._compareobject.compare()
-                if result==True:
-                    self._act = self._compareobject.Actual
-                    self._exp = self._compareobject.Expect
-                    return True
-                try_count +=1
-                waited = time.time() - start
-                if waited < self._timeout:
-                    time.sleep(min(self._interval, self._timeout - waited))
-                else:
-                    self._act = self._compareobject.Actual
-                    self._exp = self._compareobject.Expect
-                    return False
-        
-def verify(msg,compare_object):
-    '''测试验证，如果不通过，则会Log一个Error的错误，但不会抛出Exception,用例继续执行 
+    def _NameConstant(c):
+        return ast.Name(str(c), ast.Load())
     
-    :param compare_object: 比较对象
-    :type compare_object: By.CompareBase
-    '''
-    if compare_object.compare() != True: 
-        logger.error(msg, extra={'actual':compare_object.Actual, 'expect':compare_object.Expect})
-        return False
+def set_location(node, lineno, col_offset):
+    """Set node location information recursively."""
+
+    def _fix(node, lineno, col_offset):
+        if "lineno" in node._attributes:
+            node.lineno = lineno
+        if "col_offset" in node._attributes:
+            node.col_offset = col_offset
+        for child in ast.iter_child_nodes(node):
+            _fix(child, lineno, col_offset)
+
+    _fix(node, lineno, col_offset)
+    return node
+
+def hook_function(func):
+    code = func.__code__
+    src_code = inspect.getsource(code)
+    tree = ast.parse(src_code, "<string>", "exec")
+    print_func = ast.Name(id="print",ctx=ast.Load())
+    arg = ast.Str("hello world!")
+    print_expr = ast.Expr(ast.Call(func=print_func, args=[arg], keywords=[]))
+    test_func = tree.body[0]
+    test_func.body.append(print_expr)
+    ast.fix_missing_locations(tree)
+    new_code = compile(tree, "<string>", "exec", dont_inherit=True)
+    for item in new_code.co_consts:
+        if isinstance(item, types.CodeType) and item.co_name == code.co_name:
+            func.__code__ = copy.deepcopy(item)
+            break
     else:
-        return True
+        raise RuntimeError("no match name function for %s" % code.co_name)
     
-def _getObjProperty(obj,prop_name):
-    '''获取对象多层属性值
-    '''
-    objtmp = obj
-    pro_names = prop_name.split('.')
-    for i in range(len(pro_names)):
-        propvalue = getattr(objtmp, pro_names[i])
-        objtmp = propvalue
-    return propvalue
-
-def _getFuncResult(func,args):
-    '''对函数对象和参数进行类型检查，调用函数对象获取结果
-    '''
-    if not isinstance(func,types.MethodType) and not isinstance(func,types.LambdaType):
-        raise TypeError("func type %s is not a MethodType or LambdaType" % type(func))
-    if dict == type(args):
-        actret = func(**args)
-    elif tuple == type(args):
-        actret = func(*args)
-    else:
-        actret = func(args)
-    return actret
-
-def _waitForCompareResult(func,args,compareobj,timeout=10,interval=0.5):
-    ''' 等待获取比较结果
+class AssertionRewriter(ast.NodeVisitor):
+    """assert rewriter
+    """
     
-       :param actualfunc: 获取实际值的函数对象
-       :param actargs: 获取实际值的函数的参数
-       :param compareobj: 变量或者判断实际值是否符合预期条件的函数对象
-       :return comparefunc: True or False
-       :param timeout: 超时秒数
-       :param interval: 重试间隔秒数
-       :return type: tuple,(True,try_count,actual,expect)
-    '''
-    start = time.time()
-    waited = 0.0
-    try_count = 0
-    while True:
-        try_count +=1
-        actret = _getFuncResult(func,args)
-        if isinstance(compareobj,types.MethodType) or isinstance(compareobj,types.LambdaType):
-            expret = _getFuncResult(compareobj,actret)
-            if expret == True:
-                return True,try_count,actret,expret
+    def rewrite(self, item):
+        try:
+            self.rewrite_(item)
+        except:
+            stack = traceback.format_exc()
+            msg = "[WARN]rewrite item %s failed: %s" % (item, stack)
+            print(msg, file=sys.stderr)
+
+    def rewrite_(self, item):
+        """Find all assert statements in *mod* and rewrite them."""
+        func = item
+        if func in _AssertHookedCache():
+            return
+        
+        mod, func_node = get_func_mod_and_node(func)
+        if mod is None and func_node is None:
+            _AssertHookedCache().add(func)
+            return
+        
+        #compatibility with py 2 and 3
+        if sys.version_info[0] == 3:
+            builtins_mod = "builtins"
         else:
-            expret = compareobj
-            if actret == expret:
-                return True,try_count,actret,expret
-        waited = time.time() - start
-        if waited < timeout:
-            time.sleep(min(interval, timeout - waited))
-        else:
-            return False,try_count,actret,expret
-
-def verifyTrue(message,actual):
-    '''检查变量actual的值是否为True
-    '''
-    if not isinstance(actual,bool):
-        raise TypeError("actual type %s is not a bool" % type(actual))
-    if actual != True:
-        logger.error(message, extra={'actual':actual, 'expect':True})
-        return False
-    return True
-
-def verifyTrueWait(message,actualfunc,actargs,timeout=10,interval=0.5):
-    '''每隔interval检查actualfunc返回的值是否为True，如果在timeout时间内都不相等，则测试用例失败
-    
-       :param message: 失败时的输出信息
-       :param actualfunc: 获取实际值的函数对象
-       :param actargs: 获取实际值的函数的参数
-       :param timeout: 超时秒数
-       :param interval: 重试间隔秒数
-    '''
-    result = _waitForCompareResult(actualfunc,actargs,True,timeout,interval)
-    if result[0]==False:
-        logger.error("%s[Timeout:在%d秒内尝试了%d次]" % (message,timeout,result[1]), extra={'actual':result[2], 'expect':True})
-
-     
-def verifyEqual(message,actual,expect):
-    '''检查实际值和期望值是否相等，不等则测试用例失败
-    
-       :param message: 检查信息
-       :param actual: 实际值
-       :param expect: 期望值
-       :return: True or False
-    '''
-    if actual != expect:
-        logger.error(message, extra={'actual':actual, 'expect':expect})
-        return False
-    return True
+            builtins_mod = "__builtin__"
+        aliases = [
+            ast.alias(builtins_mod, "_py_builtins_"),
+            ast.alias("testbase.assertion", "_qtaf_assert_"),
+        ]
+        pos = 0
+        lineno = func_node.lineno
+        col_offset = func_node.col_offset 
         
-def verifyEqualWait(message,actualfunc,actargs,expect,timeout=10,interval=0.5):
-    '''每隔interval检查实际值和期望值是否相等，如果在timeout时间内都不相等，则测试用例失败
-
-       :param message: 失败时的输出信息
-       :param actualfunc: 获取实际值的函数对象
-       :param actargs: 获取实际值的函数的参数
-       :param expect: 期望值
-       :param timeout: 超时秒数
-       :param interval: 重试间隔秒数
-    '''
-    result = _waitForCompareResult(actualfunc,actargs,expect,timeout,interval)
-    if result[0]==False:
-        logger.error("%s[Timeout:在%d秒内尝试了%d次]" % (message,timeout,result[1]), extra={'actual':result[2], 'expect':expect})
-
-
-def verifyMatch(message,actual,regexpect):
-    '''检查actual和regexpect是否模式匹配，不匹配则记录一个检查失败
+        imports = [
+            ast.Import([alias], lineno=lineno, col_offset=col_offset) for alias in aliases
+        ]
+        imports.append(ast.ImportFrom(module="testbase.testresult", names=[ast.alias('EnumLogLevel',None)], level=0, lineno=lineno, col_offset=col_offset))
+        func_node.body[pos:pos] = imports
+        nodes = [func_node]
+        self.rewrite_code = False
+        while nodes:
+            node = nodes.pop()
+            for field, value in ast.iter_fields(node):
+                if isinstance(value, list):
+                    new_nodes = []
+                    for child in value:
+                        if isinstance(child, ast.Expr):
+                            new_nodes.extend(self.visit(child))
+                        else:
+                            new_nodes.append(child)
+                    setattr(node, field, new_nodes)
+                if isinstance(value, ast.Expr):
+                    self.visit(value)
+        if self.rewrite_code:
+            source_file = inspect.getsourcefile(func)
+            new_code = compile(mod, source_file, "exec")
+            set_func_code(func, new_code)
+        _AssertHookedCache().add(func)
     
-        :type message: string
-        :param message: 失败时记录的消息
-        :type actual: string
-        :param actual: 需要匹配的字符串
-        :type regexpect: string
-        :param regexpect: 要匹配的正则表达式 
-    '''
-    if re.search(regexpect, actual):
-        return True
+    def visit_Expr(self, expr):
+        value = expr.value
+        if isinstance(value, ast.Call):
+            if isinstance(value.func, ast.Attribute):
+                if value.func.attr == "assert_":
+                    return self.rewrite_assert_(expr)
+            elif isinstance(value.func, ast.Name):
+                if value.func.id == "assert_":
+                    return self.rewrite_assert_(value)
+            
+        return [expr]
+            
+    def rewrite_assert_(self, elem):
+        """rewrite the assert_ expression
+        """
+        self.rewrite_code = True
+        self.statements = []
+        self.variables = []
+        self.variable_counter = itertools.count()
+        self.stack = []
+        self.on_failure = []
+        self.push_format_context()
+        
+        # Rewrite assert into a bunch of statements.
+        if isinstance(elem, ast.Expr):
+            top_condition, explanation = self.visit(elem.value.args[1])
+            msg_arg = elem.value.args[0]
+            caller_id = "self"
+        elif isinstance(elem, ast.Call):
+            top_condition, explanation = self.visit(elem.args[1])
+            msg_arg = elem.args[0]
+            caller_id = "_qtaf_assert_"
+
+        # Create failure message.
+        body = self.on_failure
+        negation = ast.UnaryOp(ast.Not(), top_condition)
+        self.statements.append(ast.If(negation, body, []))
+        assertmsg = self.helper("format_assertmsg", msg_arg)
+        explanation = " " + explanation
+        template = ast.BinOp(assertmsg, ast.Add(), ast.Str(explanation))
+        msg = self.pop_format_context(template)
+        fmt = self.helper("format_explanation", msg)
+        log_record = ast.Attribute(
+                                value=ast.Name(id=caller_id, ctx=ast.Load()), 
+                                attr='_log_assert_failed', 
+                                ctx=ast.Load())
+        args = [fmt]
+        exc = ast_Call(log_record, args, [])
+        log_record_expr = ast.Expr(value=exc)
+        body.append(log_record_expr)
+        # Clear temporary variables by setting them to None.
+        if self.variables:
+            variables = [ast.Name(name, ast.Store()) for name in self.variables]
+            clear = ast.Assign(variables, _NameConstant(None))
+            self.statements.append(clear)
+        # Fix line numbers.
+        for stmt in self.statements:
+            set_location(stmt, elem.lineno, elem.col_offset)
+        return self.statements
+        
+    def variable(self):
+        """Get a new variable."""
+        # Use a character invalid in python identifiers to avoid clashing.
+        name = "_py_assert" + str(next(self.variable_counter))
+        self.variables.append(name)
+        return name
+
+    def assign(self, expr):
+        """Give *expr* a name."""
+        name = self.variable()
+        self.statements.append(ast.Assign([ast.Name(name, ast.Store())], expr))
+        return ast.Name(name, ast.Load())
+
+    def display(self, expr):
+        """Call py.io.saferepr on the expression."""
+        return self.helper("saferepr", expr)
+
+    def helper(self, name, *args):
+        """Call a helper in this module."""
+        py_name = ast.Name("_qtaf_assert_", ast.Load())
+        attr = ast.Attribute(py_name, "_" + name, ast.Load())
+        return ast_Call(attr, list(args), [])
+
+    def builtin(self, name):
+        """Return the builtin called *name*."""
+        builtin_name = ast.Name("_py_builtins_", ast.Load())
+        return ast.Attribute(builtin_name, name, ast.Load())
+
+    def explanation_param(self, expr):
+        """Return a new named %-formatting placeholder for expr.
+
+        This creates a %-formatting placeholder for expr in the
+        current formatting context, e.g. ``%(py0)s``.  The placeholder
+        and expr are placed in the current format context so that it
+        can be used on the next call to .pop_format_context().
+
+        """
+        specifier = "py" + str(next(self.variable_counter))
+        self.explanation_specifiers[specifier] = expr
+        return "%(" + specifier + ")s"
+
+    def push_format_context(self):
+        """Create a new formatting context.
+
+        The format context is used for when an explanation wants to
+        have a variable value formatted in the assertion message.  In
+        this case the value required can be added using
+        .explanation_param().  Finally .pop_format_context() is used
+        to format a string of %-formatted values as added by
+        .explanation_param().
+
+        """
+        self.explanation_specifiers = {}
+        self.stack.append(self.explanation_specifiers)
+
+    def pop_format_context(self, expl_expr):
+        """Format the %-formatted string with current format context.
+
+        The expl_expr should be an ast.Str instance constructed from
+        the %-placeholders created by .explanation_param().  This will
+        add the required code to format said string to .on_failure and
+        return the ast.Name instance of the formatted string.
+
+        """
+        current = self.stack.pop()
+        if self.stack:
+            self.explanation_specifiers = self.stack[-1]
+        keys = [ast.Str(key) for key in current.keys()]
+        format_dict = ast.Dict(keys, list(current.values()))
+        form = ast.BinOp(expl_expr, ast.Mod(), format_dict)
+        name = "_py_format_" + str(next(self.variable_counter))
+        self.on_failure.append(ast.Assign([ast.Name(name, ast.Store())], form))
+        return ast.Name(name, ast.Load())
+
+    def generic_visit(self, node):
+        """Handle expressions we don't have custom code for."""
+        assert isinstance(node, ast.expr)
+        res = self.assign(node)
+        return res, self.explanation_param(self.display(res))
+
+    def visit_Name(self, name):
+        # Display the repr of the name if it's a local variable or
+        # _should_repr_global_name() thinks it's acceptable.
+        locs = ast_Call(self.builtin("locals"), [], [])
+        inlocs = ast.Compare(ast.Str(name.id), [ast.In()], [locs])
+        dorepr = self.helper("should_repr_global_name", name)
+        test = ast.BoolOp(ast.Or(), [inlocs, dorepr])
+        expr = ast.IfExp(test, self.display(name), ast.Str(name.id))
+        return name, self.explanation_param(expr)
+
+    def visit_BoolOp(self, boolop):
+        res_var = self.variable()
+        expl_list = self.assign(ast.List([], ast.Load()))
+        app = ast.Attribute(expl_list, "append", ast.Load())
+        is_or = int(isinstance(boolop.op, ast.Or))
+        body = save = self.statements
+        fail_save = self.on_failure
+        levels = len(boolop.values) - 1
+        self.push_format_context()
+        # Process each operand, short-circuting if needed.
+        cond = None
+        for i, v in enumerate(boolop.values):
+            if i:
+                fail_inner = []
+                # cond is set in a prior loop iteration below
+                self.on_failure.append(ast.If(cond, fail_inner, []))  # noqa
+                self.on_failure = fail_inner
+            self.push_format_context()
+            res, expl = self.visit(v)
+            body.append(ast.Assign([ast.Name(res_var, ast.Store())], res))
+            expl_format = self.pop_format_context(ast.Str(expl))
+            call = ast_Call(app, [expl_format], [])
+            self.on_failure.append(ast.Expr(call))
+            if i < levels:
+                cond = res
+                if is_or:
+                    cond = ast.UnaryOp(ast.Not(), cond)
+                inner = []
+                self.statements.append(ast.If(cond, inner, []))
+                self.statements = body = inner
+        self.statements = save
+        self.on_failure = fail_save
+        expl_template = self.helper("format_boolop", expl_list, ast.Num(is_or))
+        expl = self.pop_format_context(expl_template)
+        return ast.Name(res_var, ast.Load()), self.explanation_param(expl)
+
+    def visit_UnaryOp(self, unary):
+        pattern = unary_map[unary.op.__class__]
+        operand_res, operand_expl = self.visit(unary.operand)
+        res = self.assign(ast.UnaryOp(unary.op, operand_res))
+        return res, pattern % (operand_expl,)
+
+    def visit_BinOp(self, binop):
+        symbol = binop_map[binop.op.__class__]
+        left_expr, left_expl = self.visit(binop.left)
+        right_expr, right_expl = self.visit(binop.right)
+        explanation = "(%s %s %s)" % (left_expl, symbol, right_expl)
+        res = self.assign(ast.BinOp(left_expr, binop.op, right_expr))
+        return res, explanation
+
+    def visit_Call_35(self, call):
+        """
+        visit `ast.Call` nodes on Python3.5 and after
+        """
+        new_func, func_expl = self.visit(call.func)
+        arg_expls = []
+        new_args = []
+        new_kwargs = []
+        for arg in call.args:
+            res, expl = self.visit(arg)
+            arg_expls.append(expl)
+            new_args.append(res)
+        for keyword in call.keywords:
+            res, expl = self.visit(keyword.value)
+            new_kwargs.append(ast.keyword(keyword.arg, res))
+            if keyword.arg:
+                arg_expls.append(keyword.arg + "=" + expl)
+            else:  # **args have `arg` keywords with an .arg of None
+                arg_expls.append("**" + expl)
+
+        expl = "%s(%s)" % (func_expl, ", ".join(arg_expls))
+        new_call = ast.Call(new_func, new_args, new_kwargs)
+        res = self.assign(new_call)
+        res_expl = self.explanation_param(self.display(res))
+        outer_expl = "%s\n{%s = %s\n}" % (res_expl, res_expl, expl)
+        return res, outer_expl
+
+    def visit_Starred(self, starred):
+        # From Python 3.5, a Starred node can appear in a function call
+        _, expl = self.visit(starred.value)
+        return starred, "*" + expl
+
+    def visit_Call_legacy(self, call):
+        """
+        visit `ast.Call nodes on 3.4 and below`
+        """
+        new_func, func_expl = self.visit(call.func)
+        arg_expls = []
+        new_args = []
+        new_kwargs = []
+        new_star = new_kwarg = None
+        for arg in call.args:
+            res, expl = self.visit(arg)
+            new_args.append(res)
+            arg_expls.append(expl)
+        for keyword in call.keywords:
+            res, expl = self.visit(keyword.value)
+            new_kwargs.append(ast.keyword(keyword.arg, res))
+            arg_expls.append(keyword.arg + "=" + expl)
+        if call.starargs:
+            new_star, expl = self.visit(call.starargs)
+            arg_expls.append("*" + expl)
+        if call.kwargs:
+            new_kwarg, expl = self.visit(call.kwargs)
+            arg_expls.append("**" + expl)
+        expl = "%s(%s)" % (func_expl, ", ".join(arg_expls))
+        new_call = ast.Call(new_func, new_args, new_kwargs, new_star, new_kwarg)
+        res = self.assign(new_call)
+        res_expl = self.explanation_param(self.display(res))
+        outer_expl = "%s\n{%s = %s\n}" % (res_expl, res_expl, expl)
+        return res, outer_expl
+
+    # ast.Call signature changed on 3.5,
+    # conditionally change  which methods is named
+    # visit_Call depending on Python version
+    if sys.version_info >= (3, 5):
+        visit_Call = visit_Call_35
     else:
-        logger.error(message, extra={'actual':actual, 'expect':regexpect})
-    return False
+        visit_Call = visit_Call_legacy
 
-def verifyMatchWait(message,actualfunc,actargs,regexpect,timeout=10,interval=0.5):
-    '''每隔interval检查actualfunc返回值是否和正则表达式regexpect是否匹配，如果在timeout时间内都不相等，则测试用例失败
+    def visit_Attribute(self, attr):
+        if not isinstance(attr.ctx, ast.Load):
+            return self.generic_visit(attr)
+        value, value_expl = self.visit(attr.value)
+        res = self.assign(ast.Attribute(value, attr.attr, ast.Load()))
+        res_expl = self.explanation_param(self.display(res))
+        pat = "%s\n{%s = %s.%s\n}"
+        expl = pat % (res_expl, res_expl, value_expl, attr.attr)
+        return res, expl
 
-       :param message: 失败时的输出信息
-       :param actualfunc: 获取实际值的函数对象
-       :param actargs: 获取实际值的函数的参数
-       :param regexpect: 需要匹配的正则表达式
-       :param timeout: 超时秒数
-       :param interval: 重试间隔秒数
-       :return: True or False
-    '''
-    compareobj = lambda x:re.search(regexpect, x)!=None
-    result = _waitForCompareResult(actualfunc,actargs,compareobj,timeout,interval)
-    if result[0]==False:
-        logger.error("%s[Timeout:在%d秒内尝试了%d次]" % (message,timeout,result[1]), extra={'actual':result[2], 'expect':regexpect})
+    def visit_Compare(self, comp):
+        self.push_format_context()
+        left_res, left_expl = self.visit(comp.left)
+        if isinstance(comp.left, (ast.Compare, ast.BoolOp)):
+            left_expl = "({})".format(left_expl)
+        res_variables = [self.variable() for i in range(len(comp.ops))]
+        load_names = [ast.Name(v, ast.Load()) for v in res_variables]
+        store_names = [ast.Name(v, ast.Store()) for v in res_variables]
+        it = zip(range(len(comp.ops)), comp.ops, comp.comparators)
+        expls = []
+        syms = []
+        results = [left_res]
+        for i, op, next_operand in it:
+            next_res, next_expl = self.visit(next_operand)
+            if isinstance(next_operand, (ast.Compare, ast.BoolOp)):
+                next_expl = "({})".format(next_expl)
+            results.append(next_res)
+            sym = binop_map[op.__class__]
+            syms.append(ast.Str(sym))
+            expl = "%s %s %s" % (left_expl, sym, next_expl)
+            expls.append(ast.Str(expl))
+            res_expr = ast.Compare(left_res, [op], [next_res])
+            self.statements.append(ast.Assign([store_names[i]], res_expr))
+            left_res, left_expl = next_res, next_expl
+        # Use pytest.assertion.util._reprcompare if that's available.
+        expl_call = self.helper(
+            "call_reprcompare",
+            ast.Tuple(syms, ast.Load()),
+            ast.Tuple(load_names, ast.Load()),
+            ast.Tuple(expls, ast.Load()),
+            ast.Tuple(results, ast.Load()),
+        )
+        if len(comp.ops) > 1:
+            res = ast.BoolOp(ast.And(), load_names)
+        else:
+            res = load_names[0]
+        return res, self.explanation_param(self.pop_format_context(expl_call))
 
+def _call_reprcompare(ops, results, expls, each_obj):
+    for _, res, expl in zip(range(len(ops)), results, expls):
+        try:
+            done = not res
+        except Exception:
+            done = True
+        if done:
+            break
+    return expl
 
-def verifyCompareFunc(message,actual,comparefunc):
-    '''检查传入actual后调用comparefunc的返回值是否为True，为False则测试用例失败
+def _saferepr(obj):
+    """Get a safe repr of an object for assertion error messages.
+
+    The assertion formatting (util.format_explanation()) requires
+    newlines to be escaped since they are a special character for it.
+    Normally assertion.util.format_explanation() does this but for a
+    custom repr it is possible to contain one of the special escape
+    sequences, especially '\n{' and '\n}' are likely to be present in
+    JSON reprs.
+
+    """
+    if isinstance(obj, types.MethodType):
+        if obj.im_self:
+            obj_repr = "self.%s" % obj.__func__.__name__
+    elif isinstance(obj, types.ClassType):
+        obj_repr = obj.__name__
+    else:
+        obj_repr = pprint.saferepr(obj)
+    return obj_repr
+
+def _should_repr_global_name(obj):
+    return not hasattr(obj, "__name__") and not callable(obj)
+
+def _format_assertmsg(obj):
+    """Format the custom assertion message given.
+
+    For strings this simply replaces newlines with '\n~' so that
+    util.format_explanation() will preserve them instead of escaping
+    newlines.  For other objects py.io.saferepr() is used first.
+
+    """
+    # reprlib appears to have a bug which means that if a string
+    # contains a newline it gets escaped, however if an object has a
+    # .__repr__() which contains newlines it does not get escaped.
+    # However in either case we want to preserve the newline.
+#     if isinstance(obj, six.text_type) or isinstance(obj, six.binary_type):
+    if isinstance(obj, basestring):
+        s = obj
+        is_repr = False
+    else:
+        s = pprint.saferepr(obj)
+        is_repr = True
+    if isinstance(s, unicode):
+        t = unicode
+    else:
+        t = str
+    s = s.replace(t("\n"), t("\n~")).replace(t("%"), t("%%"))
+    if is_repr:
+        s = s.replace(t("\\n"), t("\n~"))
+    return s + "\n"
+
+def _format_explanation(explanation):
+    """This formats an explanation
+
+    Normally all embedded newlines are escaped, however there are
+    three exceptions: \n{, \n} and \n~.  The first two are intended
+    cover nested explanations, see function and attribute explanations
+    for examples (.visit_Call(), visit_Attribute()).  The last one is
+    for when one explanation needs to span multiple lines, e.g. when
+    displaying diffs.
+    """
+    raw_lines = (explanation or '').split('\n')
+    # escape newlines not followed by {, } and ~
+    msg = raw_lines[0]
+    raw_lines = raw_lines[1:]
+    lines = raw_lines[:1]
+    for l in raw_lines[1:]:
+        if l.startswith('{') or l.startswith('}') or l.startswith('~'):
+            lines.append(l)
+        else:
+            lines[-1] += '\\n' + l
+
+    result = lines[:1]
+    stack = [0]
+    stackcnt = [0]
+    for line in lines[1:]:
+        if line.startswith('{'):
+            if stackcnt[-1]:
+                s = 'and   '
+            else:
+                s = 'where '
+            stack.append(len(result))
+            stackcnt[-1] += 1
+            stackcnt.append(0)
+            result.append(' +' + '  '*(len(stack)-1) + s + line[1:])
+        elif line.startswith('}'):
+            stack.pop()
+            stackcnt.pop()
+            result[stack[-1]] += line[1:]
+        else:
+            assert line.startswith('~')
+            result.append('  '*len(stack) + line[1:])
+    assert len(stack) == 1
+    result[0] = " [%s] assert " % msg + result[0]
+    return '\n'.join(result)
+
+def get_func_name(func):
+    if isinstance(func, types.MethodType):
+        if sys.version_info[0] == 3:
+            return func.__func__.__name__
+        else:
+            return func.__name__
+    else:
+        return func.func_name
+
+def get_func_source_code(func):
+    if isinstance(func, types.MethodType):
+        if sys.version_info[0] == 3:
+            src_code = inspect.getsource(func.__self__.__class__)
+        else:
+            im_class = get_method_defined_class(func)
+            src_code = inspect.getsource(im_class)
+    else:
+        src_code = inspect.getsource(func)
+    indent = inspect.indentsize(src_code)
+    if indent > 0:
+        lines = src_code.split("\n")
+        src_code = ""
+        for line in lines:
+            src_code += line[indent:] + "\n"
+    return src_code 
+
+def get_func_mod_and_node(func):
+    func_name = get_func_name(func)
+    src_code = get_func_source_code(func)
+    if isinstance(func, types.MethodType):
+        mod = ast.parse(src_code)
+        ast_cls = mod.body[0]
+        for item in ast_cls.body:
+            if isinstance(item, ast.FunctionDef):
+                if item.name == func_name:
+                    func_node = item
+                    break
+        else:
+            return None, None
+    else:
+        mod = ast.parse(src_code)
+        func_node = mod.body[0]
+    ast.increment_lineno(func_node, func.__code__.co_firstlineno - func_node.lineno)
+    return mod, func_node
+
+def get_func_compiled_code(func, new_code):
+    func_name = get_func_name(func)
+    if isinstance(func, types.MethodType):
+        for item in new_code.co_consts:
+            if isinstance(item, types.CodeType):
+                for sub_item in item.co_consts:
+                    if isinstance(sub_item, types.CodeType) and sub_item.co_name == func_name:
+                        return sub_item
+    elif isinstance(func, types.FunctionType):
+        for item in new_code.co_consts:
+            if isinstance(item, types.CodeType) and item.co_name == func_name:
+                return item
+    else:
+        raise RuntimeError("%s not supported yet" % repr(func))
     
-        :param actual: 实际值
-        :type actual: tuple or dict or 任意一个变量
-        :param comparefunc: 判断实际值是否符合预期条件的函数对象
-        :return comparefunc: True
-    '''
-    actret = _getFuncResult(comparefunc,actual)
-    if actret != True:
-        logger.error(message, extra={'actual':actret, 'expect':True})
-        return False
-    return True
-
-def verifyCompareFuncWait(message,actualfunc,actargs,comparefunc,timeout=10,interval=0.5):
-    '''每隔interval将actualfunc返回值传入到comparefunc，检查其返回值是否为True，如果在timeout时间内都不为True，则测试用例失败
+def set_func_code(func, new_code):
+    new_func_code = get_func_compiled_code(func, new_code)
+    if isinstance(func, types.MethodType):
+        if sys.version_info[0] == 3:
+            func.__code__ = new_func_code
+        else:
+            func.__func__.__code__ = new_func_code
+    else:
+        func.func_code = new_func_code
     
-       :param message: 失败时的输出信息
-       :param actualfunc: 获取实际值的函数对象
-       :param actargs: 获取实际值的函数的参数
-       :param comparefunc: 判断实际值是否符合预期条件的函数对象
-       :return comparefunc: True
-       :param timeout: 超时秒数
-       :param interval: 重试间隔秒数
-    '''
-    result = _waitForCompareResult(actualfunc,actargs,comparefunc,timeout,interval)
-    if result[0]==False:
-        logger.error("%s[Timeout:在%d秒内尝试了%d次]" % (message,timeout,result[1]), extra={'actual':result[2], 'expect':True})
-
-def verifyPropertyWait(message,obj,prop_name,expect,timeout=10,interval=0.5):
-    '''每隔interval检查obj.prop_name是否和expected相等，如果在timeout时间内都不相等，则测试用例失败
+class _AssertHookedCache(object):
+    __metaclass__ = Singleton
     
-       :param message: 失败时的输出信息
-       :param obj: 需要检查的对象
-       :type prop_name: string 
-       :param prop_name: 需要检查的对象的属性名，支持多层属性
-       :param expect: 期望的对象属性值
-       :param timeout: 超时秒数
-       :param interval: 重试间隔秒数
-    '''
-    result = _waitForCompareResult(_getObjProperty,{'obj':obj,'prop_name':prop_name},expect,timeout,interval)
-    if result[0]==False:
-        logger.error("%s[Timeout:在%d秒内尝试了%d次]" % (message,timeout,result[1]), extra={'actual':result[2], 'expect':expect})
-
+    def __init__(self):
+        self._lock = threading.Lock()
+        self.__cache = set()
         
-if __name__ == '__main__':
-    pass  
+    def add(self, func):
+        with self._lock:
+            self.__cache.add(self._hash_func(func))
+            
+    def __contains__(self, func):
+        item =self._hash_func(func)
+        return item in self.__cache
+    
+    def __iter__(self):
+        return self.__cache.__iter__()
+    
+    def _hash_func(self, func):
+        if isinstance(func, (types.FunctionType, types.MethodType)):
+            return func
+        else:
+            raise ValueError("func must be a callable type or object")
+        
+if __name__ == "__main__":
+    pass

@@ -1,23 +1,8 @@
 # -*- coding: utf-8 -*-
-#
-# Tencent is pleased to support the open source community by making QTA available.
-# Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
-# Licensed under the BSD 3-Clause License (the "License"); you may not use this 
-# file except in compliance with the License. You may obtain a copy of the License at
-# 
-# https://opensource.org/licenses/BSD-3-Clause
-# 
-# Unless required by applicable law or agreed to in writing, software distributed 
-# under the License is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
-# OF ANY KIND, either express or implied. See the License for the specific language
-# governing permissions and limitations under the License.
-#
 '''
 模块描述
 '''
-#2012-11-20  banana  - Created
-#2013-01-15  pear  - 已经没有htmlcontrols和htmlcontrols2模块，修改测试用例
-#2013-01-15  aaronlnai - 空构造函数抛出TypeError
+
 import testbase
 from testbase import logger
 from testbase import context
@@ -27,11 +12,31 @@ from testbase.testresult import EnumLogLevel
 
 def _some_thread():
     logger.info('非测试线程打log, tid=%s' % threading.current_thread().ident)
+
+def _create_sampefile():
+    import os
+    from testbase.conf import settings
+    res_dir = os.path.join(settings.PROJECT_ROOT,'resources')
+    if not os.path.isdir(res_dir):
+        os.mkdir(res_dir)
+    with open(os.path.join(res_dir,'a.txt'),'w') as f:
+        f.write('abc')
+    with open(os.path.join(res_dir,'readme.txt.link'),'w') as f:
+        f.write('/dist/qt4c/readme.txt')
+
+def _test_getfile(resmgr):
+    with open(resmgr.get_file('a.txt')) as f:
+        print f.read()
+    
+    with open(resmgr.get_file('readme.txt')) as f:
+            print f.read()
+    
+        
     
 class HelloTest(testbase.TestCase):
     '''测试示例
     '''
-    owner = "banana"
+    owner = "foo"
     status = testbase.TestCase.EnumStatus.Ready
     timeout = 1
     priority = testbase.TestCase.EnumPriority.Normal
@@ -54,7 +59,7 @@ class HelloTest(testbase.TestCase):
 class TimeoutTest(testbase.TestCase):
     '''超时示例
     '''
-    owner = "olive"
+    owner = "foo"
     status = testbase.TestCase.EnumStatus.Ready
     timeout = 0.1
     priority = testbase.TestCase.EnumPriority.Normal
@@ -65,7 +70,7 @@ class TimeoutTest(testbase.TestCase):
 class CrashTest(testbase.TestCase):
     '''发生Crash
     '''
-    owner = "olive"
+    owner = "foo"
     status = testbase.TestCase.EnumStatus.Ready
     timeout = 0.1
     priority = testbase.TestCase.EnumPriority.Normal
@@ -87,7 +92,7 @@ class App(object):
 class QT4iTest(testbase.TestCase):
     '''QT4i测试用例
     '''
-    owner = "olive"
+    owner = "foo"
     status = testbase.TestCase.EnumStatus.Ready
     timeout = 0.1
     priority = testbase.TestCase.EnumPriority.Normal
@@ -111,11 +116,11 @@ class QT4iTest(testbase.TestCase):
 class ExtraInfoTest(testbase.TestCase):
     '''带test_extra_info_def的用例
     '''
-    owner = "olive"
+    owner = "foo"
     status = testbase.TestCase.EnumStatus.Ready
     timeout = 1
     priority = testbase.TestCase.EnumPriority.Normal
-    dev_owner = "olive"
+    dev_owner = "foo"
     
     test_extra_info_def = [
         ("dev_owner", "开发负责人")
@@ -123,8 +128,24 @@ class ExtraInfoTest(testbase.TestCase):
     
     def runTest(self):
         pass
+
+class ResmgrTest(testbase.TestCase):
+    '''资源管理相关接口测试
+    '''
+    owner = "foo"
+    status = testbase.TestCase.EnumStatus.Ready
+    timeout = 1
+    priority = testbase.TestCase.EnumPriority.Normal
+    dev_owner = "foo"
+    _create_sampefile()
+    
+    def runTest(self):
+        import testbase.resource as rs
+        _test_getfile(self.test_resources)
+        _test_getfile(rs)
+            
     
 if __name__ == '__main__':
 #     HelloTest().run()
 #     CrashTest().debug_run()
-    QT4iTest().debug_run()
+    ResmgrTest().debug_run()

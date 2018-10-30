@@ -15,9 +15,6 @@
 '''
 测试用例加载
 '''
-#2014/10/30    olive 创建
-#2015/03/26    olive 支持项目级别的数据驱动测试用例的加载
-#2016/05/25    olive 支持通过模块名来指定数据模块
 
 import types
 import sys
@@ -35,7 +32,7 @@ class TestLoader(object):
     '''
     def __init__(self, filter_func=None ):
         '''构造函数
-        :param filter: 用例过滤函数，函数原型为 filter_func(testcase_class)，返回None/False表示不过滤此用例
+        :param filter: 用例过滤函数，函数原型为 filter_func(testcase_obj)，返回None/False表示不过滤此用例
         :type filter: callable
         '''
         self._filter = filter_func
@@ -63,26 +60,35 @@ class TestLoader(object):
         '''通过名字加载测试用例
         
         :param name: 用例或用例名称
-        :type name: string
+        :type name: string/list
         :returns list - 测试用例对象列表
         '''
-        self._module_errs = {}
-        if settings.DATA_DRIVE:
-            self._dataset = TestDataLoader().load()
-        if '/' in testname:
-            testname, datakeyname = testname.split('/', 1)
+
+        if isinstance(testname, list):
+            testnames = testname
         else:
-            datakeyname = None 
-            
-        obj = self._load(testname)
+            testnames = [testname]
+
+        self._module_errs = {}
         testcases = []
-        if isinstance(obj, types.ModuleType):
-            if hasattr(obj, '__path__'):
-                testcases = self._load_from_package(obj)
+
+        for testname in testnames:
+            if settings.DATA_DRIVE:
+                self._dataset = TestDataLoader().load()
+            if '/' in testname:
+                testname, datakeyname = testname.split('/', 1)
             else:
-                testcases = self._load_from_module(obj)
-        elif isinstance(obj, types.TypeType):
-            testcases = self._load_from_class(obj)
+                datakeyname = None 
+                
+            obj = self._load(testname)
+            
+            if isinstance(obj, types.ModuleType):
+                if hasattr(obj, '__path__'):
+                    testcases += self._load_from_package(obj)
+                else:
+                    testcases += self._load_from_module(obj)
+            elif isinstance(obj, types.TypeType):
+                testcases += self._load_from_class(obj)
         
         #过滤掉重复的用例
         testcase_dict = {}
@@ -219,8 +225,7 @@ class TestLoader(object):
         '''
         tests = []
         if datadrive.is_datadrive(cls):
-            dd = datadrive.get_datadrive(cls)
-            tests = [cls(dd[name], str(name)) for name in dd ]
+            tests = datadrive.load_datadrive_tests(cls)
         elif settings.DATA_DRIVE:
             tests = [cls(self._dataset[it], str(it)) for it in self._dataset]
         else:

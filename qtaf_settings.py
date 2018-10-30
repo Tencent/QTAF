@@ -33,3 +33,10 @@ PROJECT_NAME = 'qtaf'
 PROJECT_MODE = 'standalone' #choices: standard/standalone
 PROJECT_ROOT = None#os.path.dirname(__file__)
 INSTALLED_APPS = []
+
+
+# -----------------------------------
+# Assert 
+# -----------------------------------
+QTAF_REWRITE_ASSERT = True
+

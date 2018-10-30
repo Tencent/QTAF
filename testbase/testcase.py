@@ -15,37 +15,21 @@
 '''
 测试用例基类模块
 '''
-#10/11/09 banana    增加TestCaseStatus和TestCasePriority类，修改TestCase.run函数
-#10/11/16 banana    用多线程实现超时结束测试用例
-#10/12/02 pear    修改TestCase.waitForEqual函数的参数
-#10/12/07 banana    增加TestCase.Log属性
-#10/12/12 pear    修改TestCase.assertEqual函数的参数
-#10/12/13 pear    修改TestCase.assertEqual函数的参数
-#10/12/22 banana    添加TestCase.logInfo函数
-#10/12/23 banana    将assertEqual和waitForEqual的正则匹配由assertMatch和waitForMatch代替
-#10/12/30 banana    添加initTest和cleanTest函数
-#11/05/27 persimmon    修改run方法，本地执行用例后把当前log handler去掉
-#13/01/21 organse   TestCase类增加__Environ类，用于访问用例环境变量
-#13/05/10 tangor     platform support
-#13/11/11 pear    增加对环境变量的用法说明
-#15/01/13 olive      规避大部分用例超时，postTest可能被执行两次的情况
-#15/03/31 olive      重构，用例执行逻辑移到runner
-#16/04/18 durian  新旧接口风格的兼容性改造
-#16/04/19 durian  兼容性改造优化
-#17/05/10 durian  assert接口对传入的unicode统一转换成utf8处理
 
 import os
 import sys
-import inspect
 import re
 import threading
 import traceback
 import collections
+import random
+import types
 
-from testbase.util import Timeout, TimeoutError, Singleton, ForbidOverloadMethods, \
-ThreadGroupLocal, ThreadGroupScope,_to_utf8
+from testbase.assertion import AssertionRewriter
+from testbase.util import Singleton, ThreadGroupLocal, ThreadGroupScope,_to_utf8, get_last_frame_stack
 from testbase.testresult import EnumLogLevel, TestResultCollection
 from testbase.conf import settings
+from testbase.retry import Retry
 
 
 # 后续需专门花时间去除TestCaseStatus和TestCasePriority这两个类
@@ -54,8 +38,6 @@ class TestCaseStatus(object):
     
     :attention: 此类将会被移除，请使用TestCase.EnumStatus
     '''
-    
-    #11/09/19    persimmon    增加TestCaseStatus的Suspend字段
     Design, Implement, Review, Ready, Suspend = ('Design', 'Implement', 'Review', 'Ready', 'Suspend')
 
 class TestCasePriority(object):
@@ -63,7 +45,6 @@ class TestCasePriority(object):
     
     :attention: 此类将会被移除，请使用TestCase.EnumPriority
     '''
-    #2011/07/05 pear    加上BVT(Build Verification Test)优先级
     BVT, High, Normal, Low = ('BVT', 'High', 'Normal', 'Low')
 
 
@@ -106,33 +87,64 @@ env保存了用例运行时的一些测试环境变量。
     print env['YourEnvKey']
 
     """
-    #2013/11/25 pear    实现为单例模式
     __metaclass__ = Singleton
     def __init__(self):
         """构造函数。判断系统环境变量中是否存在由测试计划中传入的环境变量，有则加载。
         
         """
-        #2013/11/04 pear    created
-        #2013/12/12 pear    修改类名称，去掉线程保护
         super(Environ, self).__init__()
         for key in os.environ.keys():
             if key.startswith("QTAF_") and key[5:]:
                 self[key[5:]] = os.environ[key]
-        
-    
+
+
+class TestCaseType(type):
+    '''测试用例元类型
+    '''
+    forbid_overload_methods = ["__init__"]
+
+    def __new__(cls, name, bases, attrs):
+        super_new = super(TestCaseType, cls).__new__
+        parents = [b for b in bases if isinstance(b, TestCaseType)]
+        # ensure only apply for subclass of TestCase
+        if not parents:
+            return super_new(cls, name, bases, attrs)
+
+        for it in cls.forbid_overload_methods:
+            if it in attrs.keys():
+                raise RuntimeError("不允许%s重载函数: %s" % (cls.__name__, it))
+
+        base_tags_set = set()
+        if "tags" in attrs:
+            tags = attrs.pop("tags")
+            if isinstance(tags, basestring):
+                tags = [tags]
+            tags_set = set(tags)
+            for b in bases:
+                if issubclass(b, TestCase) and hasattr(b, "tags"):
+                    base_tags_set |= b.tags
+            if "__module__" in attrs:
+                mod = sys.modules[attrs["__module__"]]
+                if hasattr(mod, "__qtaf_tags__"):
+                    mod_tags = mod.__qtaf_tags__
+                    if isinstance(mod_tags, basestring):
+                        mod_tags = [mod_tags]
+                    base_tags_set |= set(mod_tags)
+            tags_set |= base_tags_set
+        else:
+            tags_set = set()
+        attrs["tags"] = tags_set
+        attrs["base_tags"] = base_tags_set
+        return super_new(cls, name, bases, attrs)
+
 class TestCase(object):
     '''测试用例基类
     
             所有测试用例都最终从此基类继承。测试用例的测试脚本主要实现在"runTest()"中，
            而当用例需要初始化和清理测试环境时则分别重写"preTest()"和"postTest()"函数。
     '''
-    #11/01/12 banana     添加EnumStatus和EnumPriority
-    #11/04/04 banana    使用新的log方式
-    #12/02/02 persimmon    去除不用的attribute
-    #13/11/04 pear    修改environ的赋值
-    #15/07/01 olive      增加test_dir属性
     
-    __metaclass__ = ForbidOverloadMethods(["__init__"])
+    __metaclass__ = TestCaseType
     test_extra_info_def = [] #自定义字段
     
     class EnumStatus(object):
@@ -141,8 +153,6 @@ class TestCase(object):
         :attention: 如果因为特殊原因需要暂时屏蔽某个用例的任务执行（比如有功能缺陷从而导致执行失败），
                                                      则可以先置为该字段为Suspend,等到可用的时候再将该字段置为Ready
         '''
-        #11/09/19 persimmon    增加EnumStatus的Suspend字段
-        #12/11/15 pear    引用TestCaseStatus定义
         Design, Implement, Review, Ready, Suspend = (TestCaseStatus.Design, 
                                                      TestCaseStatus.Implement,
                                                      TestCaseStatus.Review,
@@ -152,8 +162,6 @@ class TestCase(object):
     class EnumPriority(object):
         '''测试用例优先级枚举类
         '''
-        #2011/07/05 pear    加上BVT(Build Verification Test)优先级
-        #2012/11/15 pear    引用TestCasePriority
         BVT, High, Normal, Low = (TestCasePriority.BVT,
                                   TestCasePriority.High,
                                   TestCasePriority.Normal,
@@ -163,22 +171,39 @@ class TestCase(object):
     priority = None
     status = None
     timeout = None
-    def __init__(self, testdata=None, testdataname=None ):
+
+    ATTRIB_OVERWRITE_WHITELIST = ["priority", "status", "owner", "timeout", "tags", "__doc__"]
+
+    def __init__(self, testdata=None, testdataname=None, attrs=None ):
         '''构造函数 
         
         :param testdata: 测试数据
         :type testdata: object
         :param testdataname: 测试数据标识
         :type testdataname: str
+        :param attrs: 重载的测试用例属性
+        :type attrs: dict
         '''
-        #2013/09/05 pear    将测试用例信息设置到测试环境中
-        #2013/12/12 pear    修改实例化
-        #2015/03/31 olive      增加testdata参数
         self.__casedata = testdata
         self.__testdataname = testdataname
         self.__environ = Environ()
         self.__testresult = None
-          
+        self.__resmgr_session = None
+        self.__resmgr = None
+        self.__test_doc = None
+
+        if attrs:
+            for k, v in attrs.items():
+                if k in self.ATTRIB_OVERWRITE_WHITELIST:
+                    if k == "__doc__":
+                        self.__test_doc = v
+                    elif k == "tags":
+                        if isinstance(v, basestring):
+                            v = [v]
+                        self.tags = self.base_tags | set(v)
+                    else:
+                        setattr(self, k, v)
+
     @property
     def casedata(self):
         '''测试数据
@@ -225,8 +250,6 @@ class TestCase(object):
         
         :rtype: str
         '''
-        #11/2/24    sorgo    测试名包含模块名
-        #2012/05/31 pear    修改编码
         cls = type(self)
         if cls.__module__ == '__main__':
             type_name =  cls.__name__.decode('gbk').encode('utf8')
@@ -255,7 +278,8 @@ class TestCase(object):
         
         :rtype: str
         '''
-        #2013/08/21 pear    新建
+        if self.__test_doc:
+            return self.__test_doc
         desc = self.__class__.__doc__
 #        if desc:
 #            desc = cgi.escape(desc)
@@ -272,7 +296,25 @@ class TestCase(object):
         for name, _ in self.test_extra_info_def:
             info[name] = getattr(self, name, None)
         return info
-            
+    
+    @property
+    def test_resmgr(self):
+        '''资源管理器
+        '''
+        return self.__resmgr
+    
+    @test_resmgr.setter
+    def test_resmgr(self, resmgr):
+        self.__resmgr = resmgr
+
+    @property
+    def test_resources(self):
+        '''资源管理使用接口
+        '''
+        if not self.__resmgr_session:
+            self.__resmgr_session = self.__resmgr.create_session(self)
+        return self.__resmgr_session            
+    
     def init_test(self, testresult ):
         '''初始化测试用例。慎用此函数，尽量将初始化放到preTest里。
         
@@ -289,7 +331,6 @@ class TestCase(object):
     def run_test(self):
         '''运行测试用例
         '''
-        #2013/08/01 pear    若子类不重载此函数，则抛出异常
         raise NotImplementedError("请在%s类中实现runTest方法" % type(self))
 
     def post_test(self):
@@ -300,7 +341,7 @@ class TestCase(object):
     def clean_test(self):
         '''测试用例反初始化。慎用此函数，尽量将清理放到postTest里。
         '''
-        pass
+        self.test_resources.destroy()
     
     def start_step(self, stepinfo):
         '''开始执行一个测试步骤
@@ -328,8 +369,6 @@ class TestCase(object):
         :type message: string
         :param message: 要Log的信息  
         '''
-        #2011/06/13 pear    增加参数
-        #2011/06/29 pear    去掉参数
         if not isinstance(message, basestring):
             message=str(message)
         self.__testresult.error(message)
@@ -345,13 +384,29 @@ class TestCase(object):
         :type expect: string
         '''
         #得到上一个函数调用帧所在的文件路径，行号，函数名
-        err_filepath = inspect.currentframe().f_back.f_back.f_code.co_filename
-        err_lineno = inspect.currentframe().f_back.f_back.f_lineno
-        err_funcname = inspect.currentframe().f_back.f_back.f_code.co_name
-        self.__testresult.log_record(EnumLogLevel.ASSERT, message, 
-                                     dict(actual=actual, 
-                                          expect=expect, 
-                                          code_location=(err_filepath, err_lineno, err_funcname)))
+        stack = get_last_frame_stack(3)
+        msg = "检查点不通过\n%s%s\n期望值：%s%s\n实际值：%s%s" % (stack, message,
+                                                    expect.__class__,expect,
+                                                    actual.__class__,actual)
+        self.__testresult.log_record(EnumLogLevel.ASSERT, msg)
+    
+    def _log_assert_failed(self, message, back_count=2):
+        """记录断言失败的信息
+        """
+        stack = get_last_frame_stack(back_count)
+        msg = "检查点不通过\n%s%s\n" % (stack, message)
+        self.__testresult.log_record(EnumLogLevel.ASSERT, msg)
+        
+    def assert_(self, message, value):
+        """测试断言，如果value的值不为真，则用例失败，输出对应信息
+        
+        :param message:断言失败时的提示消息
+        :type  message: str
+        :param value:用于判断的值
+        :type  value: bool或
+        """
+        if not value:
+            self._log_assert_failed(message, 3)
     
     def assert_equal(self, message, actual, expect=True):
         '''检查实际值和期望值是否相等，不能则测试用例失败
@@ -404,13 +459,14 @@ class TestCase(object):
         :param interval: 重试间隔秒数
         :return: True or False
         '''
-        tout = Timeout(timeout, interval)
-        try:
-            tout.waitObjectProperty(obj, prop_name, expected, regularMatch=False)
-            return True
-        except TimeoutError:
+        for _ in Retry(timeout=timeout, interval=interval, raise_error=False):
+            actual = getattr(obj, prop_name)
+            if actual == expected:
+                return True
+        else:
             self.__record_assert_failed(message, getattr(obj, prop_name), expected)
             return False
+        
         
     def wait_for_match(self, message, obj, prop_name, expected, timeout=10, interval=0.5):
         '''每隔interval检查obj.prop_name是否和正则表达式expected是否匹配，如果在timeout时间内都不相等，则测试用例失败
@@ -424,11 +480,11 @@ class TestCase(object):
         :param interval: 重试间隔秒数
         :return: True or False
         '''
-        tout = Timeout(timeout, interval)
-        try:
-            tout.waitObjectProperty(obj, prop_name, expected, regularMatch=True)
-            return True
-        except TimeoutError:
+        for _ in Retry(timeout=timeout, interval=interval, raise_error=False):
+            actual = getattr(obj, prop_name)
+            if re.match(expected, actual, re.I):
+                return True
+        else:
             self.__record_assert_failed(message, getattr(obj, prop_name), expected)
             return False
             
@@ -442,8 +498,6 @@ class TestCase(object):
     def debug_run(self):
         '''本地调试测试用例
         '''
-        #2012/08/22 pear    期望这里能返回测试用例的执行结果
-        #2012/11/01 pear    SDK发布流程商定由自动改为手动方式，不再需要返回值
         from testbase.runner import TestRunner
         from testbase.loader import TestDataLoader
         from testbase.report import EmptyTestReport, StreamTestReport
@@ -454,7 +508,7 @@ class TestCase(object):
             testcls = type(self)
             if datadrive.is_datadrive(testcls):  #数据驱动用例
                 runner = TestRunner(StreamTestReport(output_testresult=True, output_summary=True))
-                return runner.run([testcls(self.__qtaf_datadrive__[it], str(it)) for it in self.__qtaf_datadrive__ ])
+                return runner.run(datadrive.load_datadrive_tests(testcls))
             elif settings.DATA_DRIVE: #项目级的数据驱动
                 testdataset = TestDataLoader().load()
                 runner = TestRunner(StreamTestReport(output_testresult=True, output_summary=True))
@@ -477,11 +531,10 @@ class TestCase(object):
         if self.casedata is None:
             testcls = type(self)
             if datadrive.is_datadrive(testcls):  #数据驱动用例
-                for it in self.__qtaf_datadrive__:
-                    if (name is None) or (str(name) == str(it)):
-                        return runner.run([testcls(self.__qtaf_datadrive__[it], str(it))])
-                else:
-                    raise RuntimeError("找不到指定名字的测试数据")
+                tests = datadrive.load_datadrive_tests(testcls, name)
+                if len(tests) > 1:
+                    tests = [ random.choice(tests) ]
+                return runner.run(tests)
             elif settings.DATA_DRIVE: #项目级的数据驱动
                 testdataset = TestDataLoader().load()
                 for it in testdataset:
@@ -492,7 +545,8 @@ class TestCase(object):
             else:
                 raise RuntimeError("非数据驱动用例请使用debug_run接口进行调试执行")
         else:
-            return runner.run([self])
+            runner.run([self])
+            return self
         
         
         
@@ -552,7 +606,6 @@ class TestCaseRunner(ITestCaseRunner):
     自定义一个测试用例的执行逻辑，以下是TestCaseRunner的接口定义
     '''
     
-    #2015/05/20 olive TestCaseRunner增加setup/teardown扩展接口
     
     CLEANUP_TIMEOUT = 300
     
@@ -563,16 +616,27 @@ class TestCaseRunner(ITestCaseRunner):
         self._stop_run = False
         self._error = None
         
-    def _methods_mapping(self,test_case):
-        '''检测用例的接口风格，并进行兼容
+    def _rewrite_assert(self, cls):
+        if not settings.get("QTAF_REWRITE_ASSERT", True) or cls == TestCase:
+            return
+        rewriter = AssertionRewriter()
+        for key in dir(cls):
+            item = getattr(cls, key)
+            if isinstance(item, (types.MethodType, types.FunctionType)):
+                rewriter.rewrite(item)
+        
+    def _walk_bases(self,test_case):
+        '''遍历所有基类，进行相应的处理
         '''
         cur_cls=type(test_case)
         self._single_methods_mapping(cur_cls)
+        self._rewrite_assert(cur_cls)
         bases=set(cur_cls.__bases__)
         while bases:
             new_bases=set()
             for base_cls in bases:
                 self._single_methods_mapping(base_cls)
+                self._rewrite_assert(cur_cls)
                 new_bases=new_bases.union(set(base_cls.__bases__))
             bases=new_bases
         
@@ -596,7 +660,7 @@ class TestCaseRunner(ITestCaseRunner):
             elif pairs[0] not in cls_dict and pairs[1] in cls_dict:
                 setattr(cls_type,pairs[0],cls_dict[pairs[1]])
             elif pairs[0] in cls_dict and pairs[1] in cls_dict:
-                if cls_dict[pairs[0]]<>cls_dict[pairs[1]]:
+                if cls_dict[pairs[0]] != cls_dict[pairs[1]]:
                     raise RuntimeError('类型%s不允许同时独立定义"%s"和"%s"' % (cls_type,pairs[0],pairs[1]))
         
     def _check_testcase(self, testcase ):
@@ -620,17 +684,12 @@ class TestCaseRunner(ITestCaseRunner):
         if not self._testcase.test_doc:
             raise RuntimeError("测试用例的描述不能为空，请加上描述！")
         
-        self._methods_mapping(testcase)
+        self._walk_bases(testcase)
         
     def _thread_run(self):
         '''测试用例线程过程
         '''
-        #11/11/07 persimmon    增加判断各个test是否成功的标志位
-        #12/09/28 pear    修改类属性置空时并不能提示的bug、增加对用例描述是否空的判断
-        #12/10/17 pear    修改当用例描述未填写时，不能提示用例注释错误的bug
-        #13/03/01 pear    注释掉pythoncom.CoUninitialize，因使用windbg查看被hang住的python进程时，发现是在调用CoUninitialize
         #                     函数时发生了死锁，故注释掉。观察一段时间，看修改是否会影响测试。
-        #13/09/05 pear    使用TestDoc属性
         try:
             try:
                 self._check_testcase(self._testcase)
@@ -709,24 +768,14 @@ class TestCaseRunner(ITestCaseRunner):
         :type testresult_factory: ITestResultFactory
         :rtype: TestResult/TestResultCollection - 测试结果
         '''
-        #2011/08/31 pear    is_alive是一个方法，非变量
-        #2012/01/05 banana    当被测程序hang住，python的垃圾回收释放远程COM对象也会hang。
         #                       临时方案是disable gc后kill掉程序，在enable gc。后续这里
         #                        需要重新考虑已独立进程来执行测试用例。
-        #2012/06/07 pear    如果测试用例超时，调用postTest，否则无法释放资源，也无法看到申请的帐号资源是什么。
         
         self._stop_run=False
         self._testcase = testcase
         self._testresult = testresult_factory.create(testcase)
-#         if type(testcase).__dict__.has_key('run_test'): #使用新的代码风格的接口
-#             self._subtasks = collections.deque(['init_test', 'pre_test', 'run_test', 'post_test', 'clean_test'])
-#         else: #兼容老的代码风格的接口
-#             self._subtasks = collections.deque(['initTest', 'preTest', 'runTest', 'postTest', 'cleanTest'])
-        self._subtasks = collections.deque(['initTest', 'preTest', 'runTest', 'postTest', 'cleanTest'])
+        self._subtasks = collections.deque(['init_test', 'pre_test', 'run_test', 'post_test', 'clean_test'])
                     
-        #import gc
-        #gc.disable()
-        
         with ThreadGroupScope('%s:%s'%(self._testcase.test_name, id(self))):
 
             ThreadGroupLocal().testcase = self._testcase
@@ -755,7 +804,7 @@ class TestCaseRunner(ITestCaseRunner):
                     self._testresult.log_record(EnumLogLevel.TESTTIMEOUT, '测试用例执行超时，抓取测试线程当前堆栈', 
                                                 dict(traceback=thread_traceback))
                 
-                #启动线程执行可能未执行的postTest和cleanTest，只给15秒的窗口
+                #启动线程执行可能未执行的postTest和cleanTest
                 cleanup_thread = threading.Thread(target=self._thread_cleanup)
                 cleanup_thread.daemon = True
                 cleanup_thread.start()
@@ -813,7 +862,7 @@ class RepeatTestCaseRunner(ITestCaseRunner):
         class HelloRepeatTest(TestCase):
             '示例用例'
             case_runner = RepeatTestCaseRunner()
-            owner = "olive"
+            owner = "eeelin"
             timeout = 1
             status = TestCase.EnumStatus.Ready
             priority = TestCase.EnumPriority.Normal
@@ -913,7 +962,6 @@ class TestSuite(object):
         '''反序列化
         '''
         raise NotImplementedError()
-    
         
 class SeqTestSuite(TestSuite):
     '''顺序执行的测试用例套
@@ -929,6 +977,7 @@ class SeqTestSuite(TestSuite):
         :type name: string
         '''
         self._testcases = testcases
+        self._resmgr = None
     
     def __iter__(self):
         for it in self._testcases:
@@ -943,8 +992,6 @@ class SeqTestSuite(TestSuite):
         
         :rtype: str
         '''
-        #11/2/24    sorgo    测试名包含模块名
-        #2012/05/31 pear    修改编码
         cls = type(self._testcases[0])
         return cls.__module__.decode('gbk').encode('utf8')
                         
@@ -982,6 +1029,18 @@ class SeqTestSuite(TestSuite):
                 break
         return result
     
+    @property
+    def test_resmgr(self):
+        '''资源管理器
+        '''
+        return self._resmgr
+    
+    @test_resmgr.setter
+    def test_resmgr(self, resmgr):
+        self._resmgr = resmgr
+        for it in self._testcases:
+            it.test_resmgr = resmgr
+
     def dumps(self):
         '''序列化
         '''
