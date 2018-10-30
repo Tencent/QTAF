@@ -15,8 +15,6 @@
 '''测试项目接口
 '''
 
-#2015/04/28 olive 新建
-
 import os
 import codecs
 import datetime
@@ -278,6 +276,10 @@ def create_project(dest_path, proj_name, mode ):
         os.mkdir(case_dir)
         _create_initpy(case_dir, "测试用例")
         _create_sample_test(case_dir, proj_name)
+    
+    res_dir = os.path.join(dest_path, 'resources')
+    if not os.path.isdir(res_dir):
+        os.mkdir(res_dir)
 
     if mode == EnumProjectMode.Standalone:
         exlib_dir = os.path.join(dest_path, 'exlib')

@@ -20,12 +20,6 @@ import sys
 import traceback
 from testbase import context
 
-#2012/07/20 pear    去掉basicConfig，因为会重复打印stream log
-#2012/06/10 persimmon    给logging系统做基本配置
-#2015/03/30 olive      TestResult和logging模块解耦
-#2016/06/27 durian  如果TestResult为空，则输出到控制台
-
-
 _streamhandler=logging.StreamHandler(sys.stdout)
 class TestResultBridge(logging.Handler):
     '''中转log信息到TestResult

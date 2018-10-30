@@ -15,7 +15,6 @@
 '''
 异常模块定义
 '''
-#2012/03/16 pear    初稿，创建
 
 class ControlNotFoundError(Exception):
     '''控件没有找到

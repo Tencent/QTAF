@@ -54,7 +54,6 @@ QPath是一个用于定位各个平台的UI控件（除Web控件）的查询语�
 
 
 '''
-#15/06/02 olive      新建
 
 import types
 

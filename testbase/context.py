@@ -15,7 +15,6 @@
 '''
 测试用例执行时上下文
 '''
-#2015/03/31 olive 新建
 
 from testbase.util import ThreadGroupLocal
 
@@ -32,3 +31,6 @@ def current_testresult():
     :returns: TestResult
     '''
     return getattr(ThreadGroupLocal(), 'testresult', None)
+
+def current_testcase_local():
+    return ThreadGroupLocal()

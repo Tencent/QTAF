@@ -45,3 +45,4 @@ INSTALLED_APPS
 仅标准模式下配置文件中的改设置才有效，用于指定已安装的QTAF库。在独立模式下INSTALLED_APPS的值通过读取exlib/installed_libs.txt得到，，因此不能修改和设置。
 
 适用5.0.97或以上版本。
+

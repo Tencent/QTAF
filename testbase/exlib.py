@@ -16,8 +16,6 @@
 扩展库管理（仅独立模式使用）
 '''
 
-#2015/10/30 olive 新建
-
 import os
 import zipfile
 import shutil
