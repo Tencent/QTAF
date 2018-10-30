@@ -1,4 +1,8 @@
-# QTAF [![Build Status](https://travis-ci.org/Tencent/QTAF.svg?branch=master)](https://travis-ci.org/Tencent/QTAF)
+# QTAF 
+
+[![Build Status](https://travis-ci.org/Tencent/QTAF.svg?branch=master)](https://travis-ci.org/Tencent/QTAF) 
+[![PyPi version](https://img.shields.io/pypi/v/qtaf.svg)](https://pypi.python.org/pypi/qtaf/) 
+[![GitHub tag](https://img.shields.io/github/tag/Tencent/QTAF.svg)](https://GitHub.com/Tencent/QTAF/tags/)
 
 QTA is a cross-platform test automation tool for servers and native, hybrid and applications.
 
