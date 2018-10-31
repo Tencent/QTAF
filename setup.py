@@ -26,6 +26,8 @@ def generate_version():
             content = fd.read().strip()
             if content:
                 version = content
+    with open(os.path.join(BASE_DIR, "testbase", "version.py"), "w") as fd:
+        fd.write('version = "%s"\n' % version)
     return version
   
 def parse_requirements():
@@ -41,33 +43,13 @@ def get_description():
     with open(os.path.join(BASE_DIR, "README.md"), "r") as fh:
         return fh.read()
 
-class bdist_egg(Command):
-    """automatically update version number before build
-    """
-    user_options = []
-    boolean_options = []
-          
-    def initialize_options (self):
-        pass
-    
-    def finalize_options(self):
-        pass
-
-    def run(self):
-        version = self.distribution.metadata.get_version()
-        with open(os.path.join("testbase", "version.py"), "w") as fd:
-            fd.write('version = "%s"\n' % version)
-        self.run_command("orig_bdist_egg")
 
 if __name__ == "__main__":
-        
+       
     setup(
       version=generate_version(),
       name="qtaf",
-      cmdclass={
-          "bdist_egg": bdist_egg,
-          "orig_bdist_egg": orig_bdist_egg,},
-      packages=find_packages(exclude=("test",)),
+      packages=find_packages(exclude=("test", "test.*",)),
       py_modules=["qtaf_settings", "__main__"],
       include_package_data=True,
       package_data={'':['*.txt', '*.TXT'], },
