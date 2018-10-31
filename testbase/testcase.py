@@ -862,7 +862,7 @@ class RepeatTestCaseRunner(ITestCaseRunner):
         class HelloRepeatTest(TestCase):
             '示例用例'
             case_runner = RepeatTestCaseRunner()
-            owner = "eeelin"
+            owner = "foo"
             timeout = 1
             status = TestCase.EnumStatus.Ready
             priority = TestCase.EnumPriority.Normal

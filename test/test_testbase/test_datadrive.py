@@ -24,7 +24,7 @@ class DatadriveTest(unittest.TestCase):
     def test_load_dict_data(self):
 
         data = {
-            "x": {"value":"x", "xxx":{"owner": "eeelin"}},
+            "x": {"value":"x", "xxx":{"owner": "foo"}},
             "y": {"value":2, "xxx":{"priority": TestCase.EnumPriority.Low}}
         }
         @datadrive.DataDrive(data)
@@ -61,7 +61,7 @@ class DatadriveTest(unittest.TestCase):
 
     def test_set_attrs(self):
         data = [
-            {"value":"x", "__attrs__":{"owner": "eeelin"}},
+            {"value":"x", "__attrs__":{"owner": "foo"}},
             {"value":2, "__attrs__":{"priority": TestCase.EnumPriority.Low}}
         ]
         @datadrive.DataDrive(data)
@@ -75,7 +75,7 @@ class DatadriveTest(unittest.TestCase):
 
         tests = datadrive.load_datadrive_tests(Demo)
         self.assertEqual(len(tests), 2)
-        self.assertEqual(tests[0].owner, "eeelin")
+        self.assertEqual(tests[0].owner, "foo")
         self.assertEqual(tests[0].priority, TestCase.EnumPriority.BVT)
         self.assertEqual(tests[1].owner, "xxx")
         self.assertEqual(tests[1].priority, TestCase.EnumPriority.Low)
@@ -85,7 +85,7 @@ class DatadriveTest(unittest.TestCase):
             tags = "base"
         
         data = [
-            {"value":"x", "__attrs__":{"tags": "eeelin"}},
+            {"value":"x", "__attrs__":{"tags": "foo"}},
             {"value":"x", "__attrs__":{"tags": ("fff","xxx")}},
         ]
         @datadrive.DataDrive(data)
@@ -99,7 +99,7 @@ class DatadriveTest(unittest.TestCase):
                 pass
         tests = datadrive.load_datadrive_tests(Demo)
         self.assertEqual(len(tests), 2)
-        self.assertEqual(tests[0].tags, set(["base", "eeelin"]))
+        self.assertEqual(tests[0].tags, set(["base", "foo"]))
         self.assertEqual(tests[1].tags, set(["base", "fff", "xxx"]))
 
     def test_set_attrs_doc(self):
