@@ -202,7 +202,7 @@ QTA测试用例的代码的执行控制逻辑和一般Python的代码是类似�
    Traceback (most recent call last):
      File "D:\Guying\Workspace\DemoProj\test_assert.py", line 5, in <module>
        for item in Retry(timeout=2, interval=0.5):
-     File "C:\Users\guyingzhao\git\qtaf\testbase\retry.py", line 54, in next
+     File "C:\Users\foo\git\qtaf\testbase\retry.py", line 54, in next
        raise RetryLimitExcceeded("funtion retried %s times in %ss" % (self.__count, self.timeout))
    testbase.retry.RetryLimitExcceeded: function retried 4 times in 2s
 
@@ -228,7 +228,7 @@ Retry的默认参数是tiemout=10，interval=0.5，使用最大的重试时间�
    Traceback (most recent call last):
      File "D:\Guying\Workspace\DemoProj\test_assert.py", line 4, in <module>
        for item in Retry(limit=3, interval=0.5):
-     File "C:\Users\guyingzhao\git\qtaf\testbase\retry.py", line 78, in next
+     File "C:\Users\foo\git\qtaf\testbase\retry.py", line 78, in next
        raise RetryLimitExcceeded("function retried for %s times" % self.limit)
    testbase.retry.RetryLimitExcceeded: function retried for 3 times
    

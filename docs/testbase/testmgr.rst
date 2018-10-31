@@ -123,7 +123,7 @@ TestLoader的load可以接受非顶层的包名，比如::
    class HelloTest(TestCase):
       '''测试示例
       '''
-      owner = "eeelin"
+      owner = "foo"
       status = TestCase.EnumStatus.Ready
       timeout = 1
       priority = TestCase.EnumPriority.Normal
