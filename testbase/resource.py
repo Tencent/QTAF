@@ -569,7 +569,7 @@ class LocalResourceManagerBackend(IResourceManagerBackend):
         """
         handler = self._res_type_map.get(res_type)
         if handler is None:
-            handler = LocalResourceHandler()
+            raise ValueError("resource type '%s' it not registered")
         return handler.acquire_resource(session_id, res_type, res_group, condition)
         
     def release_resource(self, session_id, res_type, resource_id):
@@ -577,7 +577,7 @@ class LocalResourceManagerBackend(IResourceManagerBackend):
         """
         handler = self._res_type_map.get(res_type)
         if handler is None:
-            handler = LocalResourceHandler()
+            raise ValueError("resource type '%s' it not registered")
         return handler.release_resource(session_id, res_type, resource_id)
 
     def iter_managed_resource(self):

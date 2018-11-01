@@ -150,16 +150,60 @@ bingfile.mp4.lnk是一个文本文件，其内容为文件正在的路径，比�
         return resource.get_file("video/foo.mp4")
 
 
+================
+非文件资源
+================
+
+非文件资源指除了文件形态外的其他资源类型，比如执行用例的设备、使用的终端设备、测试帐号等都属于此类。非文件资源管理主要用于解决可能导致的资源使用冲突，对于并行执行测试用例的场景尤其必要。
+
+对于QTA来说，非文件资源和文件资源的主要区别是：
+
+ * 非文件资源存储形态多样化，可以是在本地的CSV文件、数据库或远程的服务器的数据库等形态
+
+ * 非文件资源类型是多样且可扩展的，所以在使用之前，需要先注册给QTA框架
+
+.. _RegisterResType:
+
+================
+注册非文件资源类型
+================
+
+注册资源类型需要通过“:class:`testbase.resource.LocalResourceManagerBackend`”接口注册一个以“:class:`testbase.resource.LocalResourceHandler`”为基类的Handler。
+
+比如我们用一个本地的CSV文件来管理测试资源::
+
+    import csv
+    from testbase.testcase import TestCase
+    from testbase.resource import LocalResourceManagerBackend, LocalCSVResourceHandler
+    
+    LocalResourceManagerBackend.register_resource_type(
+        "account", 
+        LocalCSVResourceHandler("/path/to/account.csv"))
+
+
+如果需要，也可以通过以“:class:`testbase.resource.LocalResourceHandler`”为基类自定义一个资源类型，比如对于Android手机设备，设备资源是通过ADB工具动态查询得到的，则可以这样实现::
+
+    from testbase.resource import LocalResourceManagerBackend, LocalResourceHandler
+
+    class AndroidResourceHandler(LocalResourceHandler):
+        def iter_resource(self, res_type, res_group=None, condition=None):
+            for it in ADBClient().list_device():
+                yield {"id": it["serialno"], "host":"localhost", "serialno":it["serialno"]}
+
+
 
 ================
 非文件资源的使用
 ================
 
-非文件资源指除了文件形态外的其他资源类型，比如执行用例的设备、使用的终端设备、测试帐号等都属于此类。非文件资源管理主要用于解决可能导致的资源使用冲突，对于并行执行测试用例的场景尤其必要。
+非文件测试资源一般只允许在测试用例，和文件资源一样，也通过test_resources接口（类型为：“:class:`testbase.resource.Session`”）使用::
 
-测试资源一般只允许在测试用例，和文件资源一样，也通过test_resources接口（类型为：“:class:`testbase.resource.Session`”）使用::
+    from testbase.testcase import TestCase
+    from testbase.resource import LocalResourceManagerBackend, LocalCSVResourceHandler
 
-   from testbase.testcase import TestCase
+    LocalResourceManagerBackend.register_resource_type(
+        "account", 
+        LocalCSVResourceHandler("/path/to/account.csv"))
 
    class HelloTest(TestCase):
        '''非文件资源测试用例
@@ -213,49 +257,6 @@ acquire_resource接口还提供两个可选参数：
     def get_special_resource():
         return resource.acquire_resource("account", res_group="special")
     
-
-
-.. _RegisterResType:
-
-================
-注册测试资源类型
-================
-
-上面的资源使用的接口的前提是有对应的注册好的资源，比如上面的测试帐号资源，需要通过“:class:`testbase.resource.LocalResourceManagerBackend`”接口注册一个以“:class:`testbase.resource.LocalResourceHandler`”为基类的Handler。
-
-比如我们用一个本地的CSV文件来管理测试资源::
-
-    import csv
-    from testbase.testcase import TestCase
-    from testbase.resource import LocalResourceManagerBackend, LocalCSVResourceHandler
-    
-    LocalResourceManagerBackend.register_resource_type(
-        "account", 
-        LocalCSVResourceHandler("/path/to/account.csv"))
-
-
-    class HelloTest(TestCase):
-        '''非文件资源测试用例
-        '''
-        owner = "foo"
-        status = TestCase.EnumStatus.Ready
-        priority = TestCase.EnumPriority.Normal
-        timeout = 1
-
-        def run_test(self):
-        acc = self.test_resources.acquire_resource("account")
-        app = FooApp()
-        app.login(acc["username"], acc["password"])
-
-
-如果需要，也可以通过以“:class:`testbase.resource.LocalResourceHandler`”为基类自定义一个资源类型，比如对于Android手机设备，设备资源是通过ADB工具动态查询得到的，则可以这样实现::
-
-    from testbase.resource import LocalResourceManagerBackend, LocalResourceHandler
-
-    class AndroidResourceHandler(LocalResourceHandler):
-        def iter_resource(self, res_type, res_group=None, condition=None):
-            for it in ADBClient().list_device():
-                yield {"id": it["serialno"], "host":"localhost", "serialno":it["serialno"]}
 
 
 .. _CustomResmgrBackend:

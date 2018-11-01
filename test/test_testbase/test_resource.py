@@ -114,8 +114,12 @@ class TestResManager(unittest.TestCase):
         self.assertRaisesRegexp(Exception, "存在多个",resource.get_file,'a.txt')
         self.assertRaisesRegexp(Exception, "存在多个",resource.list_dir,'')
         
-        
-        
+    def test_unregisted_restype(self):
+        rm = resource.TestResourceManager(resource.LocalResourceManagerBackend()).create_session()
+        with self.assertRaises(ValueError):
+            rm.acquire_resource("xxx")      
+        with self.assertRaises(ValueError):
+            rm.release_resource("xxx", 12)
         
 if __name__ == '__main__':
     unittest.main()
