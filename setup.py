@@ -38,6 +38,7 @@ def parse_requirements():
                 line = line.strip()
                 if line:
                     reqs.append(line)
+        return reqs
 
 def get_description():
     with open(os.path.join(BASE_DIR, "README.md"), "r") as fh:
