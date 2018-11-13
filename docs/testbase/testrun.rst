@@ -240,7 +240,7 @@ windows下会自动通过IE打开。无命令行参数。
    from testbase.report import report_types
    from testbase.runner import runner_types
    
-   resmgr = resmgr_backend_types["local"]()
+   resmgr_backend = resmgr_backend_types["local"]()
    report = report_types["xml"]()
    runner_type = runner_types["multithread"]
    runner = runner_type(report, retries=1, resmgr_backend=resmgr_backend) # 根据实际类型，可以在构造时传入对应的参数

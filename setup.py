@@ -55,6 +55,7 @@ if __name__ == "__main__":
       include_package_data=True,
       package_data={'':['*.txt', '*.TXT'], },
       data_files=[(".", ["requirements.txt", "version.txt"])],
+      description = "Basic test automation framework for QTA",
       long_description=get_description(),
       long_description_content_type="text/markdown",
       author="Tencent",
@@ -64,5 +65,10 @@ if __name__ == "__main__":
       classifiers=[
         "Programming Language :: Python :: 2.7",
         "Operating System :: OS Independent",
-      ]
+      ],
+      url="https://github.com/Tencent/QTAF",
+      project_urls={
+          "TestBase Documentation": "https://qta-testbase.readthedocs.io/zh/latest/",
+          "TUIA Documentation": "https://qta-tuia.readthedocs.io/zh/latest/"
+      },
     )
