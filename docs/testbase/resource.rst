@@ -134,7 +134,7 @@ bingfile.mp4.lnk是一个文本文件，其内容为文件正在的路径，比�
            self.start_step("测试文件资源管理接口")
            #---------------------------
            paths = self.test_resources.list_dir("video")
-           print paths
+           self.log_info(paths)
            
            mp4_filepath = self.test_resources.get_file("video/foo.mp4")
            self.assert_equal("文件存在", os.path.isfile(mp4_filepath), True)

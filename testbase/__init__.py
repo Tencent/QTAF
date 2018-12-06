@@ -15,5 +15,5 @@
 '''测试框架类库
 '''
 
-from testcase import TestCase, TestCaseStatus, TestCasePriority
-from testbase.version import version
+from .testcase import TestCase, TestCaseStatus, TestCasePriority
+from .version import version

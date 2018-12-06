@@ -14,10 +14,9 @@
 #
 
 import os
-from setuptools import setup, find_packages, Command
-from setuptools.command.bdist_egg import bdist_egg as orig_bdist_egg
+from setuptools import setup, find_packages
 
-BASE_DIR = os.path.realpath(os.path.dirname(__file__))
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
   
 def generate_version():
     version = "1.0.0"

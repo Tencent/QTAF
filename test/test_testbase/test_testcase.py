@@ -28,7 +28,7 @@ class TestCaseTest(unittest.TestCase):
         self.assertEqual(test.test_class_name, "test.sampletest.hellotest.HelloTest")
         self.assertEqual(test.test_name, "test.sampletest.hellotest.HelloTest")
         self.assertEqual(test.casedata, None)
-        self.assertEqual(test.test_doc, '测试示例')
+        self.assertRegexpMatches(test.test_doc, '测试示例')
 
         
     def test_datadrive(self):

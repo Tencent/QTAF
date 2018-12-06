@@ -277,7 +277,7 @@ QTA对于每个测试用例，都有一个唯一的名字；由于数据驱动�
    from testbase.loader import TestLoader
    loader = TestLoader()
    for it in loader.load("zootest.cat.eat"):
-      print it.test_name
+      print(it.test_name)
       
 执行结果如下::
 
@@ -311,7 +311,7 @@ QTA对于每个测试用例，都有一个唯一的名字；由于数据驱动�
    from testbase.loader import TestLoader
    loader = TestLoader()
    for it in loader.load("zootest.cat.eat/fish"):
-      print it.test_name
+      print(it.test_name)
 
 则TestLoader的执行结果如下::
 

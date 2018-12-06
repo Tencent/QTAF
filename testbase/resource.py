@@ -21,16 +21,13 @@
 import os
 import sys
 import locale
-import warnings
 import uuid
-import argparse
 import pkg_resources
-import warnings
 import csv
 
 import testbase.logger as logger
 from testbase.conf import settings
-from testbase.util import _to_unicode
+from testbase.util import smart_text
 from testbase import context
 from testbase.testresult import EnumLogLevel
 
@@ -45,6 +42,23 @@ class ResourceNotAvailable(Exception):
     """没有可用的资源
     """
     pass
+
+class DownloadFileError(Exception):
+    """download file failed
+    """
+    def __init__(self, url, status_code, msg, headers, data):
+        self.url = url
+        self.status_code = status_code
+        self.msg = msg
+        self.headers = headers
+        self.data = data
+        
+    def __str__(self):
+        return "downloading file failed for: %s %s %s\nheaders=%s\nbody=%s" % (self.url,
+                                                             self.status_code,
+                                                             self.msg,
+                                                             self.headers,
+                                                             smart_text(self.data))
 
 
 
@@ -461,16 +475,26 @@ class LocalResourceManagerBackend(IResourceManagerBackend):
         else:
             return path.replace('/',os.sep)
     
+    def _download_file(self, url, target_path):
+        from six.moves.urllib import request, error
+        try:
+            rsp = request.urlopen(url, timeout=300)
+            rspbuf = rsp.read()
+        except error.HTTPError as e:
+            raise DownloadFileError(url, e.code, e.msg, e.headers, e.read())
+        with open(target_path, "wb") as fd:
+            fd.write(rspbuf)
+    
     def _resolve_link_file(self, remote_path, prefer_local_path):
         """获取链接的真正的文件
         """
         if os.path.isfile(remote_path):
             return remote_path
         elif remote_path.startswith("http://") or remote_path.startswith("https://"):
-            import urllib
-            return urllib.urlretrieve(remote_path, prefer_local_path)[0]
+            self._download_file(remote_path, prefer_local_path)
+            return prefer_local_path
         else:
-            raise ValueError()
+            raise ValueError("Invalid link file path: %s" % remote_path)
 
     def get_file(self,relative_path):
         """查找某个文件
@@ -485,8 +509,8 @@ class LocalResourceManagerBackend(IResourceManagerBackend):
             relative_path = relative_path[1:]
         for it in self._resources_dirs:
             file_path = self._adjust_path(os.path.join(it,relative_path))
-            file_path = _to_unicode(file_path)
-            file_link = _to_unicode(file_path+'.link')
+            file_path = smart_text(file_path)
+            file_link = smart_text(file_path+'.link')
             if os.path.isfile(file_path):
                 result.append(file_path)
             elif os.path.isfile(file_link):
@@ -513,7 +537,7 @@ class LocalResourceManagerBackend(IResourceManagerBackend):
             relative_path = relative_path[1:]
         for it in self._resources_dirs:
             dir_path = self._adjust_path(os.path.join(it,relative_path))
-            dir_path = _to_unicode(dir_path)
+            dir_path = smart_text(dir_path)
             if os.path.isdir(dir_path):
                 result.append(dir_path)
         if len(result) > 1:
@@ -528,9 +552,6 @@ class LocalResourceManagerBackend(IResourceManagerBackend):
             paths.append(os.path.join(result[0],path))
         return paths
         
-            
-            
-    
     def _clean_cache(self):
         """清理缓存文件
         """
@@ -593,7 +614,7 @@ class LocalResourceManagerBackend(IResourceManagerBackend):
 def _current_resmgr_session():
     tc = context.current_testcase()
     if tc is None:
-        warnings.warn("注意！非用例模式，将返回默认测试文件资源管理器，此处调用可能在测试环境下异常")
+        logger.warn("注意！非用例模式，将返回默认测试文件资源管理器，此处调用可能在测试环境下异常")
         return TestResourceManager(LocalResourceManagerBackend()).create_session()
     return tc.test_resources
 
@@ -662,6 +683,3 @@ def __init_resmgr_backend_types():
 
 __init_resmgr_backend_types()
 del __init_resmgr_backend_types
-
-
-

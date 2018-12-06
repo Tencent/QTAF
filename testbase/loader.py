@@ -12,6 +12,7 @@
 # OF ANY KIND, either express or implied. See the License for the specific language
 # governing permissions and limitations under the License.
 #
+import six
 '''
 测试用例加载
 '''
@@ -25,6 +26,7 @@ import traceback
 
 from testbase.testcase import TestCase, SeqTestSuite
 from testbase.conf import settings
+from testbase.util import smart_text
 from testbase import datadrive
 
 class TestLoader(object):
@@ -49,7 +51,7 @@ class TestLoader(object):
     def get_filtered_tests(self):
         '''返回最后一次load调用时被过滤掉的测试用例
         '''
-        return self._filtered_tests.keys()
+        return list(self._filtered_tests.keys())
     
     def get_filtered_tests_with_reason(self):
         '''返回最后一次load调用时被过滤掉的测试用例和过滤原因
@@ -73,6 +75,7 @@ class TestLoader(object):
         testcases = []
 
         for testname in testnames:
+            testname = smart_text(testname)
             if settings.DATA_DRIVE:
                 self._dataset = TestDataLoader().load()
             if '/' in testname:
@@ -87,17 +90,17 @@ class TestLoader(object):
                     testcases += self._load_from_package(obj)
                 else:
                     testcases += self._load_from_module(obj)
-            elif isinstance(obj, types.TypeType):
+            elif isinstance(obj, type):
                 testcases += self._load_from_class(obj)
         
         #过滤掉重复的用例
         testcase_dict = {}
         for testcase in testcases:
-            if datakeyname and str(testcase.casedataname) != datakeyname:
+            if datakeyname and smart_text(testcase.casedataname) != datakeyname:
                 continue
             testcase_dict[testcase.test_name] = testcase
             
-        return testcase_dict.values()
+        return list(testcase_dict.values())
 
     def _load(self, testname ):
         '''加载对应的对象
@@ -155,7 +158,7 @@ class TestLoader(object):
         
         :returns bool - 是否为用例类
         '''
-        return ( isinstance(obj, types.TypeType) and
+        return ( isinstance(obj, type) and
               issubclass(obj, TestCase) and
               hasattr(obj, "runTest") and 
               getattr(obj, "priority", None))
@@ -211,7 +214,7 @@ class TestLoader(object):
             for test in tests:
                 test_dict[type(test)] = test
             for it in seqdef:
-                if not test_dict.has_key(it):
+                if it not in test_dict:
                     raise RuntimeError("__qtaf_seq_tests__中的测试用例'%s'已被过滤"%it.__name__)
             tests = [SeqTestSuite([ test_dict[it] for it in seqdef])]
         return tests
@@ -251,15 +254,15 @@ class TestDataLoader(object):
     def _load_dataset_module_from_file(self):
         '''从文件中加载数据模块
         '''
-        if sys.modules.has_key(self.MODULE_NAME):
+        if self.MODULE_NAME in sys.modules:
             return sys.modules[self.MODULE_NAME]
         
         if os.path.isfile(__file__):
-            qtaf_top_dir = os.path.realpath(os.path.join(os.path.dirname(__file__), '..'))
+            qtaf_top_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
             top_dir = qtaf_top_dir
         else: #使用的egg包
-            qtaf_top_dir = os.path.realpath(os.path.join(os.path.dirname(__file__), '..'))
-            top_dir = os.path.realpath(os.path.join(qtaf_top_dir, '..', '..'))
+            qtaf_top_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
+            top_dir = os.path.join(qtaf_top_dir, '..', '..')
             
         py_path = os.path.join(top_dir, settings.DATA_SOURCE)
         if not os.path.isfile(py_path):
@@ -284,7 +287,7 @@ class TestDataLoader(object):
         if not settings.DATA_SOURCE:
             raise RuntimeError("DATA_DRIVE=True，但未指定的数据源文件")
         
-        if isinstance(settings.DATA_SOURCE, basestring):
+        if isinstance(settings.DATA_SOURCE, six.string_types):
             if settings.DATA_SOURCE.endswith('.py'):
                 module = self._load_dataset_module_from_file()
             else:

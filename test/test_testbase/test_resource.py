@@ -15,24 +15,21 @@
 '''runner test
 '''
 
-import unittest, os, shutil
+import unittest, os, shutil, six
 from testbase import resource
 from testbase.conf import settings
+from testbase.test import modify_environ
+from testbase.util import smart_text
 
-def _create_testfile():
+def _create_local_testfile():
     res_dir = os.path.join(settings.PROJECT_ROOT,'resources')
-    if not os.path.isdir(res_dir):
-        os.mkdir(res_dir)
-    os.path.join(res_dir,'test_dir')
-    if not os.path.isdir(res_dir):
-        os.mkdir(res_dir)
+    os.makedirs(os.path.join(res_dir,'test_dir'))
     local_file = os.path.join(res_dir,'a.txt')
-    link_file = os.path.join(res_dir,'test.txt.link')
     with open(local_file,'w') as f:
         f.write('abc')
-    with open(link_file,'w') as f:
-        f.write('http://file.com/user_resources/test.txt')
-    return local_file,link_file[:-5],res_dir
+    
+    return local_file, res_dir
+
 
 def _copy_testfile(src):
     base_dir = os.path.join(settings.PROJECT_ROOT,'base_test')
@@ -44,75 +41,44 @@ def _copy_testfile(src):
     shutil.copytree(src, res_dir)
     return base_dir
 
-def _rm_testfile():
-    rm_root=[]
-    for root, _, _ in os.walk(settings.PROJECT_ROOT):
-        if root.endswith('resources'):
-            rm_root.append(root)
-    for it in rm_root:
-        try:
-            print it
-            shutil.rmtree(it)
-        except:
-            pass
-    
-    
-      
-
 class TestResManager(unittest.TestCase):
     def setUp(self):
-        _rm_testfile()
+        if six.PY2:
+            self.assertRaisesRegex = self.assertRaisesRegexp
+    
+    def tearDown(self):
+        proj_root = settings.PROJECT_ROOT
+        shutil.rmtree(os.path.join(proj_root, "resources"), ignore_errors=True)
+        shutil.rmtree(os.path.join(proj_root, "base_test"), ignore_errors=True)
         
-      
-    def test_get_file(self):
-        local_file,link_file, res_dir = _create_testfile()
-        self.addCleanup(_rm_testfile)
+    def test_get_local_file(self):
+        local_file, local_dir = _create_local_testfile()
         fm = resource.TestResourceManager(resource.LocalResourceManagerBackend()).create_session()
         self.assertEqual(local_file, fm.get_file('a.txt'))
-        self.assertEqual(link_file, fm.get_file('test.txt'))
         self.assertEqual(local_file, resource.get_file('a.txt'))
-        self.assertEqual(link_file, resource.get_file('test.txt'))
-         
-    def test_path_compatibility(self):
-        local_file,link_file, res_dir = _create_testfile()
-        self.addCleanup(_rm_testfile)
-        fm = resource.TestResourceManager(resource.LocalResourceManagerBackend()).create_session()
-        self.assertEqual(local_file, fm.get_file('\\a.txt'))
-        self.assertEqual(local_file, fm.get_file('/a.txt'))
-        self.assertEqual(link_file, fm.get_file('\\test.txt'))
-        self.assertEqual(link_file, fm.get_file('/test.txt'))
-        self.assertEqual(local_file, resource.get_file('\\a.txt'))
-        self.assertEqual(local_file, resource.get_file('/a.txt'))
-        self.assertEqual(link_file, resource.get_file('\\test.txt'))
-        self.assertEqual(link_file, resource.get_file('/test.txt'))
-     
-    def test_list_dir(self):
-        _,_, res_dir = _create_testfile()
-        self.addCleanup(_rm_testfile)
-        fm = resource.TestResourceManager(resource.LocalResourceManagerBackend()).create_session()
+        
         paths =[]
-        from testbase.util import _to_unicode
-        for it in os.listdir(res_dir):
-            paths.append(_to_unicode(os.path.join(res_dir,it)))
+        for it in os.listdir(local_dir):
+            paths.append(smart_text(os.path.join(local_dir,it)))
         self.assertEqual(paths,fm.list_dir(''))
         self.assertEqual(paths,resource.list_dir(''))
+  
          
     def test_nofile_raise(self):
         fm = resource.TestResourceManager(resource.LocalResourceManagerBackend()).create_session()
-        self.assertRaisesRegexp(Exception, "文件不存在",fm.get_file,'a.txt')
-        self.assertRaisesRegexp(Exception, "文件不存在",resource.get_file,'a.txt')
-        self.assertRaisesRegexp(Exception, "目录不存在",fm.list_dir,'')
-        self.assertRaisesRegexp(Exception, "目录不存在",resource.list_dir,'')
+        self.assertRaisesRegex(Exception, "文件不存在",fm.get_file,'a.txt')
+        self.assertRaisesRegex(Exception, "文件不存在",resource.get_file,'a.txt')
+        self.assertRaisesRegex(Exception, "目录不存在",fm.list_dir,'')
+        self.assertRaisesRegex(Exception, "目录不存在",resource.list_dir,'')
                  
     def test_duplicated_raise(self):
-        _, _, res_dir=_create_testfile()
-        _copy_testfile(res_dir)
-        self.addCleanup(_rm_testfile)
+        _, local_dir=_create_local_testfile()
+        _copy_testfile(local_dir)
         fm = resource.TestResourceManager(resource.LocalResourceManagerBackend()).create_session()
-        self.assertRaisesRegexp(Exception, "存在多个",fm.get_file,'a.txt')
-        self.assertRaisesRegexp(Exception, "存在多个",fm.list_dir,'')
-        self.assertRaisesRegexp(Exception, "存在多个",resource.get_file,'a.txt')
-        self.assertRaisesRegexp(Exception, "存在多个",resource.list_dir,'')
+        self.assertRaisesRegex(Exception, "存在多个",fm.get_file,'a.txt')
+        self.assertRaisesRegex(Exception, "存在多个",fm.list_dir,'')
+        self.assertRaisesRegex(Exception, "存在多个",resource.get_file,'a.txt')
+        self.assertRaisesRegex(Exception, "存在多个",resource.list_dir,'')
         
     def test_unregisted_restype(self):
         rm = resource.TestResourceManager(resource.LocalResourceManagerBackend()).create_session()
@@ -122,4 +88,4 @@ class TestResManager(unittest.TestCase):
             rm.release_resource("xxx", 12)
         
 if __name__ == '__main__':
-    unittest.main()
+    unittest.main(defaultTest="TestResManager.test_get_local_file")

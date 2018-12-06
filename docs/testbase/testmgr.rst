@@ -46,7 +46,7 @@ Python以名字来唯一表示一个模块，也就是说，名字相同的模�
    
    loader = TestLoader()
    for it in loader.load("zootest"):
-      print it
+      print(it)
       
 上面代码是加载zootest包下面的全部测试用例，并展示其对应的测试用例名称，执行的结果如下::
 
@@ -64,7 +64,7 @@ Python以名字来唯一表示一个模块，也就是说，名字相同的模�
 TestLoader的load可以接受非顶层的包名，比如::
 
    for it in loader.load("zootest.cat"):
-      print it
+      print(it)
       
 返回::
 
@@ -77,7 +77,7 @@ TestLoader的load可以接受非顶层的包名，比如::
 也支持模块名::
 
    for it in loader.load("zootest.cat.feed"):
-      print it
+      print(it)
    
 返回::
 
@@ -88,7 +88,7 @@ TestLoader的load可以接受非顶层的包名，比如::
 甚至可以支持测试用例名::
 
    for it in loader.load("zootest.cat.feed.FeedFishTest"):
-      print it
+      print(it)
    
 返回::
 
@@ -102,13 +102,13 @@ TestLoader的load可以接受非顶层的包名，比如::
          
    loader = TestLoader(filter)
    for it in loader.load("zootest"):
-      print it
+      print(it)
       
 以上的代码可以过滤掉全部状态不是为Ready的测试用例。如果需要查询被过滤的全部测试用例，可以调用下面接口::
 
    filtered_records = loader.get_filtered_tests_with_reason()
    for tc in filtered_records:
-      print tc.name, filtered_records[tc]
+      print(tc.name, filtered_records[tc])
       
 ======
 处理加载失败

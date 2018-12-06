@@ -101,7 +101,7 @@ class TestRetry(unittest.TestCase):
         start_time = time.time()
         retry.call(dummy, x)
         time_cost = time.time() - start_time
-        self.assertGreaterEqual(time_cost, (limit-1)*0.5, "interval has no effect.")
+        self.assertGreaterEqual(time_cost + 0.1, (limit-1)*0.5, "interval has no effect.")
         
 
 if __name__ == "__main__":

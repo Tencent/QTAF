@@ -24,9 +24,10 @@ import traceback
 import collections
 import random
 import types
+import six
 
 from testbase.assertion import AssertionRewriter
-from testbase.util import Singleton, ThreadGroupLocal, ThreadGroupScope,_to_utf8, get_last_frame_stack
+from testbase.util import Singleton, ThreadGroupLocal, ThreadGroupScope, smart_text, get_last_frame_stack
 from testbase.testresult import EnumLogLevel, TestResultCollection
 from testbase.conf import settings
 from testbase.retry import Retry
@@ -48,7 +49,7 @@ class TestCasePriority(object):
     BVT, High, Normal, Low = ('BVT', 'High', 'Normal', 'Low')
 
 
-class Environ(dict):
+class Environ(six.with_metaclass(Singleton, dict)):
     """测试环境类
 
 用法说明：
@@ -63,7 +64,7 @@ env保存了用例运行时的一些测试环境变量。
 
     from testbase.testcase import Environ
     env = Environ()
-    print env 
+    print(env_
     # 输出
     env = {
         'ASSERTTEST':'True',  #注意：这里key是全字母大写
@@ -76,18 +77,17 @@ env保存了用例运行时的一些测试环境变量。
     from testbase.testcase import TestCase
     class YourTest(TestCase):
         def runTest(self):
-            print self.environ['TestName']
-            print self.environ['TestDoc']
+            print(self.environ['TestName'])
+            print(self.environ['TestDoc'])
 
 3、Environ还可以用于设置自定义的环境变量，使用方法如下::
 
     from testbase.testcase import Environ
     env = Environ()
     env['YourEnvKey'] = "EnvValue" 
-    print env['YourEnvKey']
+    print(env['YourEnvKey'])
 
     """
-    __metaclass__ = Singleton
     def __init__(self):
         """构造函数。判断系统环境变量中是否存在由测试计划中传入的环境变量，有则加载。
         
@@ -117,7 +117,7 @@ class TestCaseType(type):
         base_tags_set = set()
         if "tags" in attrs:
             tags = attrs.pop("tags")
-            if isinstance(tags, basestring):
+            if isinstance(tags, six.string_types):
                 tags = [tags]
             tags_set = set(tags)
             for b in bases:
@@ -127,7 +127,7 @@ class TestCaseType(type):
                 mod = sys.modules[attrs["__module__"]]
                 if hasattr(mod, "__qtaf_tags__"):
                     mod_tags = mod.__qtaf_tags__
-                    if isinstance(mod_tags, basestring):
+                    if isinstance(mod_tags, six.string_types):
                         mod_tags = [mod_tags]
                     base_tags_set |= set(mod_tags)
             tags_set |= base_tags_set
@@ -137,14 +137,13 @@ class TestCaseType(type):
         attrs["base_tags"] = base_tags_set
         return super_new(cls, name, bases, attrs)
 
+@six.add_metaclass(TestCaseType)
 class TestCase(object):
     '''测试用例基类
     
             所有测试用例都最终从此基类继承。测试用例的测试脚本主要实现在"runTest()"中，
            而当用例需要初始化和清理测试环境时则分别重写"preTest()"和"postTest()"函数。
     '''
-    
-    __metaclass__ = TestCaseType
     test_extra_info_def = [] #自定义字段
     
     class EnumStatus(object):
@@ -198,7 +197,7 @@ class TestCase(object):
                     if k == "__doc__":
                         self.__test_doc = v
                     elif k == "tags":
-                        if isinstance(v, basestring):
+                        if isinstance(v, six.string_types):
                             v = [v]
                         self.tags = self.base_tags | set(v)
                     else:
@@ -242,7 +241,7 @@ class TestCase(object):
         
         :rtype: str
         '''
-        return os.path.realpath(os.getcwd())
+        return os.path.abspath(os.getcwd())
         
     @property
     def test_class_name(self):  
@@ -252,9 +251,9 @@ class TestCase(object):
         '''
         cls = type(self)
         if cls.__module__ == '__main__':
-            type_name =  cls.__name__.decode('gbk').encode('utf8')
+            type_name =  smart_text(cls.__name__)
         else:
-            type_name = (cls.__module__ + '.' + cls.__name__).decode('gbk').encode('utf8')
+            type_name = smart_text(cls.__module__ + '.' + cls.__name__)
         return type_name
                         
     @property
@@ -264,10 +263,7 @@ class TestCase(object):
         :rtype: str
         '''
         if self.casedata is not None:
-            if isinstance(self.casedataname, unicode):
-                casedataname = self.casedataname.encode('utf8')
-            else:
-                casedataname = self.casedataname 
+            casedataname = smart_text(self.casedataname)
             return '%s/%s' % (self.test_class_name, casedataname)
         else:
             return self.test_class_name
@@ -283,7 +279,7 @@ class TestCase(object):
         desc = self.__class__.__doc__
 #        if desc:
 #            desc = cgi.escape(desc)
-        if isinstance(desc, basestring):
+        if isinstance(desc, six.text_type):
             desc = re.sub('^\s*', '', desc)
             desc = re.sub('\s*$', '', desc)
         return desc
@@ -349,7 +345,7 @@ class TestCase(object):
         :param stepinfo: 步骤描述
         :type stepinfo: str
         '''
-        if not isinstance(stepinfo, basestring):
+        if not isinstance(stepinfo, six.text_type):
             stepinfo=str(stepinfo)
         self.__testresult.begin_step(stepinfo)
         
@@ -359,7 +355,7 @@ class TestCase(object):
         :type info: string
         :param info: 要Log的信息  
         '''
-        if not isinstance(info, basestring):
+        if not isinstance(info, six.text_type):
             info=str(info)
         self.__testresult.info(info)
         
@@ -369,7 +365,7 @@ class TestCase(object):
         :type message: string
         :param message: 要Log的信息  
         '''
-        if not isinstance(message, basestring):
+        if not isinstance(message, six.text_type):
             message=str(message)
         self.__testresult.error(message)
         
@@ -385,16 +381,16 @@ class TestCase(object):
         '''
         #得到上一个函数调用帧所在的文件路径，行号，函数名
         stack = get_last_frame_stack(3)
-        msg = "检查点不通过\n%s%s\n期望值：%s%s\n实际值：%s%s" % (stack, message,
-                                                    expect.__class__,expect,
-                                                    actual.__class__,actual)
+        msg = u"检查点不通过\n%s%s\n期望值：%s%s\n实际值：%s%s" % (smart_text(stack), smart_text(message),
+                                                    expect.__class__, expect,
+                                                    actual.__class__, actual)
         self.__testresult.log_record(EnumLogLevel.ASSERT, msg)
     
     def _log_assert_failed(self, message, back_count=2):
         """记录断言失败的信息
         """
         stack = get_last_frame_stack(back_count)
-        msg = "检查点不通过\n%s%s\n" % (stack, message)
+        msg = u"检查点不通过\n%s%s\n" % (smart_text(stack), smart_text(message))
         self.__testresult.log_record(EnumLogLevel.ASSERT, msg)
         
     def assert_(self, message, value):
@@ -416,10 +412,10 @@ class TestCase(object):
        :param expect: 期望值(默认：True)
        :return: True or False
         '''
-        if isinstance(actual,basestring):
-            actual=_to_utf8(actual)
-        if isinstance(expect,basestring):
-            expect=_to_utf8(expect)
+        if isinstance(actual, six.string_types):
+            actual = smart_text(actual)
+        if isinstance(expect, six.string_types):
+            expect = smart_text(expect)
         if expect != actual:
             self.__record_assert_failed(message, actual, expect)
             return False
@@ -437,10 +433,10 @@ class TestCase(object):
         :param expect: 要匹配的正则表达式 
         :return: 匹配成果
         '''
-        if isinstance(actual,unicode):
-            actual=actual.encode('utf8')
-        if isinstance(expect,unicode):
-            expect=expect.encode('utf8')        
+        if isinstance(actual,six.string_types):
+            actual = smart_text(actual)
+        if isinstance(expect,):
+            expect = smart_text(expect)        
         if re.search(expect, actual):
             return True
         else:
@@ -674,7 +670,7 @@ class TestCaseRunner(ITestCaseRunner):
         tcattrs = {}
         for attr in attrnames:
             attrvalue = getattr(self._testcase, attr)
-            if isinstance(attrvalue, basestring):
+            if isinstance(attrvalue, six.text_type):
                 if attrvalue.strip(" ") == "":
                     attrvalue = None
             tcattrs[attr] = attrvalue
@@ -694,7 +690,7 @@ class TestCaseRunner(ITestCaseRunner):
             try:
                 self._check_testcase(self._testcase)
             except RuntimeError as e:
-                self._testresult.error(e.message)
+                self._testresult.error(e.args[0])
                 return
             
             while True:
@@ -710,7 +706,7 @@ class TestCaseRunner(ITestCaseRunner):
                         else:
                             getattr(self._testcase, it)()
                     except:
-                        self._testresult.exception('%s执行失败'%it)
+                        self._testresult.exception('%s执行失败' % it)
                 else:
                     it()
 
@@ -733,7 +729,7 @@ class TestCaseRunner(ITestCaseRunner):
                     try:
                         getattr(self._testcase, it)()
                     except:
-                        self._testresult.exception('用例超时时%s执行失败'%it)
+                        self._testresult.exception('用例超时时%s执行失败' % it)
                 else:
                     it()
         except:
@@ -819,10 +815,10 @@ class TestCaseRunner(ITestCaseRunner):
                                                     dict(traceback=thread_traceback))
                 else:
                     if self._error:
-                        raise RuntimeError("用例执行线程异常：\n%s" % self._error)
+                        raise RuntimeError(u"用例执行线程异常：\n%s" % smart_text(self._error))
             else:
                 if self._error:
-                    raise RuntimeError("用例执行线程异常：\n%s" % self._error)
+                    raise RuntimeError(u"用例执行线程异常：\n%s" % smart_text(self._error))
                     
             self.teardown(self._testcase, self._testresult)
             
@@ -948,9 +944,9 @@ class TestSuite(object):
         '''
         cls = type(self)
         if cls.__module__ == '__main__':
-            type_name =  cls.__name__.decode('gbk').encode('utf8')
+            type_name =  cls.__name__
         else:
-            type_name = (cls.__module__ + '.' + cls.__name__).decode('gbk').encode('utf8')
+            type_name = (cls.__module__ + '.' + cls.__name__)
         return type_name
         
     def dumps(self):
@@ -993,7 +989,7 @@ class SeqTestSuite(TestSuite):
         :rtype: str
         '''
         cls = type(self._testcases[0])
-        return cls.__module__.decode('gbk').encode('utf8')
+        return cls.__module__
                         
     @property
     def test_name(self):
@@ -1002,7 +998,7 @@ class SeqTestSuite(TestSuite):
         :rtype: str
         '''
         cls = type(self._testcases[0])
-        return cls.__module__.decode('gbk').encode('utf8')
+        return cls.__module__
         
     @property
     def test_doc(self):
@@ -1012,7 +1008,7 @@ class SeqTestSuite(TestSuite):
         '''
         cls = type(self._testcases[0])
         desc = cls.__module__.__doc__
-        if isinstance(desc, basestring):
+        if isinstance(desc, six.text_type):
             desc = re.sub('^\s*', '', desc)
             desc = re.sub('\s*$', '', desc)
         return desc

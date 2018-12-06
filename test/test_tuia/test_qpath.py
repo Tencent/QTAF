@@ -37,14 +37,12 @@ class QPathTest(unittest.TestCase):
         qp = "/ ClassName='TxGuiFoundation' & Caption='QQ' / instance='xxx' & name='mainpanel'"
         with self.assertRaises(QPathSyntaxError) as cm:
             QPathParser().parse(qp)
-        #print cm.exception.msg
         self.assertEqual(qp.find('\'xxx\''), cm.exception.lexpos)
         
     def test_invalid_value_of_match_operator(self):
         qp = "/ ClassName='TxGuiFoundation' & Caption='QQ' / name~=true"
         with self.assertRaises(QPathSyntaxError) as cm:
             QPathParser().parse(qp)
-        #print cm.exception.msg
         self.assertEqual(qp.find('~='), cm.exception.lexpos)
         
     def test_invalid_seperator(self):

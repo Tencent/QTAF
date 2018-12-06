@@ -14,15 +14,16 @@
 #
 """a module for unittest
 """
+import os
 
 from testbase.conf import settings
+
+class _NotExistedItem(object):
+    pass
 
 class modify_settings(object):
     """temporarily modify settings
     """
-    class _NotExistedItem(object):
-        pass
-    
     def __init__(self, **kwargs):
         self.new_conf = kwargs
         self.old_conf = {}
@@ -30,17 +31,37 @@ class modify_settings(object):
     def __enter__(self):
         settings._Settings__sealed = False
         for key in self.new_conf:
-            self.old_conf[key] = getattr(settings, key, self._NotExistedItem())
-            if isinstance(self.old_conf[key], self._NotExistedItem):
+            self.old_conf[key] = getattr(settings, key, _NotExistedItem())
+            if isinstance(self.old_conf[key], _NotExistedItem):
                 settings._Settings__keys.add(key)
             setattr(settings, key, self.new_conf[key])
         
     def __exit__(self, *args):
         for key in self.old_conf:
             old_value = self.old_conf[key]
-            if isinstance(old_value, self._NotExistedItem):
+            if isinstance(old_value, _NotExistedItem):
                 delattr(settings, key)
                 settings._Settings__keys.remove(key)
             else:
                 setattr(settings, key, old_value)
         settings._Settings__sealed = True
+        
+class modify_environ(object):
+    """temporarily modify envrion
+    """
+    def __init__(self, **kwargs):
+        self.new_conf = kwargs
+        self.old_conf = {}
+        
+    def __enter__(self):
+        for key in self.new_conf:
+            self.old_conf[key] = os.environ.get(key, _NotExistedItem())
+            os.environ[key] = self.new_conf[key]
+        
+    def __exit__(self, *args):
+        for key in self.old_conf:
+            old_value = self.old_conf[key]
+            if isinstance(old_value, _NotExistedItem):
+                del os.environ[key]
+            else:
+                os.environ[key] = old_value

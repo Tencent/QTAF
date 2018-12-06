@@ -55,10 +55,14 @@ QPath是一个用于定位各个平台的UI控件（除Web控件）的查询语�
 
 '''
 
-import types
+import types, six
 
-from ply import lex, yacc
-from ply.lex import TOKEN
+try:
+    from .ply import lex, yacc
+    from .ply.lex import TOKEN
+except ImportError:
+    from ply import lex, yacc
+    from ply.lex import TOKEN
 
 class QPathSyntaxError(Exception):
     '''QPath语法错误
@@ -336,7 +340,7 @@ class UIObjectLocator(object):
         return name.upper() in self._prop_dict
     
     def __iter__(self):
-        return self._prop_dict.iterkeys()
+        return self._prop_dict.__iter__()
     
 
 class QPathParser(object):
@@ -462,7 +466,7 @@ class QPathParser(object):
         if p[1].value.upper() in self.INT_TYPE_PROPNAMES:
             if p[2].value == '~=':
                 self._error('"%s"属性不可以使用"~="操作符'%(p[1].value), p[2], p[2].lexpos)
-            if not isinstance(p[3].value, types.IntType):
+            if not isinstance(p[3].value, int):
                 try:
                     p[3].value = int(p[3].value)
                 except ValueError:
@@ -472,7 +476,7 @@ class QPathParser(object):
                     self._error("MaxDepth属性值必须>0", p[3], p[3].lexpos)
                 
         elif p[2].value == '~=':
-            if not isinstance(p[3].value, types.StringTypes):
+            if not isinstance(p[3].value, six.string_types):
                 self._error('操作符"~="不可以连接"%s"类型的属性'%(type(p[3].value)), p[2], p[2].lexpos)
                 
         p[0] = UIObjectProperty(p[1], p[2], p[3])

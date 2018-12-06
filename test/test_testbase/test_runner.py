@@ -12,13 +12,16 @@
 # OF ANY KIND, either express or implied. See the License for the specific language
 # governing permissions and limitations under the License.
 #
+import six
 '''runner test
 '''
+import os, unittest, time, json
 
+from xml.dom import minidom
 from testbase import runner
 from testbase import report
 from testbase import testresult
-import unittest
+from testbase.util import smart_text
 
 class TestResult(testresult.TestResultBase):
     
@@ -203,3 +206,6 @@ class RunnerTest(unittest.TestCase):
         from test.sampletest.tagtest import TagTest
         self.assertIsInstance(tc, TagTest)
 
+        
+if __name__ == "__main__":
+    unittest.main()
