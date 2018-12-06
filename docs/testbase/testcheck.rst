@@ -191,7 +191,7 @@ QTA测试用例的代码的执行控制逻辑和一般Python的代码是类似�
 
    from testbase.retry import Retry
    for item in Retry(timeout=2, interval=0.5):
-       print item
+       print(item)
        
 得到的输出如下::
 
@@ -218,7 +218,7 @@ Retry的默认参数是tiemout=10，interval=0.5，使用最大的重试时间�
 
    from testbase.retry import Retry
    for item in Retry(limit=3, interval=0.5):
-       print item
+       print(item)
      
 输出结果如下::
 

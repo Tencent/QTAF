@@ -22,14 +22,14 @@ def _create_sampefile():
     with open(os.path.join(res_dir,'a.txt'),'w') as f:
         f.write('abc')
     with open(os.path.join(res_dir,'readme.txt.link'),'w') as f:
-        f.write('/dist/qt4c/readme.txt')
+        f.write(os.path.join(res_dir, 'a.txt'))
 
 def _test_getfile(resmgr):
     with open(resmgr.get_file('a.txt')) as f:
-        print f.read()
+        print(f.read())
     
-    with open(resmgr.get_file('readme.txt')) as f:
-            print f.read()
+    with open(resmgr.get_file('test.txt')) as f:
+        print(f.read())
     
         
     
@@ -41,7 +41,7 @@ class HelloTest(testbase.TestCase):
     timeout = 1
     priority = testbase.TestCase.EnumPriority.Normal
     
-    def runTest(self):
+    def run_test(self):
         #-----------------------------
         self.startStep("测试")
         #-----------------------------
@@ -61,21 +61,21 @@ class TimeoutTest(testbase.TestCase):
     '''
     owner = "foo"
     status = testbase.TestCase.EnumStatus.Ready
-    timeout = 0.1
+    timeout = 0.01
     priority = testbase.TestCase.EnumPriority.Normal
     
-    def runTest(self):
-        time.sleep(7)
+    def run_test(self):
+        time.sleep(2)
         
 class CrashTest(testbase.TestCase):
     '''发生Crash
     '''
     owner = "foo"
     status = testbase.TestCase.EnumStatus.Ready
-    timeout = 0.1
+    timeout = 1
     priority = testbase.TestCase.EnumPriority.Normal
     
-    def runTest(self):
+    def run_test(self):
         context.current_testresult().log_record(EnumLogLevel.APPCRASH, "App Crash", attachments={'QQ12e6.dmp':__file__, 'QQ12e6.txt':__file__})
                 
     
@@ -97,11 +97,11 @@ class QT4iTest(testbase.TestCase):
     timeout = 0.1
     priority = testbase.TestCase.EnumPriority.Normal
     
-    def initTest(self, testresult):
+    def init_test(self, testresult):
         super(QT4iTest,self).initTest(testresult)
         self._apps = []
         
-    def runTest(self):
+    def run_test(self):
         self._apps.append(App("A"))
         self._apps.append(App("B"))
         raise RuntimeError("XXX")
@@ -126,7 +126,7 @@ class ExtraInfoTest(testbase.TestCase):
         ("dev_owner", "开发负责人")
     ]
     
-    def runTest(self):
+    def run_test(self):
         pass
 
 class ResmgrTest(testbase.TestCase):
@@ -139,7 +139,7 @@ class ResmgrTest(testbase.TestCase):
     dev_owner = "foo"
     _create_sampefile()
     
-    def runTest(self):
+    def run_test(self):
         import testbase.resource as rs
         _test_getfile(self.test_resources)
         _test_getfile(rs)
@@ -147,5 +147,6 @@ class ResmgrTest(testbase.TestCase):
     
 if __name__ == '__main__':
 #     HelloTest().run()
-#     CrashTest().debug_run()
+#     x = CrashTest().debug_run()
     ResmgrTest().debug_run()
+#     TimeoutTest().debug_run()

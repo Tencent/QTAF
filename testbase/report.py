@@ -17,37 +17,28 @@
 
 import sys
 import codecs
-import cgi
 import socket
 import os
 import shutil
 import json
 import getpass
-import string
 import locale
 import argparse
 import pkg_resources
+import six
 import xml.dom.minidom as dom
 import xml.sax.saxutils as saxutils
+
 from datetime import datetime
 
 from testbase import testresult
 from testbase.testresult import EnumLogLevel
+from testbase.util import smart_text, smart_binary, to_pretty_xml, ensure_binary_stream
     
 REPORT_ENTRY_POINT = "qtaf.report"
 report_types = {}
 os_encoding = locale.getdefaultlocale()[1]
 report_usage = 'runtest <test ...> --report-type <report-type> [--report-args "<report-args>"]'
-
-def _to_unicode( s ):
-    '''将任意字符串转换为unicode编码
-    '''
-    if isinstance(str, unicode):
-        return s
-    try:
-        return s.decode('utf8')
-    except UnicodeDecodeError:
-        return s.decode(os_encoding)
         
 class ITestReport(object):
     '''测试报告接口
@@ -393,16 +384,13 @@ class StreamTestReport(ITestReport):
         :param output_summary: 是否输出执行汇总信息
         :type output_summary: boolean
         '''
-        self._stream = stream
-        self._err_stream = error_stream
+        self._stream, encoding = ensure_binary_stream(stream)
+        self._err_stream, _ = ensure_binary_stream(error_stream)
+        self._write = lambda x: self._stream.write(smart_binary(x, encoding=encoding))
+        self._write_err = lambda x: self._err_stream.write(smart_binary(x, encoding=encoding))
+                    
         self._output_testresult = output_testresult
         self._output_summary = output_summary
-        if stream.encoding and stream.encoding != 'utf8':
-            self._write = lambda x: self._stream.write(x.decode('utf8').encode(stream.encoding))
-            self._write_err = lambda x: self._err_stream.write(x.decode('utf8').encode(stream.encoding))
-        else:
-            self._write = self._stream.write
-            self._write_err = self._err_stream.write
         self._passed_testresults = []
         self._failed_testresults = [] 
             
@@ -922,11 +910,17 @@ RESULT_XLS = """<?xml version="1.0" encoding="utf-8"?><!-- DWXMLSource="tmp/qqte
 </xsl:template>
 </xsl:stylesheet>"""
 
+if six.PY3:
+    maketrans_func = str.maketrans
+else:
+    import string
+    maketrans_func = string.maketrans
+
 class XMLTestResultFactory(ITestResultFactory):
     '''XML形式TestResult工厂
     '''
     BAD_CHARS = r'\/*?:<>"|~'
-    TRANS = string.maketrans(BAD_CHARS, '='*len(BAD_CHARS))
+    TRANS = maketrans_func(BAD_CHARS, '='*len(BAD_CHARS))
                     
     def create(self, testcase ):
         '''创建TestResult对象
@@ -935,7 +929,11 @@ class XMLTestResultFactory(ITestResultFactory):
         :return TestResult
         '''
         time_str=datetime.now().strftime("%Y%m%d_%H%M%S_%f")[:-3]
-        filename = '%s_%s.xml' % (testcase.test_name.translate(self.TRANS),time_str)
+        if six.PY2:
+            translated_name = smart_binary(testcase.test_name).translate(self.TRANS)
+        else:
+            translated_name = smart_text(testcase.test_name).translate(self.TRANS)
+        filename = '%s_%s.xml' % (translated_name, time_str)
         return testresult.XmlResult(filename)
 
 class XMLTestReport(ITestReport):
@@ -958,9 +956,10 @@ class XMLTestReport(ITestReport):
         xmltpl = "<TestEnv><PC>%s</PC><OS>%s</OS></TestEnv>"
         hostname = socket.gethostname()
         if sys.platform == 'win32':
-            osver = os.popen("ver").read().decode('gbk').encode('utf-8')
+            with os.popen("ver") as pipe:
+                osver = smart_binary(pipe.read()) # dom parse needs utf-8
         else:
-            osver = os.uname()  # @UndefinedVariable
+            osver = smart_binary(str(os.uname()))  # @UndefinedVariable
         envxml = dom.parseString(xmltpl % (hostname, osver))
         self._runrstnode.appendChild(envxml.childNodes[0])
         
@@ -975,15 +974,13 @@ class XMLTestReport(ITestReport):
         timenodes = dom.parseString(timexml)
         self._runrstnode.appendChild(timenodes.childNodes[0])
         
-        xmldata = self._xmldoc.toprettyxml(indent="    ", 
-                                           newl="\n", 
-                                           encoding='utf-8')
-        with codecs.open('TestReport.xml', 'w') as fd:
+        xmldata = to_pretty_xml(self._xmldoc)
+        with codecs.open('TestReport.xml', 'w', encoding="utf-8") as fd:
             fd.write(xmldata)
-        with codecs.open('TestReport.xsl', 'w') as fd:
-            fd.write(REPORT_XSL)
-        with codecs.open('TestResult.xsl', 'w') as fd:
-            fd.write(RESULT_XLS)   
+        with codecs.open('TestReport.xsl', 'w', encoding="utf-8") as fd:
+            fd.write(smart_text(REPORT_XSL))
+        with codecs.open('TestResult.xsl', 'w', encoding="utf-8") as fd:
+            fd.write(smart_text(RESULT_XLS))   
     
     def log_test_result(self, testcase, testresult ):
         '''记录一个测试结果
@@ -992,13 +989,13 @@ class XMLTestReport(ITestReport):
         :param testresult: 测试结果
         :type testresult: XmlResult
         '''
-        casemark = cgi.escape(testcase.test_doc)
+        casemark = saxutils.escape(testcase.test_doc)
         nodestr = """<TestResult result="%s" log="%s" status="%s">%s</TestResult>
         """ % (testresult.passed, testresult.file_path, testcase.status, casemark)
-        doc2 = dom.parseString(nodestr)
+        doc2 = dom.parseString(smart_binary(nodestr))
         resultNode = doc2.childNodes[0]
-        resultNode.setAttribute("name", _to_unicode(saxutils.escape(testcase.test_name)))
-        resultNode.setAttribute("owner", _to_unicode(saxutils.escape(testcase.owner)))
+        resultNode.setAttribute("name", smart_text(saxutils.escape(testcase.test_name)))
+        resultNode.setAttribute("owner", smart_text(saxutils.escape(testcase.owner)))
         self._runrstnode.appendChild(resultNode)
     
     def log_record(self, level, tag, msg, record={}):
@@ -1013,7 +1010,7 @@ class XMLTestReport(ITestReport):
         :type record: dict
         '''        
         if tag == 'LOADER' and level == EnumLogLevel.ERROR:
-            if record.has_key('error_testname') and record.has_key('error'):
+            if 'error_testname' in record and 'error' in record:
                 testname = record['error_testname']
                 mdfailsnode = self._xmldoc.createElement("LoadFailure")
                 self._runrstnode.appendChild(mdfailsnode)
@@ -1034,8 +1031,8 @@ class XMLTestReport(ITestReport):
         '''
         nodestr = """<FilterTest name="%s" reason="%s"></FilterTest>
         """ % (
-            _to_unicode(saxutils.escape(testcase.test_name)),
-            _to_unicode(saxutils.escape(reason))
+            smart_text(saxutils.escape(testcase.test_name)),
+            smart_text(saxutils.escape(reason))
         )
         doc2 = dom.parseString(nodestr)
         filterNode = doc2.childNodes[0]
@@ -1053,7 +1050,7 @@ class XMLTestReport(ITestReport):
         log_file = "%s.log" % name
         nodestr = """<LoadTestError name="%s" log="%s"></LoadTestError>
         """ % (
-            _to_unicode(saxutils.escape(name)),
+            smart_text(saxutils.escape(name)),
             log_file,
         )
         doc2 = dom.parseString(nodestr)

@@ -119,7 +119,7 @@ class ExLibManager(object):
                 propnode.removeChild(pathnode)
                 
         pathnode = doc.createElement('path')
-        print egg_name
+        print(egg_name)
         pathnode.appendChild(doc.createTextNode('/${PROJECT_DIR_NAME}/exlib/%s'%egg_name))
         propnode.appendChild(pathnode)
         with codecs.open(pydev_path, 'w', 'utf8') as fd:

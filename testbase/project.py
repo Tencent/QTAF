@@ -46,7 +46,7 @@ SETTINGS_CONTENT_STANDARD = """# -*- coding: utf-8 -*-
 import os
 
 PROJECT_NAME = "%(ProjectName)s"
-PROJECT_ROOT = os.path.realpath(os.path.dirname(__file__))
+PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 PROJECT_MODE = "standard"
 INSTALLED_APPS = []
 """
@@ -97,7 +97,7 @@ MANAGE_CONTENT = """# -*- coding: utf-8 -*-
 import sys
 import os
 
-proj_root = os.path.realpath(os.path.dirname(__file__))
+proj_root = os.path.dirname(os.path.abspath(__file__))
 if proj_root not in sys.path:
     sys.path.insert(0, proj_root)
 exlib_dir = os.path.join(proj_root, 'exlib')
@@ -226,7 +226,7 @@ def _create_pydev_conffile(proj_path, mode):
     '''
     with codecs.open(os.path.join(proj_path, '.pydevproject'), 'w') as fd:
         if mode == EnumProjectMode.Standalone:
-            qtaf_egg_path = os.path.realpath(os.path.join(os.path.dirname(__file__), '..'))
+            qtaf_egg_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
             fd.write(PYDEV_CONF_CONTENT_STANDALONE % {"EggName":os.path.basename(qtaf_egg_path)})
         else:
             fd.write(PYDEV_CONF_CONTENT_STANDARD)
@@ -285,7 +285,7 @@ def create_project(dest_path, proj_name, mode ):
         exlib_dir = os.path.join(dest_path, 'exlib')
         if not os.path.isdir(exlib_dir):
             os.mkdir(exlib_dir)
-            qtaf_egg_path = os.path.realpath(os.path.join(os.path.dirname(__file__), '..'))
+            qtaf_egg_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
             _copy_qtaf_egg(qtaf_egg_path, exlib_dir)
         
     _create_settingspy(dest_path, proj_name, mode)

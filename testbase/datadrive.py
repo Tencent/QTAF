@@ -50,7 +50,7 @@
 2、可以在runTest里通过self.casedata使用测试数据::
 
     def runTest(self):
-        print self.casedata
+        print(self.casedata)
     
 3、运行及调试方法和原来一样::
 

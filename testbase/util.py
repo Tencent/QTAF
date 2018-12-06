@@ -16,18 +16,28 @@
 共用类模块
 '''
 
-import copy
-import copy_reg
-import operator
-import os, sys
+import io
+import binascii
+import codecs
+import sys
 import re
 import threading
 import time
 import traceback
-import zipfile
 import inspect
+import six
+import locale
+
+from six.moves import StringIO
+from xml.dom.minidom import Node
+
 from tuia.exceptions import TimeoutError
 
+default_locale = locale.getdefaultlocale()
+if default_locale:
+    default_encoding = default_locale[1]
+else:
+    default_encoding = "utf-8"
 
 class Timeout(object):
     '''TimeOut类，实现超时重试逻辑
@@ -110,7 +120,7 @@ class Timeout(object):
         start = time.time()
         waited = 0.0
         try_count = 0
-        isstr = isinstance(waited_value, basestring)
+        isstr = isinstance(waited_value, six.string_types)
         while True:
             objtmp = obj    #增加多层属性支持
             pro_names = property_name.split('.')
@@ -154,9 +164,8 @@ class Timeout(object):
 class Singleton(type):
     """单实例元类，用于某个类需要实现单例模式。
     使用方式示例如下::
-          
-          class MyClass(object):
-              __metaclass__ = Singleton
+          import six
+          class MyClass(with_metaclass(Singleton, object)):
               def __init__(self, *args, **kwargs):
                   pass
     
@@ -170,37 +179,6 @@ class Singleton(type):
         if self not in self._instances:
             self._instances[self] = super(Singleton, self).__call__(*args, **kwargs)          
         return self._instances[self]
-    
-    
-class EggArchive(object):
-    '''Egg包
-    '''
-    def __init__(self, egg_path ):
-        '''构造函数
-        
-        :param egg_path: egg包路径
-        :type egg_path: str
-        '''
-        self._egg_path = egg_path
-        
-    def get(self, relpath ):
-        '''提取文件
-        '''
-        #EGG包都存放在项目根目录的sites文件夹下，以此推导出项目根目录
-        dstpath = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', '..', 'res', os.path.basename(self._egg_path)))
-        if not os.path.isdir(dstpath):
-            os.makedirs(dstpath)
-        dstfile = os.path.join(dstpath, relpath)
-        zfile = zipfile.ZipFile(self._egg_path)
-        if sys.platform == 'win32':
-            ziprelpath = '/'.join(relpath.split('\\'))
-        else:
-            ziprelpath = relpath
-        if os.path.exists(dstfile):
-            return dstfile
-        print 'extracting %s ...' % ziprelpath
-        zfile.extract(ziprelpath, dstpath)
-        return dstfile
     
 class LazyInit(object):
     '''实现延迟初始化
@@ -371,37 +349,52 @@ class classproperty(object):
     def __get__(self, instance, owner):
         return self.getter(owner)
     
-def _to_unicode( s ):
-    '''将任意字符串转换为unicode编码
+def smart_text(s, decoding=None):
+    '''convert any text or binary to text
     '''
-    if not isinstance(s, (str,unicode)):
-        raise RuntimeError("data must be basestring type instead of <%s>" % s.__class__.__name__)
-    if isinstance(s,unicode):
+    if not isinstance(s, (six.string_types, six.binary_type)):
+        raise RuntimeError("string or binary type didn't match with %r" % s)
+    if isinstance(s, six.text_type):
         return s
     else:
         try:
             return s.decode('utf8')
-        except UnicodeDecodeError: # data 可能是gbk编码
+        except UnicodeDecodeError: # other encoding
             try:
-                return s.decode('gbk')
-            except UnicodeDecodeError: # data 可能是gbk和utf8混合编码
+                if decoding is None:
+                    decoding = default_encoding
+                return s.decode(decoding)
+            except UnicodeDecodeError: # mixed encoding
                 return repr(s)
             
-def _to_utf8( s ):
-    '''将任意字符串转换为UTF-8编码
+def smart_binary(s, encoding="utf8", decoding=None):
+    '''convert any text or binary to binary of specified encoding 
     '''
-    if not isinstance(s, (str,unicode)):
-        raise RuntimeError("data must be basestring type instead of <%s>" % s.__class__.__name__)
-    if isinstance(s,unicode):
-        return s.encode('utf8')
-    else:
+    if not isinstance(s, (six.string_types, six.binary_type)):
+        raise RuntimeError("string or binary type didn't match with %r" % s)
+    if isinstance(s, six.text_type):
+        return s.encode(encoding)
+    
+    assert type(s) == six.binary_type
+    try:
+        return s.decode("utf8").encode(encoding) # other encoding
+    except UnicodeError:
         try:
-            return s.decode('utf8').encode('utf8')
-        except UnicodeDecodeError: # data 可能是gbk编码
-            try:
-                return s.decode('gbk').encode('utf8')
-            except UnicodeDecodeError: # data 可能是gbk和utf8混合编码，repr返回
-                return repr(s)
+            if decoding is None:
+                decoding = default_encoding
+            return s.decode(decoding).encode(encoding)
+        except UnicodeError: # data mixed encoding
+            return bytes(repr(s), encoding)
+            
+def text_to_hex(s, encoding="utf8", decoding=None):
+    s = smart_binary(s, encoding=encoding, decoding=decoding)
+    binary_s = binascii.hexlify(s)
+    return smart_text(binary_s)
+
+def text_from_hex(s):
+    s = smart_binary(s)
+    binary_s = binascii.unhexlify(s)
+    return smart_text(binary_s)
 
 def get_thread_traceback(thread):
     '''获取用例线程的当前的堆栈
@@ -457,138 +450,44 @@ def get_last_frame_stack(back_count=2):
     stack = "".join(traceback.format_stack(frame, 1))
     return stack
 
-empty = object()
-
-
-def new_method_proxy(func):
-    def inner(self, *args):
-        if self._wrapped is empty:
-            self._setup()
-        return func(self._wrapped, *args)
-    return inner
-
-
-class LazyBase(object):
-    """base class of lazy inited object
+def to_pretty_xml(doc, encoding="utf-8"):
+    """we need to ensure each line to be binary type
     """
-
-    # Avoid infinite recursion for __init__.
-    _wrapped = None
-
-    def __init__(self):
-        self._wrapped = empty
-
-    __getattr__ = new_method_proxy(getattr)
-
-    def __setattr__(self, name, value):
-        if name == "_wrapped":
-            # Avoid infinite recursion for setattr.
-            self.__dict__["_wrapped"] = value
-        else:
-            if self._wrapped is empty:
-                self._setup()
-            setattr(self._wrapped, name, value)
-
-    def __delattr__(self, name):
-        if name == "_wrapped":
-            raise TypeError("can't delete _wrapped.")
-        if self._wrapped is empty:
-            self._setup()
-        delattr(self._wrapped, name)
-
-    def _setup(self):
-        """to be overridden by subclasses.
+    class _XMLWriter(codecs.StreamWriter):
+        """an inner writer to give writer a chance to handle each line
         """
-        raise NotImplementedError('subclasses of LazyInit must provide a _setup() method')
-
-    #avoid __reduce__ failure cause __class__ method is messed.
-    def __getstate__(self):
-        if self._wrapped is empty:
-            self._setup()
-        return self._wrapped.__dict__
-
-    # Python 3.3 will call __reduce__ when pickling; this method is needed
-    # to serialize and deserialize correctly.
-    @classmethod
-    def __newobj__(cls, *args):
-        return cls.__new__(cls, *args)
-
-    def __reduce_ex__(self, proto):
-        if proto >= 2:
-            return (self.__newobj__, (self.__class__,), self.__getstate__())
-        else:
-            return (copy_reg._reconstructor, (self.__class__, object, None), self.__getstate__())
-
-    def __deepcopy__(self, memo):
-        if self._wrapped is empty:
-            # We have to use type(self), not self.__class__, because the
-            # latter is proxied.
-            result = type(self)()
-            memo[id(self)] = result
-            return result
-        return copy.deepcopy(self._wrapped, memo)
-
-    if sys.version_info[0]==3:#py3
-        __bytes__ = new_method_proxy(bytes)
-        __str__ = new_method_proxy(str)
-        __bool__ = new_method_proxy(bool)
-    else:
-        __str__ = new_method_proxy(str)
-        __unicode__ = new_method_proxy(unicode)
-        __nonzero__ = new_method_proxy(bool)
-
-    # Introspection support
-    __dir__ = new_method_proxy(dir)
-
-    # Need to pretend to be the wrapped class, for the sake of objects that
-    # care about this (especially in equality tests)
-    __class__ = property(new_method_proxy(operator.attrgetter("__class__")))
-    __eq__ = new_method_proxy(operator.eq)
-    __ne__ = new_method_proxy(operator.ne)
-    __hash__ = new_method_proxy(hash)
-
-    # Dictionary methods support
-    __getitem__ = new_method_proxy(operator.getitem)
-    __setitem__ = new_method_proxy(operator.setitem)
-    __delitem__ = new_method_proxy(operator.delitem)
-
-    __len__ = new_method_proxy(len)
-    __contains__ = new_method_proxy(operator.contains)
-
-# Workaround for http://bugs.python.org/issue12370
-_super = super
-
-class LazyObject(LazyBase):
-    """A lazy object initialized from any function.
-    """
-    def __init__(self, func):
-        """
-        :param func:init function for lazy object with no extra argument
-        :type  func:function or object with __call__
-        """
-        self.__dict__['_setupfunc'] = func
-        _super(LazyObject, self).__init__()
-
-    def _setup(self):
-        self._wrapped = self._setupfunc()
-
-    #representation for debugging before object is caculated.
-    def __repr__(self):
-        if self._wrapped is empty:
-            repr_attr = self._setupfunc
-        else:
-            repr_attr = self._wrapped
-        return '<%s: %r>' % (type(self).__name__, repr_attr)
-
-    def __deepcopy__(self, memo):
-        if self._wrapped is empty:
-            #__class__ is proxied,using LazyObject instead.
-            result = LazyObject(self._setupfunc)
-            memo[id(self)] = result
-            return result
-        return copy.deepcopy(self._wrapped, memo)
+        def write(self, data):
+            data = smart_text(data)
+            self.stream.write(data)
     
+    buff = StringIO()
+    indent = "    "
+    newl = "\n"
+    writer = _XMLWriter(buff)
+    if doc.nodeType == Node.DOCUMENT_NODE: # document node needs encoding
+        doc.writexml(writer, "", indent, newl, encoding)
+    else:
+        doc.writexml(writer, "", indent, newl)
+    return smart_text(writer.stream.getvalue())
+
+def ensure_binary_stream(stream, encoding="utf-8"):
+    encoding = "utf-8"
+    if six.PY3:
+        stream_type = type(stream)
+        if not issubclass(stream_type, io.IOBase):
+            raise ValueError("stream=%r does not match subclass of io.IOBase", stream)
+        if not hasattr(stream, "mode"):
+            raise ValueError("stream=%r does not have attribute mode", stream)
+        if "b" in stream.mode:
+            new_stream = stream
+        else:
+            new_stream = stream.buffer
+    else:
+        if stream.encoding:
+            if not stream.encoding.lower().startswith('ansi'): # linux ascii
+                encoding = stream.encoding
+        new_stream = stream
+    return new_stream, encoding
 
 if __name__ == "__main__":
     pass
-    

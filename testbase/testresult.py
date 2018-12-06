@@ -33,6 +33,7 @@ ITestResultHandler来实现一个新的Handler，详细请参考ITestResultHandl
 
 '''
 
+import codecs
 import sys
 import traceback
 import time
@@ -41,13 +42,14 @@ import xml.parsers.expat as xmlexpat
 import xml.sax.saxutils as saxutils
 import socket
 import threading
-import codecs
 import os
 import locale
 import json
+import six
 
 from testbase import context
-from testbase.util import _to_unicode, _to_utf8, get_thread_traceback, get_method_defined_class
+from testbase.util import smart_text, get_thread_traceback, get_method_defined_class, \
+to_pretty_xml, smart_binary, ensure_binary_stream
 
     
 os_encoding = locale.getdefaultlocale()[1]
@@ -82,14 +84,12 @@ def _convert_timelength(sec):
     sec -= m * 60
     return (h, m, sec)
 
-
-    
-def _to_utf8_by_lines( s ):
+def smart_text_by_lines( s ):
     '''将任意字符串转换为UTF-8编码
     '''
     lines = []
     for line in s.split('\n'):
-        lines.append(_to_utf8(line))
+        lines.append(smart_text(line))
     return '\n'.join(lines)
 
 class TestResultBase(object):
@@ -110,7 +110,7 @@ class TestResultBase(object):
         self.__testcase = None
         self.__begin_time = None
         self.__end_time = None
-        self.__error_level = None
+        self.__error_level = 0
         
     @property
     def testcase(self):
@@ -125,7 +125,12 @@ class TestResultBase(object):
         
         :returns: True or False
         '''
-        return reduce(lambda x,y: x and y, self.__steps_passed)
+        if six.PY3:
+            import functools
+            reduce_func = functools.reduce
+        else:
+            reduce_func = reduce
+        return reduce_func(lambda x,y: x and y, self.__steps_passed)
     
     @property
     def failed_reason(self):
@@ -210,10 +215,9 @@ class TestResultBase(object):
             record = {}
         if attachments is None:
             attachments = {}
-        if not isinstance(msg,(str,unicode)):
-            raise ValueError("msg必须是unicode或str类型")
-        if isinstance(msg, unicode):
-            msg = msg.encode('utf8')
+        if not isinstance(msg, six.string_types):
+            raise ValueError("msg='%r'必须是string类型" % msg)
+        msg = smart_text(msg)
         if level >= EnumLogLevel.ERROR:
                 self.__steps_passed[self.__curr_step] = False
                 if level > self.__error_level:
@@ -361,16 +365,10 @@ class StreamResult(TestResultBase):
         :type stream: file
         '''
         super(StreamResult, self).__init__()
-        self._stream = stream
-        if stream.encoding and stream.encoding != 'utf8':
-            if stream.encoding.lower().startswith('ansi'): #fix Linux下可能出现编码为ANSI*的情况
-                self._write = self._stream.write
-            else:
-                self._write = lambda x: self._stream.write(x.decode('utf8').encode(stream.encoding))
-        else:
-            self._write = self._stream.write
+        self._stream, encoding = ensure_binary_stream(stream)
+        self._write = lambda x: self._stream.write(smart_binary(x, encoding=encoding))
         self._step_results = []
-
+        
     def handle_test_begin(self, testcase ):
         '''处理一个测试用例执行的开始
         
@@ -381,8 +379,8 @@ class StreamResult(TestResultBase):
         owner = getattr(testcase, 'owner', None)
         priority = getattr(testcase, 'priority', None)
         timeout = getattr(testcase, 'timeout', None)
-        self._write("测试用例:%s 所有者:%s 优先级:%s 超时:%s分钟\n" % 
-                    (testcase.test_name, owner, priority, timeout))
+        begin_msg = u"测试用例:%s 所有者:%s 优先级:%s 超时:%s分钟\n" % (testcase.test_name, owner, priority, timeout)
+        self._write(begin_msg)
         self._write(self._seperator2)
     
     def handle_test_end(self, passed ):
@@ -410,8 +408,8 @@ class StreamResult(TestResultBase):
         :param msg: 测试步骤名称
         :type msg: string
         '''
-        if not isinstance(msg,(str,unicode)):
-            raise ValueError("msg必须是unicode或str类型")
+        if not isinstance(msg, six.string_types):
+            raise ValueError("msg='%r'必须是string类型" % msg)
         
         self._write(self._seperator1)
         self._write("步骤%s: %s\n" % (len(self._step_results) + 1, msg))
@@ -439,23 +437,23 @@ class StreamResult(TestResultBase):
         self._write("%s: %s\n" % (levelname[level], msg))
         
         if level == EnumLogLevel.ASSERT:
-            if record.has_key("actual"):
+            if "actual" in record:
                 actual=record["actual"]
-                self._write("   实际值：%s%s\n" % (actual.__class__,actual))
-            if record.has_key("expect"):
+                self._write(u"   实际值：%s%s\n" % (actual.__class__,actual))
+            if "expect" in record:
                 expect=record["expect"]
-                self._write("   期望值：%s%s\n" % (expect.__class__,expect))
-            if record.has_key("code_location"):
-                self._write(_to_utf8('  File "%s", line %s, in %s\n' % record["code_location"]))
+                self._write(u"   期望值：%s%s\n" % (expect.__class__,expect))
+            if "code_location" in record:
+                self._write(smart_text('  File "%s", line %s, in %s\n' % record["code_location"]))
             
-        if record.has_key("traceback"):
-            self._write(_to_utf8_by_lines("%s\n" % record["traceback"]))
+        if "traceback" in record:
+            self._write(smart_text_by_lines("%s\n" % record["traceback"]))
             
         for name in attachments:
-            file_path = attachments[name]
-            if os.path.exists(_to_unicode(file_path)):
-                file_path = os.path.realpath(file_path)
-            self._write("   %s：%s\n" % (name, _to_utf8(file_path)))
+            file_path = smart_text(attachments[name])
+            if os.path.exists(file_path):
+                file_path = os.path.abspath(file_path)
+            self._write("   %s:%s\n" % (smart_text(name), file_path))
 
 class XmlResult(TestResultBase):
     '''xml格式的测试用例结果
@@ -490,8 +488,8 @@ class XmlResult(TestResultBase):
         priority = getattr(testcase, 'priority', None)
         timeout = getattr(testcase, 'timeout', None)
         self._testnode = self._xmldoc.createElement('TEST')
-        self._testnode.setAttribute("name", _to_utf8(saxutils.escape(testcase.test_name)))
-        self._testnode.setAttribute("owner", _to_utf8(saxutils.escape(str(owner))))
+        self._testnode.setAttribute("name", smart_text(saxutils.escape(testcase.test_name)))
+        self._testnode.setAttribute("owner", smart_text(saxutils.escape(str(owner))))
         self._testnode.setAttribute("priority", str(priority))
         self._testnode.setAttribute("timeout", str(timeout))
         self._testnode.setAttribute('begintime', time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(self.begin_time)))
@@ -509,7 +507,7 @@ class XmlResult(TestResultBase):
         self._testnode.setAttribute('endtime', time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(self.end_time)))
         self._testnode.setAttribute('duration', "%02d:%02d:%02.2f\n" %  _convert_timelength(self.end_time- self.begin_time))
         if self._file_path:
-            with codecs.open(self._file_path.decode('utf8'), 'w') as fd:
+            with codecs.open(smart_text(self._file_path), 'w', encoding="utf-8") as fd:
                 fd.write(self.toxml())
         
     def handle_step_begin(self, msg ):
@@ -518,10 +516,10 @@ class XmlResult(TestResultBase):
         :param msg: 测试步骤名称
         :type msg: string
         '''
-        if not isinstance(msg, (str,unicode)):
-            raise ValueError("msg必须是str或unicode类型")
+        if not isinstance(msg, six.string_types):
+            raise ValueError("msg='%r'必须是string类型" % msg)
         self._stepnode = self._xmldoc.createElement("STEP")
-        self._stepnode.setAttribute('title', _to_utf8(msg))
+        self._stepnode.setAttribute('title', smart_text(msg))
         self._stepnode.setAttribute('time', time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time())))
         self._testnode.appendChild(self._stepnode)
         
@@ -545,7 +543,7 @@ class XmlResult(TestResultBase):
         :param attachments: 附件
         :type attachments: dict
         '''
-        if not isinstance(msg, basestring):
+        if not isinstance(msg, six.string_types):
             msg = str(msg)
             
         #由于目前的报告系统仅支持部分级别的标签，所以这里先做转换
@@ -557,16 +555,17 @@ class XmlResult(TestResultBase):
             tagname = levelname[level]
             
         infonode = self._xmldoc.createElement(tagname)
-        textnode = self._xmldoc.createTextNode(_to_utf8(msg))
+        textnode = self._xmldoc.createTextNode(smart_text(msg))
         infonode.appendChild(textnode)
         self._stepnode.appendChild(infonode)
         
         if level == EnumLogLevel.ASSERT:
-            if record.has_key("actual"):
+            if "actual" in record:
                 node = self._xmldoc.createElement("ACTUAL")
                 try:
                     actual=record["actual"]
-                    if isinstance(actual, basestring):
+                    if isinstance(actual, six.string_types):
+                        actual = smart_text(actual)
                         dom.parseString("<a>%s</a>" % actual)
                     acttxt = "%s%s" % (actual.__class__,actual)
                 except xmlexpat.ExpatError:
@@ -577,11 +576,12 @@ class XmlResult(TestResultBase):
                 node.appendChild(self._xmldoc.createTextNode(acttxt))
                 infonode.appendChild(node)
                 
-            if record.has_key("expect"):   
+            if "expect" in record:   
                 node = self._xmldoc.createElement("EXPECT")
                 try:
                     expect=record["expect"]
-                    if isinstance(expect, basestring):
+                    if isinstance(expect, six.string_types):
+                        expect = smart_text(expect)
                         dom.parseString("<a>%s</a>" % expect)
                     exptxt = "%s%s" % (expect.__class__,expect)
                 except xmlexpat.ExpatError:
@@ -591,16 +591,16 @@ class XmlResult(TestResultBase):
                 node.appendChild(self._xmldoc.createTextNode(exptxt))
                 infonode.appendChild(node)
 
-        if record.has_key("traceback"):
+        if "traceback" in record:
             excnode = self._xmldoc.createElement('EXCEPT')
-            excnode.appendChild(self._xmldoc.createTextNode(_to_utf8(record["traceback"])))
+            excnode.appendChild(self._xmldoc.createTextNode(smart_text(record["traceback"])))
             infonode.appendChild(excnode)
 
         for name in attachments:
             file_path = attachments[name]
             attnode = self._xmldoc.createElement('ATTACHMENT')
-            attnode.setAttribute('filepath', _to_utf8(file_path))
-            attnode.appendChild(self._xmldoc.createTextNode(_to_utf8(name)))
+            attnode.setAttribute('filepath', smart_text(file_path))
+            attnode.appendChild(self._xmldoc.createTextNode(smart_text(name)))
             infonode.appendChild(attnode)
                                 
     def toxml(self):
@@ -608,8 +608,8 @@ class XmlResult(TestResultBase):
         
         :returns string - xml文本
         '''
-        return self._xmldoc.toprettyxml(indent="    ", newl="\n")
- 
+        return to_pretty_xml(self._xmldoc)
+                
 class JSONResult(TestResultBase):
     '''JSON格式的结果
     '''
@@ -680,8 +680,6 @@ class JSONResult(TestResultBase):
         :param attachments: 附件
         :type attachments: dict
         '''
-        print self._steps
-        print level, msg, record, attachments
         curr_step = self._steps[-1]
         curr_step["logs"].append({
             "timestamp": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
@@ -714,6 +712,3 @@ class TestResultCollection(list):
         :returns: boolean
         '''
         return self.__passed
-    
-    
-from xml.dom import minidom

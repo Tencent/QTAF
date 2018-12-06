@@ -53,7 +53,7 @@ import os
 import re
 from setuptools import setup, find_packages, Command
     
-BASE_DIR = os.path.realpath(os.path.dirname(__file__))
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 def find_all_file_patterns( resource_dir ):
     file_patterns = []
@@ -84,7 +84,6 @@ def find_resource_packages_data():
             if not os.path.isfile(os.path.join(dirpath, dirname, "__init__.py")):
                 dirnames.remove(dirname)  # not a package
                 continue
-    #print packages_data
     return packages_data
 
 def find_resource_data_files():

@@ -23,6 +23,7 @@ import os
 import traceback
 import sys
 import shlex
+import six
 
 from testbase import project
 from testbase.conf import settings
@@ -185,7 +186,7 @@ class RunTest(Command):
             runner_types[args.runner_args_help].get_parser().print_help()
             return
         if not args.tests:
-            print "no test set specified"
+            print("no test set specified")
             exit(1)
         
         from testbase.testcase import TestCase
@@ -242,18 +243,18 @@ class RunTest(Command):
         os.chdir(prev_dir)
         if args.report_type == 'online':
             if sys.platform == "win32":
-                print "opening online report url:%s" % report_inst.url
+                print("opening online report url:%s" % report_inst.url)
                 os.system("start %s" % report_inst.url)
             else:
-                print "online report generated: %s" % report_inst.url
+                print("online report generated: %s" % report_inst.url)
                 
         elif args.report_type == 'xml':
             if sys.platform == "win32":
-                print "opening XML report with IE..."
+                print("opening XML report with IE...")
                 report_xml = os.path.abspath(os.path.join(args.working_dir, "TestReport.xml"))
                 os.system("start iexplore %s" % report_xml)
             else:
-                print "XML report generated: %s" % os.path.realpath("TestReport.xml")
+                print("XML report generated: %s" % os.path.abspath("TestReport.xml"))
 
 class RunPlan(Command):
     """执行测试计划
@@ -331,7 +332,7 @@ class CreateProject(Command):
         else:
             mode = project.EnumProjectMode.Standalone
         proj_path = os.path.join(dest, args.name.lower()+'testproj')
-        print 'create %s mode test project: %s' % (mode, proj_path)
+        print('create %s mode test project: %s' % (mode, proj_path))
         project.create_project(proj_path, args.name, mode)
 
 
@@ -349,7 +350,7 @@ class UpgradeProject(Command):
             logging.error("should run in egg mode")
             sys.exit(1)
             
-        qtaf_path = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+        qtaf_path = os.path.dirname(os.path.abspath(__file__))
         project.update_project_qtaf(args.proj_path, qtaf_path)
 
 
@@ -514,13 +515,17 @@ class ManagementToolsConsole(object):
         self._argparser = argparser
         
     def cmdloop(self):
-        print """QTAF %(qtaf_version)s (test project: %(proj_root)s [%(proj_mode)s mode])\n""" % {
+        print("""QTAF %(qtaf_version)s (test project: %(proj_root)s [%(proj_mode)s mode])\n""" % {
             'qtaf_version': version,
             'proj_root': settings.PROJECT_ROOT,
             'proj_mode': settings.PROJECT_MODE,
-        }
+        })
+        if six.PY3:
+            raw_input_func = input
+        else:
+            raw_input_func = raw_input
         while 1:
-            line = raw_input(self.prompt)
+            line = raw_input_func(self.prompt)
             args = shlex.split(line, posix="win" not in sys.platform)
             if not args:
                 continue
@@ -532,7 +537,7 @@ class ManagementToolsConsole(object):
                 subcmd, ns = self._argparser.parse_args(args)
                 subcmd.execute(ns)
             except SystemExit:
-                print "command exit"
+                print("command exit")
             except:
                 traceback.print_exc()
 
@@ -568,8 +573,12 @@ class ManagementTools(object):
                 continue
             if issubclass(obj, Command):
                 cmds.append(obj)
-                
-        cmds.sort(lambda x,y:cmp(x.name, y.name))    
+        
+        if six.PY3:
+            cmp_func = lambda x,y: x>y
+        else:
+            cmp_func = cmp
+        cmds.sort(lambda x,y:cmp_func(x.name, y.name))    
         return cmds
     
     def _load_app_cmds(self):

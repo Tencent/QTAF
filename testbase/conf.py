@@ -31,7 +31,7 @@ BANNER = "hello"
 
 二、使用示例：
 from testbase.conf import settings
-print settings.CONFIG_OPTION
+print(settings.CONFIG_OPTION)
 
 注意 settings的值都是只读的，不可以修改，如果尝试修改会导致异常
 
@@ -46,7 +46,6 @@ import os
 import sys
 import imp
 import qtaf_settings
-import types
 from testbase.exlib import ExLibManager
 
 _DEFAULT_SETTINSG_MODULE = "settings"
@@ -143,12 +142,12 @@ class _Settings(object):
         if os.path.isfile(__file__): #没使用qtaf.egg包
             pwd=os.getcwd()
             #使用外链或拷贝文件的方式
-            dst_path=os.path.realpath(os.path.join(os.path.dirname(__file__), '..'))
+            dst_path=os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
             if pwd.find(dst_path)>=0:
                 return dst_path
             
             #eclipse调试使用工程引用的方式
-            if not os.environ.has_key('PYTHONPATH'):
+            if 'PYTHONPATH' not in os.environ:
                 return pwd
             py_paths=os.environ['PYTHONPATH']
             paths=py_paths.split(";")
@@ -160,8 +159,8 @@ class _Settings(object):
             #非预期的情况，返回当前工作目录
             return pwd
         else: #使用的egg包，qtaf.egg包在exlib目录中
-            qtaf_top_dir = os.path.realpath(os.path.join(os.path.dirname(__file__), '..'))
-            return os.path.realpath(os.path.join(qtaf_top_dir, '..', '..'))
+            qtaf_top_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
+            return os.path.join(qtaf_top_dir, '..', '..')
         
     def get(self, name, *default_value ):
         '''获取配置

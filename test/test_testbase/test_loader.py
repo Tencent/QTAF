@@ -23,11 +23,12 @@ TestLoader.__test__ = False # for nauseated Nose
 
 
 class TestLoaderTest(unittest.TestCase):
+    loader = TestLoader()
     
     def test_load_testcase(self):
         '''load test cases from class path
         '''
-        tests = TestLoader().load("test.sampletest.hellotest.HelloTest")
+        tests = self.loader.load("test.sampletest.hellotest.HelloTest")
         self.assertEqual(len(tests), 1)
         from test.sampletest.hellotest import HelloTest
         self.assertEqual(type(tests[0]), HelloTest)
@@ -36,28 +37,26 @@ class TestLoaderTest(unittest.TestCase):
         '''load test cases from a data-driver class path
         '''
         from test.sampletest.datatest import DataTest
-        tests = TestLoader().load("test.sampletest.datatest.DataTest")
+        tests = self.loader.load("test.sampletest.datatest.DataTest")
         self.assertEqual(len(tests), 3)
         self.assertEqual(type(tests[0]), DataTest)
         
         
     def test_load_failed_not_found(self):
-        loader = TestLoader()
-        tests = loader.load("test.sampletest.notfound")
+        tests = self.loader.load("test.sampletest.notfound")
         self.assertEqual(len(tests), 0)
-        errors = loader.get_last_errors()
+        errors = self.loader.get_last_errors()
         self.assertEqual(len(errors), 1)
         self.assertIn("test.sampletest.notfound", errors)
-        self.assertIn("No module named notfound", errors.values()[0])
+        self.assertRegexpMatches(list(errors.values())[0], "No module named .*notfound.*")
         
     def test_load_failed_runtime_error(self):
-        loader = TestLoader()
-        tests = loader.load("test.sampletest.loaderr")
+        tests = self.loader.load("test.sampletest.loaderr")
         self.assertEqual(len(tests), 0)
-        errors = loader.get_last_errors()
+        errors = self.loader.get_last_errors()
         self.assertEqual(len(errors), 1)
         self.assertIn("test.sampletest.loaderr", errors)
-        self.assertIn("RuntimeError", errors.values()[0])
+        self.assertIn("RuntimeError", list(errors.values())[0])
         
     def test_load_filter(self):
         filtered_test = 'test.sampletest.hellotest.HelloTest'
@@ -73,8 +72,8 @@ class TestLoaderTest(unittest.TestCase):
         self.assertEqual(tests[0].test_class_name, filtered_test)
         result = loader.get_filtered_tests_with_reason()
         self.assertEqual(len(tests), 1)
-        self.assertEqual(result.keys()[0].test_class_name, filtered_test)
-        self.assertEqual("hello filtered", result.values()[0])
+        self.assertEqual(list(result.keys())[0].test_class_name, filtered_test)
+        self.assertEqual("hello filtered", list(result.values())[0])
         
         
 class SettingWarpper(object):
@@ -122,4 +121,4 @@ class DataDriveTestLoaderTest(unittest.TestCase):
             self.assertEqual(test.test_class_name, "test.sampletest.hellotest.HelloTest")
             casedatas.add(str(test.casedata))
         self.assertEqual(casedatas, set([str(it) for it in server.DATASET]))    
-        
+

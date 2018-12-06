@@ -61,12 +61,12 @@ class AssertionTest(unittest.TestCase):
     """unit test for assertion
     """
     def is_func_rewritten(self, new_func, old_code):
-        new_code = new_func.im_func.func_code
+        new_code = new_func.__func__.__code__
         return new_code != old_code
     
     def test_assert_failure(self):
         case = AssertionFailureTest()
-        old_run_test_code = case.run_test.im_func.func_code
+        old_run_test_code = case.run_test.__func__.__code__
         case.debug_run()
         self.assertEqual(case.test_result.passed, False, "断言失败，用例没有失败")
         
@@ -74,7 +74,7 @@ class AssertionTest(unittest.TestCase):
         
     def test_assert_inner_invoke(self):
         case = AssertionInnerInvokeTest()
-        old_assert_foo_bar_code = case.assert_foo_bar.im_func.func_code
+        old_assert_foo_bar_code = case.assert_foo_bar.__func__.__code__
         case.debug_run()
         
         self.assertEqual(case.test_result.passed, False, "断言失败，用例没有失败")
@@ -82,7 +82,7 @@ class AssertionTest(unittest.TestCase):
     
     def test_assert_datadrive(self):
         case = AssertionDatadriveTest()
-        old_run_test_code = case.run_test.im_func.func_code
+        old_run_test_code = case.run_test.__func__.__code__
         
         report = case.debug_run_one(0)
         self.assertEqual(report.passed, False, "数据驱动断言失败，用例没有失败")
@@ -95,28 +95,12 @@ class AssertionTest(unittest.TestCase):
     def test_disable_rewrite_assert(self):
         with modify_settings(QTAF_REWRITE_ASSERT=False):
             case = AssertionFailureTest()
-            old_run_test_code = case.run_test.im_func.func_code
+            old_run_test_code = case.run_test.__func__.__code__
             case.debug_run()
             self.assertEqual(case.test_result.passed, False, "禁用重写assert，用例没有失败")
             self.assertEqual(self.is_func_rewritten(case.run_test, old_run_test_code), False, "禁用重写assert，assert_被重写了")
         
         
 if __name__ == "__main__":
-#     unittest.main()
-    class AssertionFailureTest2(TestCase):
-        """dummy class for asserts test
-        """
-        owner = "dummy"
-        timeout = 10
-        priority = TestCase.EnumPriority.High
-        status = TestCase.EnumStatus.Ready
-        
-        def run_test(self):
-            self.assert_("assert", self.foo(self.bar(1)) in [2, 4])
-             
-        def foo(self, a):
-            return a + 1
-        
-        def bar(self, b):
-            return b + 1
-    AssertionFailureTest2().debug_run()
+    unittest.main()
+    

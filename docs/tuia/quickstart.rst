@@ -21,7 +21,7 @@
 
 创建成功后，安装对应平台的“测试驱动器”::
 
-   $ pip install qt4x
+   $ pip install https://github.com/qtacore/QT4x/archive/master.zip
 
 -------
 封装一个App

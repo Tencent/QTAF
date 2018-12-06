@@ -14,10 +14,9 @@
 #
 """assert机制实现
 """
-
 from __future__ import print_function
 
-import ast, copy, inspect, itertools, sys, types, pprint
+import ast, copy, inspect, itertools, sys, types, pprint, six
 import threading, traceback
 
 from testbase.util import Singleton, get_method_defined_class
@@ -497,9 +496,9 @@ def _saferepr(obj):
 
     """
     if isinstance(obj, types.MethodType):
-        if obj.im_self:
+        if obj.__self__:
             obj_repr = "self.%s" % obj.__func__.__name__
-    elif isinstance(obj, types.ClassType):
+    elif isinstance(obj, type):
         obj_repr = obj.__name__
     else:
         obj_repr = pprint.saferepr(obj)
@@ -521,16 +520,13 @@ def _format_assertmsg(obj):
     # .__repr__() which contains newlines it does not get escaped.
     # However in either case we want to preserve the newline.
 #     if isinstance(obj, six.text_type) or isinstance(obj, six.binary_type):
-    if isinstance(obj, basestring):
+    if isinstance(obj, six.text_type):
         s = obj
         is_repr = False
     else:
         s = pprint.saferepr(obj)
         is_repr = True
-    if isinstance(s, unicode):
-        t = unicode
-    else:
-        t = str
+    t = six.text_type
     s = s.replace(t("\n"), t("\n~")).replace(t("%"), t("%%"))
     if is_repr:
         s = s.replace(t("\\n"), t("\n~"))
@@ -588,7 +584,7 @@ def get_func_name(func):
         else:
             return func.__name__
     else:
-        return func.func_name
+        return func.__name__
 
 def get_func_source_code(func):
     if isinstance(func, types.MethodType):
@@ -649,10 +645,9 @@ def set_func_code(func, new_code):
         else:
             func.__func__.__code__ = new_func_code
     else:
-        func.func_code = new_func_code
+        func.__code__ = new_func_code
     
-class _AssertHookedCache(object):
-    __metaclass__ = Singleton
+class _AssertHookedCache(six.with_metaclass(Singleton, object)):
     
     def __init__(self):
         self._lock = threading.Lock()

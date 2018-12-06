@@ -65,6 +65,8 @@ class _RetryWithTimeout(object):
                     raise RetryLimitExcceeded("Procedure retried %s times in %ss" % (self.__count, self.timeout))
                 else:
                     raise StopIteration
+                
+    __next__ = next
         
         
 class _RetryWithCount(object):
@@ -89,6 +91,8 @@ class _RetryWithCount(object):
             raise RetryLimitExcceeded("Procedure retried for %s times with interval=%ss" % (self.limit, self.interval))
         else:
             raise StopIteration
+        
+    __next__ = next
 
         
 class RetryLimitExcceeded(Exception):

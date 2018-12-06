@@ -40,7 +40,8 @@ import pkg_resources
 import socket
 import uuid
 import itertools
-from Queue import Empty
+import six
+from six.moves import queue
 from testbase.loader import TestLoader
 from testbase import serialization
 from testbase.testcase import TestCase, TestCaseRunner
@@ -195,7 +196,7 @@ class BaseTestRunner(object):
         '''  
         if isinstance(target, str):
             target = TestCaseSettings(names=target.split(" "))
-        elif isinstance(target, list) and len(target) and isinstance(target[0], basestring):
+        elif isinstance(target, list) and len(target) and isinstance(target[0], six.string_types):
             target = TestCaseSettings(names=target)
             
         if isinstance(target, TestCaseSettings):
@@ -960,7 +961,7 @@ class TestWorker(object):
         else:
             try:
                 return self._rsp_queue.get(timeout=timeout)
-            except Empty:
+            except queue.Empty:
                 raise RuntimeError("waiting response message from worker timeout")
 
     

@@ -19,8 +19,19 @@ import logging
 import sys
 import traceback
 from testbase import context
+from testbase.util import ensure_binary_stream, smart_binary
+    
+_stream, _encoding = ensure_binary_stream(sys.stdout)
 
-_streamhandler=logging.StreamHandler(sys.stdout)
+class _Formatter(logging.Formatter):
+    def format(self, record):
+        s = super(_Formatter, self).format(record)
+        return smart_binary(s, encoding=_encoding)
+    
+_stream_handler=logging.StreamHandler(_stream)
+_stream_handler.terminator = b"\n"
+_stream_handler.setFormatter(_Formatter())
+
 class TestResultBridge(logging.Handler):
     '''中转log信息到TestResult
     '''
@@ -29,7 +40,7 @@ class TestResultBridge(logging.Handler):
         '''
         testresult = context.current_testresult()
         if testresult is None:
-            _streamhandler.emit(log_record)
+            _stream_handler.emit(log_record)
             return
         record = {}
         if log_record.exc_info:
@@ -78,7 +89,6 @@ def debug(msg, *args, **kwargs):
 def log(level, msg, *args, **kwargs):
     '''Log 'msg % args' with the integer severity 'level' on the root logger.
     '''
-#    print len(root.handlers)
     _logger.log(level, msg, *args, **kwargs)
     
 def addHandler(hdlr):
@@ -90,4 +100,3 @@ def removeHandler(hdlr):
     '''Remove the specified handler from this logger.
     '''
     _logger.removeHandler(hdlr)
-    
