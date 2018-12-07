@@ -14,9 +14,13 @@
 
 import sys
 import os
-import shlex
 
 import sphinx_rtd_theme
+
+cur_dir = os.path.dirname(os.path.abspath(__file__))
+base_dir = os.path.abspath(os.path.join(cur_dir, "../.."))
+if base_dir not in sys.path:
+    sys.path.insert(0, base_dir)
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
