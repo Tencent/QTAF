@@ -35,9 +35,17 @@ from tuia.exceptions import TimeoutError
 
 default_locale = locale.getdefaultlocale()
 if default_locale:
-    default_encoding = default_locale[1]
+    default_encoding = default_locale[1] or "utf-8"
 else:
     default_encoding = "utf-8"
+    
+file_encoding = sys.getfilesystemencoding()
+file_encoding_lower = file_encoding.lower()
+for special_encoding in ["ansi", "ascii"]:
+    if file_encoding_lower.find(special_encoding) >= 0:
+        file_encoding = "utf-8"
+        break
+file_encoding = file_encoding or "utf-8"
 
 class Timeout(object):
     '''TimeOut类，实现超时重试逻辑
@@ -384,7 +392,10 @@ def smart_binary(s, encoding="utf8", decoding=None):
                 decoding = default_encoding
             return s.decode(decoding).encode(encoding)
         except UnicodeError: # data mixed encoding
-            return bytes(repr(s), encoding)
+            if six.PY3:
+                return bytes(repr(s), encoding)
+            else:
+                return bytes(repr(s))
             
 def text_to_hex(s, encoding="utf8", decoding=None):
     s = smart_binary(s, encoding=encoding, decoding=decoding)
@@ -488,6 +499,10 @@ def ensure_binary_stream(stream, encoding="utf-8"):
                 encoding = stream.encoding
         new_stream = stream
     return new_stream, encoding
+
+def codecs_open(filename, mode="rb", encoding=None, errors="strict", buffering=1):
+    filename = smart_binary(filename, encoding=file_encoding)
+    return codecs.open(filename, mode=mode, encoding=encoding, errors=errors, buffering=buffering)
 
 if __name__ == "__main__":
     pass

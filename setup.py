@@ -13,7 +13,7 @@
 # governing permissions and limitations under the License.
 #
 
-import os
+import os, codecs
 from setuptools import setup, find_packages
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -21,18 +21,18 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 def generate_version():
     version = "1.0.0"
     if os.path.isfile(os.path.join(BASE_DIR, "version.txt")):
-        with open("version.txt", "r") as fd:
+        with codecs.open("version.txt", "r", encoding="utf-8") as fd:
             content = fd.read().strip()
             if content:
                 version = content
-    with open(os.path.join(BASE_DIR, "testbase", "version.py"), "w") as fd:
+    with codecs.open(os.path.join(BASE_DIR, "testbase", "version.py"), "w", encoding="utf-8") as fd:
         fd.write('version = "%s"\n' % version)
     return version
   
 def parse_requirements():
     reqs = []
     if os.path.isfile(os.path.join(BASE_DIR, "requirements.txt")):
-        with open(os.path.join(BASE_DIR, "requirements.txt"), 'r') as fd:
+        with codecs.open(os.path.join(BASE_DIR, "requirements.txt"), 'r', encoding="utf-8") as fd:
             for line in fd.readlines():
                 line = line.strip()
                 if line:
@@ -40,7 +40,7 @@ def parse_requirements():
         return reqs
 
 def get_description():
-    with open(os.path.join(BASE_DIR, "README.md"), "r") as fh:
+    with codecs.open(os.path.join(BASE_DIR, "README.md"), "r", encoding="utf-8") as fh:
         return fh.read()
 
 

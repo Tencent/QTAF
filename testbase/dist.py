@@ -23,15 +23,10 @@ import shutil
 import zipfile
 import pkg_resources
 import subprocess
-import json
 
-from testbase.conf import settings
 from testbase import resource
-from testbase import loader
-from testbase import runner
-from testbase import report
-
-
+from testbase.conf import settings
+from testbase.util import codecs_open
 
 SETUP_PY_TEMPLATE = """
 from setuptools import setup, find_packages
@@ -178,7 +173,7 @@ class DistGenerator(object):
 
         req_txt = os.path.join(settings.PROJECT_ROOT, "requirements.txt")
         if os.path.isfile(req_txt):
-            with open(req_txt, 'r') as fd:
+            with codecs_open(req_txt, 'r', encoding="utf-8") as fd:
                 for it in pkg_resources.parse_requirements(fd.read()):
                     reqs_dict[it.name] = str(it)
 
@@ -210,7 +205,7 @@ class DistGenerator(object):
             template = SETUP_PY_TEMPLATE_INCLUDE_RESOURCE
             cmd = "sdist_qta"
 
-        with open(setup_py, "w") as fd:
+        with codecs_open(setup_py, "w", encoding="utf-8") as fd:
             fd.write(template % dict(
                 version=self._version,
                 name=settings.PROJECT_NAME,

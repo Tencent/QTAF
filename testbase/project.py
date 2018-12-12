@@ -16,12 +16,13 @@
 '''
 
 import os
-import codecs
 import datetime
 import zipfile
 import getpass
 import shutil
 import xml.dom.minidom as dom
+
+from testbase.util import codecs_open
 
 INITPY_CONTENT = """# -*- coding: utf-8 -*-
 '''%(Doc)s
@@ -165,7 +166,7 @@ class EnumProjectMode(object):
 def _create_initpy( dir_path, doc ):
         '''创建一个__init__.py
         '''
-        with codecs.open(os.path.join(dir_path, '__init__.py'), 'w') as fd:
+        with codecs_open(os.path.join(dir_path, '__init__.py'), 'w') as fd:
             fd.write(INITPY_CONTENT % {"Doc":doc, "Date":datetime.date.today().strftime('%Y/%m/%d')})
             
 def _create_settingspy(proj_path, proj_name, mode):
@@ -175,20 +176,20 @@ def _create_settingspy(proj_path, proj_name, mode):
         content = SETTINGS_CONTENT_STANDALONE
     else:
         content = SETTINGS_CONTENT_STANDARD
-    with codecs.open(os.path.join(proj_path, 'settings.py'), 'w') as fd:
+    with codecs_open(os.path.join(proj_path, 'settings.py'), 'w') as fd:
         fd.write(content % {"Date":datetime.date.today().strftime('%Y/%m/%d'),
                                      "ProjectName":proj_name})
     
 def _create_managepy(proj_path):
     '''创建manage.py文件
     '''
-    with codecs.open(os.path.join(proj_path, 'manage.py'), 'w') as fd:
+    with codecs_open(os.path.join(proj_path, 'manage.py'), 'w') as fd:
         fd.write(MANAGE_CONTENT % {"Date":datetime.date.today().strftime('%Y/%m/%d')})
     
 def _create_sample_test(dir_path, proj_name):
     '''创建示例测试用例
     '''
-    with codecs.open(os.path.join(dir_path, 'hello.py'), 'w') as fd:
+    with codecs_open(os.path.join(dir_path, 'hello.py'), 'w') as fd:
         fd.write(TESTCASE_CONTENT % {"Date":datetime.date.today().strftime('%Y/%m/%d'),
                                      "ProjectName":proj_name,
                                      "ProjectNameCapUp":proj_name[0].upper()+proj_name[1:],
@@ -197,7 +198,7 @@ def _create_sample_test(dir_path, proj_name):
 def _create_sample_lib(dir_path, proj_name):
     '''创建示例lib
     '''
-    with codecs.open(os.path.join(dir_path, 'testcase.py'), 'w') as fd:
+    with codecs_open(os.path.join(dir_path, 'testcase.py'), 'w') as fd:
         fd.write(TESTLIB_CONTENT % {"Date":datetime.date.today().strftime('%Y/%m/%d'),
                                      "ProjectName":proj_name,
                                      "ProjectNameCapUp":proj_name[0].upper()+proj_name[1:]})
@@ -212,19 +213,19 @@ def _copy_qtaf_egg(egg_path, dir_path ):
         except KeyError:
             return
         else:
-            with open(os.path.join(dir_path, "qtaf.chm"), 'wb') as fd:
+            with codecs_open(os.path.join(dir_path, "qtaf.chm"), 'wb') as fd:
                 fd.write(zfile.read("doc/qtaf.chm"))
     
 def _create_eclipse_projfile(proj_path, proj_name):
     '''创建eclispe项目文件
     '''
-    with codecs.open(os.path.join(proj_path, '.project'), 'w') as fd:
+    with codecs_open(os.path.join(proj_path, '.project'), 'w') as fd:
         fd.write(ECLIPSE_PROJ_CONTENT % {"ProjectName":proj_name})
 
 def _create_pydev_conffile(proj_path, mode):
     '''创建pydev配置文件
     '''
-    with codecs.open(os.path.join(proj_path, '.pydevproject'), 'w') as fd:
+    with codecs_open(os.path.join(proj_path, '.pydevproject'), 'w') as fd:
         if mode == EnumProjectMode.Standalone:
             qtaf_egg_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
             fd.write(PYDEV_CONF_CONTENT_STANDALONE % {"EggName":os.path.basename(qtaf_egg_path)})
@@ -234,7 +235,7 @@ def _create_pydev_conffile(proj_path, mode):
 def _update_pydev_conffile(proj_path, egg_name ):
     '''更新pydev配置文件中的Egg名称
     '''
-    with open(os.path.join(proj_path, '.pydevproject'), 'r') as fd:
+    with codecs_open(os.path.join(proj_path, '.pydevproject'), 'r', encoding="utf-8") as fd:
         doc = dom.parse(fd)
         nodes = doc.getElementsByTagName('pydev_pathproperty')
         if len(nodes) == 0:
@@ -255,7 +256,7 @@ def _update_pydev_conffile(proj_path, egg_name ):
         pathnode.appendChild(doc.createTextNode("/${PROJECT_DIR_NAME}/exlib/%s"%egg_name))
         propsnode.appendChild(pathnode)
                 
-    with codecs.open(os.path.join(proj_path, '.pydevproject'), 'w', 'utf8') as fd:
+    with codecs_open(os.path.join(proj_path, '.pydevproject'), 'w', 'utf8') as fd:
         fd.write(doc.toxml(encoding='UTF-8'))
         
         
@@ -285,7 +286,8 @@ def create_project(dest_path, proj_name, mode ):
         exlib_dir = os.path.join(dest_path, 'exlib')
         if not os.path.isdir(exlib_dir):
             os.mkdir(exlib_dir)
-            qtaf_egg_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
+            qtaf_egg_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..")
+            qtaf_egg_path = os.path.abspath(qtaf_egg_path)
             _copy_qtaf_egg(qtaf_egg_path, exlib_dir)
         
     _create_settingspy(dest_path, proj_name, mode)

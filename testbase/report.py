@@ -16,7 +16,6 @@
 '''
 
 import sys
-import codecs
 import socket
 import os
 import shutil
@@ -33,7 +32,7 @@ from datetime import datetime
 
 from testbase import testresult
 from testbase.testresult import EnumLogLevel
-from testbase.util import smart_text, smart_binary, to_pretty_xml, ensure_binary_stream
+from testbase.util import smart_text, smart_binary, to_pretty_xml, ensure_binary_stream, codecs_open
     
 REPORT_ENTRY_POINT = "qtaf.report"
 report_types = {}
@@ -975,11 +974,11 @@ class XMLTestReport(ITestReport):
         self._runrstnode.appendChild(timenodes.childNodes[0])
         
         xmldata = to_pretty_xml(self._xmldoc)
-        with codecs.open('TestReport.xml', 'w', encoding="utf-8") as fd:
+        with codecs_open('TestReport.xml', 'w', encoding="utf-8") as fd:
             fd.write(xmldata)
-        with codecs.open('TestReport.xsl', 'w', encoding="utf-8") as fd:
+        with codecs_open('TestReport.xsl', 'w', encoding="utf-8") as fd:
             fd.write(smart_text(REPORT_XSL))
-        with codecs.open('TestResult.xsl', 'w', encoding="utf-8") as fd:
+        with codecs_open('TestResult.xsl', 'w', encoding="utf-8") as fd:
             fd.write(smart_text(RESULT_XLS))   
     
     def log_test_result(self, testcase, testresult ):
@@ -1017,7 +1016,7 @@ class XMLTestReport(ITestReport):
                 logfile = '%s.log' % testname
                 xmltpl = """<Module name="%s" log="%s"/>""" % (testname, logfile)
                 mdfailsnode.appendChild(dom.parseString(xmltpl).childNodes[0])
-                with open(logfile, 'w') as fd:
+                with codecs_open(logfile, 'w', encoding="utf-8") as fd:
                     fd.write(record['error'])
                 
     def log_filtered_test(self, loader, testcase, reason):
@@ -1056,7 +1055,7 @@ class XMLTestReport(ITestReport):
         doc2 = dom.parseString(nodestr)
         errNode = doc2.childNodes[0]
         self._runrstnode.appendChild(errNode)
-        with open(log_file, 'w') as fd:
+        with codecs_open(log_file, 'w', encoding="utf-8") as fd:
             fd.write(error)
 
     def get_testresult_factory(self):
@@ -1248,7 +1247,7 @@ class JSONTestReport(ITestReport):
         elif args.output == 'stderr':
             fd = sys.stderr
         else:
-            fd = open(args.output, 'w')
+            fd = codecs_open(args.output, 'w', encoding="utf-8")
         return cls(
             name=args.name,
             fd=fd)

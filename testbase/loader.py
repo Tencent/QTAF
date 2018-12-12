@@ -263,7 +263,8 @@ class TestDataLoader(object):
         else: #使用的egg包
             qtaf_top_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
             top_dir = os.path.join(qtaf_top_dir, '..', '..')
-            
+        top_dir = os.path.abspath(top_dir)
+        
         py_path = os.path.join(top_dir, settings.DATA_SOURCE)
         if not os.path.isfile(py_path):
             raise RuntimeError("指定的数据源文件\"%s\"不存在"%py_path)

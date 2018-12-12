@@ -34,7 +34,7 @@ from testbase.testcase import TestCasePriority, TestCaseStatus
 from testbase.runner import TestCaseSettings, runner_types
 from testbase.report import report_types
 from testbase.resource import resmgr_backend_types
-
+from testbase.util import codecs_open
 
 class ArgumentParser(object):
     """参数解析
@@ -227,7 +227,7 @@ class RunTest(Command):
                     super(VerboseOnlineTestReport, self).log_test_result(testcase, testresult)
                 def begin_report(self):
                     super(VerboseOnlineTestReport,self).begin_report()
-                    with open(os.path.join(os.getcwd(),"report_url.txt"),"w") as fd:
+                    with codecs_open(os.path.join(os.getcwd(),"report_url.txt"), "w", encoding="utf-8") as fd:
                         fd.write(self.url)
             report_type = VerboseOnlineTestReport
             

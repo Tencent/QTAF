@@ -19,13 +19,13 @@ import unittest, os, shutil, six
 from testbase import resource
 from testbase.conf import settings
 from testbase.test import modify_environ
-from testbase.util import smart_text
+from testbase.util import smart_text, codecs_open
 
 def _create_local_testfile():
     res_dir = os.path.join(settings.PROJECT_ROOT,'resources')
     os.makedirs(os.path.join(res_dir,'test_dir'))
     local_file = os.path.join(res_dir,'a.txt')
-    with open(local_file,'w') as f:
+    with codecs_open(local_file, 'w', encoding="utf-8") as f:
         f.write('abc')
     
     return local_file, res_dir
