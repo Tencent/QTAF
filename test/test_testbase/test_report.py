@@ -20,7 +20,7 @@ import unittest, six, time, json, os
 from xml.dom import minidom
 from testbase import runner
 from testbase import report
-from testbase.util import smart_text
+from testbase.util import smart_text, codecs_open
 
 
 class TestReportTest(unittest.TestCase):
@@ -83,13 +83,13 @@ class TestReportTest(unittest.TestCase):
         for test_name, reason in test_pairs:
             time_str = time.strftime("%Y%m%d_%H%M%S", time.localtime(time.time()))
             test_report_name = "%s_%s.json" % (time_str, test_name)
-            with open(test_report_name, "w") as fd:
+            with codecs_open(test_report_name, "w", encoding="utf-8") as fd:
                 test_report = report.report_types["json"](fd=fd)
                 test_runner = runner.runner_types["basic"](test_report)
                 test_name = "test.sampletest.hellotest.%s" % test_name
                 print("json report test for test: " + test_name)
                 test_runner.run(test_name)
-            with open(test_report_name, "r") as fd:
+            with codecs_open(test_report_name, "r", encoding="utf-8") as fd:
                 self.addCleanup(os.remove, test_report_name)
                 content = fd.read()
                 report_json = json.loads(content)

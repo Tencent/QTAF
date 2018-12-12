@@ -25,10 +25,10 @@ import uuid
 import pkg_resources
 import csv
 
+from testbase import context
 import testbase.logger as logger
 from testbase.conf import settings
-from testbase.util import smart_text
-from testbase import context
+from testbase.util import smart_text, codecs_open
 from testbase.testresult import EnumLogLevel
 
 os_encoding = locale.getdefaultlocale()[1]
@@ -446,7 +446,7 @@ class LocalCSVResourceHandler(LocalResourceHandler):
         :returns: iterator of resource
         :rtypes: iterator(dict)
         """
-        with open(self._csv_path, "rb") as fd:
+        with codecs_open(self._csv_path, "rb", encoding="utf-8") as fd:
             for rowid, row in enumerate(csv.DictReader(fd)):
                 if "id" not in row:
                     row["id"] = rowid
@@ -482,7 +482,7 @@ class LocalResourceManagerBackend(IResourceManagerBackend):
             rspbuf = rsp.read()
         except error.HTTPError as e:
             raise DownloadFileError(url, e.code, e.msg, e.headers, e.read())
-        with open(target_path, "wb") as fd:
+        with codecs_open(target_path, "wb") as fd:
             fd.write(rspbuf)
     
     def _resolve_link_file(self, remote_path, prefer_local_path):
@@ -514,7 +514,7 @@ class LocalResourceManagerBackend(IResourceManagerBackend):
             if os.path.isfile(file_path):
                 result.append(file_path)
             elif os.path.isfile(file_link):
-                with open(file_link) as f:
+                with codecs_open(file_link, encoding="utf-8") as f:
                     remote_path = f.read()
                     file_path = self._resolve_link_file(remote_path,file_path)
                     result.append(file_path)

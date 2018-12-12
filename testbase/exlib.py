@@ -20,8 +20,9 @@ import os
 import zipfile
 import shutil
 import logging
-import codecs
 import xml.dom.minidom as dom
+
+from testbase.util import codecs_open
 
 class ExLibManager(object):
     '''扩展库管理器
@@ -77,7 +78,7 @@ class ExLibManager(object):
             if pkg in installed_pkgs:
                 toplv_pkgs.remove(pkg)
         if toplv_pkgs:
-            with open(self._installed_libs, 'a+') as fd:
+            with codecs_open(self._installed_libs, 'a+') as fd:
                 for pkg in toplv_pkgs:
                     fd.write(pkg+'\n')
                     
@@ -122,7 +123,7 @@ class ExLibManager(object):
         print(egg_name)
         pathnode.appendChild(doc.createTextNode('/${PROJECT_DIR_NAME}/exlib/%s'%egg_name))
         propnode.appendChild(pathnode)
-        with codecs.open(pydev_path, 'w', 'utf8') as fd:
+        with codecs_open(pydev_path, 'w', 'utf8') as fd:
             fd.write(doc.toxml(encoding='UTF-8'))
         
                     
@@ -132,7 +133,7 @@ class ExLibManager(object):
         if not os.path.isfile(self._installed_libs):
             return []
         names = []
-        with open(self._installed_libs, 'r') as fd:
+        with codecs_open(self._installed_libs, 'r', encoding="utf-8") as fd:
             for libname in fd.readlines():
                 libname = libname.strip('\r\n ')
                 if not libname:

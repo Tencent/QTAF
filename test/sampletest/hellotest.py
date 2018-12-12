@@ -3,12 +3,12 @@
 模块描述
 '''
 
+import time, threading
 import testbase
 from testbase import logger
 from testbase import context
-import time
-import threading
 from testbase.testresult import EnumLogLevel
+from testbase.util import codecs_open
 
 def _some_thread():
     logger.info('非测试线程打log, tid=%s' % threading.current_thread().ident)
@@ -19,19 +19,17 @@ def _create_sampefile():
     res_dir = os.path.join(settings.PROJECT_ROOT,'resources')
     if not os.path.isdir(res_dir):
         os.mkdir(res_dir)
-    with open(os.path.join(res_dir,'a.txt'),'w') as f:
+    with codecs_open(os.path.join(res_dir,'a.txt'), 'w', encoding="utf-8") as f:
         f.write('abc')
-    with open(os.path.join(res_dir,'readme.txt.link'),'w') as f:
+    with codecs_open(os.path.join(res_dir,'readme.txt.link'), 'w', encoding="utf-8") as f:
         f.write(os.path.join(res_dir, 'a.txt'))
 
 def _test_getfile(resmgr):
-    with open(resmgr.get_file('a.txt')) as f:
+    with codecs_open(resmgr.get_file('a.txt'), encoding="utf-8") as f:
         print(f.read())
     
-    with open(resmgr.get_file('test.txt')) as f:
+    with codecs_open(resmgr.get_file('test.txt'), encoding="utf-8") as f:
         print(f.read())
-    
-        
     
 class HelloTest(testbase.TestCase):
     '''测试示例

@@ -144,7 +144,7 @@ class _Settings(object):
             #使用外链或拷贝文件的方式
             dst_path=os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
             if pwd.find(dst_path)>=0:
-                return dst_path
+                return os.path.abspath(dst_path)
             
             #eclipse调试使用工程引用的方式
             if 'PYTHONPATH' not in os.environ:
@@ -159,8 +159,9 @@ class _Settings(object):
             #非预期的情况，返回当前工作目录
             return pwd
         else: #使用的egg包，qtaf.egg包在exlib目录中
-            qtaf_top_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
-            return os.path.join(qtaf_top_dir, '..', '..')
+            exlib_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..')
+            proj_root =  os.path.abspath(os.path.join(exlib_dir, '..'))
+            return proj_root
         
     def get(self, name, *default_value ):
         '''获取配置
