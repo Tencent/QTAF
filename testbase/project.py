@@ -286,7 +286,7 @@ def create_project(dest_path, proj_name, mode ):
         exlib_dir = os.path.join(dest_path, 'exlib')
         if not os.path.isdir(exlib_dir):
             os.mkdir(exlib_dir)
-            qtaf_egg_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..")
+            qtaf_egg_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
             qtaf_egg_path = os.path.abspath(qtaf_egg_path)
             _copy_qtaf_egg(qtaf_egg_path, exlib_dir)
         
