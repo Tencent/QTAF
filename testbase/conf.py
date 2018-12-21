@@ -191,23 +191,52 @@ class _Settings(object):
 settings = _Settings()
 
 class _InnerSettings(object):
+    """inner settings for a SettingsMixin class
     """
-    """
-    def __init__(self, inner_settings_cls, defined_class):
+    def __init__(self, defined_class):
+        self.__tailor_names = {}
         self.__sealed = False
-        prefix = defined_class.__name__.upper() + "_"
-        class_path = defined_class.__module__ + "." + defined_class.__name__
+        self.__load_settings(defined_class)
+        self.__sealed = True
+        
+    def __load_settings(self, defined_class):
+        classes = [ defined_class ]
+        while classes:
+            cls = classes.pop()
+            for temp_cls in cls.__bases__:
+                if hasattr(temp_cls, "Settings") and issubclass(temp_cls, SettingsMixin):
+                    classes.append(temp_cls)
+            self.__load_class_settings(cls)
+            
+    def __load_class_settings(self, cls):
+        prefix = cls.__name__.upper() + "_"
+        class_path = cls.__module__ + "." + cls.__name__
+        inner_settings_cls = getattr(cls, "Settings")
         for key in dir(inner_settings_cls):
             if key.startswith(prefix) and key.isupper():
-                setattr(self, key,  getattr(inner_settings_cls, key))
+                # handle legacy
+                tailor_name = key[len(prefix):]
+                if tailor_name in self.__tailor_names:
+                    if key in settings:
+                        # we don't think this is a good way to overwrite settings
+                        err_msg = "you may overwriting setting item {} instead of using base item {}."
+                        err_msg = err_msg.format(self.__tailor_names[tailor_name], key)
+                        raise ValueError(err_msg)
+                    else:
+                        value = getattr(self, self.__tailor_names[tailor_name])
+                else:
+                    if key in settings:
+                        value = settings.get(key)
+                    else:
+                        value = getattr(inner_settings_cls, key)
+                    self.__tailor_names[tailor_name] = key
+                setattr(self, key,  value)    
+                
             elif not key.startswith("_"):
                 if not key.startswith(prefix):
                     raise RuntimeError("%s's Settings item `%s` must start with %s like %s%s" % (class_path, key, prefix, prefix, key.upper()))
                 elif not key.isupper():
                     raise RuntimeError("%s's Settings item `%s` must be upper like %s" % (class_path, key, key.upper()))
-            
-                    
-        self.__sealed = True
         
     def __setattr__(self, name, value):
         if not name.startswith('_InnerSettings__') and self.__sealed:
@@ -215,22 +244,24 @@ class _InnerSettings(object):
         super(_InnerSettings, self).__setattr__(name, value)
         
     def __getattribute__(self, name):
-        if name in settings:
-            return settings.get(name)
-        return super(_InnerSettings, self).__getattribute__(name)
+        try:
+            return super(_InnerSettings, self).__getattribute__(name)
+        except AttributeError:
+            if name in settings:
+                return settings.get(name)
+            else:
+                raise
         
 class SettingsMixin(object):
     """a mixin class coordinate with qtaf settings
-    """    
+    """
     @property
     def settings(self):
-        if not hasattr(self, "_settings"):
-            inner_settings_cls = getattr(self, "Settings", None)
-            if inner_settings_cls.__name__ == "Settings":
-                inner_settings = _InnerSettings(inner_settings_cls, self.__class__)
-                setattr(self, "_settings", inner_settings)
-            else:
+        cls = type(self)
+        settings_key = "_%s_settings" % cls.__name__
+        if not hasattr(cls, settings_key):
+            if not hasattr(cls, "Settings"):
                 raise RuntimeError("no inner class Settings defined")
-        return self._settings
-            
-        
+            inner_settings = _InnerSettings(cls)
+            setattr(cls, settings_key, inner_settings)
+        return getattr(cls, settings_key)

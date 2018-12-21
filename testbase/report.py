@@ -974,12 +974,12 @@ class XMLTestReport(ITestReport):
         self._runrstnode.appendChild(timenodes.childNodes[0])
         
         xmldata = to_pretty_xml(self._xmldoc)
-        with codecs_open('TestReport.xml', 'w', encoding="utf-8") as fd:
+        with codecs_open('TestReport.xml', 'wb') as fd:
             fd.write(xmldata)
-        with codecs_open('TestReport.xsl', 'w', encoding="utf-8") as fd:
-            fd.write(smart_text(REPORT_XSL))
-        with codecs_open('TestResult.xsl', 'w', encoding="utf-8") as fd:
-            fd.write(smart_text(RESULT_XLS))   
+        with codecs_open('TestReport.xsl', 'wb') as fd:
+            fd.write(smart_binary(REPORT_XSL))
+        with codecs_open('TestResult.xsl', 'wb') as fd:
+            fd.write(smart_binary(RESULT_XLS))   
     
     def log_test_result(self, testcase, testresult ):
         '''记录一个测试结果
