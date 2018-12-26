@@ -28,7 +28,6 @@ import inspect
 import six
 import locale
 
-from six.moves import StringIO
 from xml.dom.minidom import Node
 
 from tuia.exceptions import TimeoutError
@@ -359,21 +358,26 @@ class classproperty(object):
     
 def smart_text(s, decoding=None):
     '''convert any text or binary to text
+    py2 text: utf-8 bytes
+    py3 text: unicode
     '''
     if not isinstance(s, (six.string_types, six.binary_type)):
         raise RuntimeError("string or binary type didn't match with %r" % s)
-    if isinstance(s, six.text_type):
-        return s
-    else:
-        try:
-            return s.decode('utf8')
-        except UnicodeDecodeError: # other encoding
+    if six.PY3:
+        if isinstance(s, six.text_type):
+            return s
+        else:
             try:
-                if decoding is None:
-                    decoding = default_encoding
-                return s.decode(decoding)
-            except UnicodeDecodeError: # mixed encoding
-                return repr(s)
+                return s.decode('utf8')
+            except UnicodeDecodeError: # other encoding
+                try:
+                    if decoding is None:
+                        decoding = default_encoding
+                    return s.decode(decoding)
+                except UnicodeDecodeError: # mixed encoding
+                    return repr(s)
+    else:
+        return smart_binary(s, decoding=decoding) # py2
             
 def smart_binary(s, encoding="utf8", decoding=None):
     '''convert any text or binary to binary of specified encoding 
@@ -406,6 +410,42 @@ def text_from_hex(s):
     s = smart_binary(s)
     binary_s = binascii.unhexlify(s)
     return smart_text(binary_s)
+
+def smart_bytify(obj, encoding="utf-8", decoding=None):
+    """recursively convert objects from string types to binary  
+    """
+    if isinstance(obj, dict):
+        dic={}
+        for key, value in obj.items():
+            dic[smart_bytify(key, encoding, decoding)] = smart_bytify(value, encoding, decoding)
+        return dic
+    elif isinstance(obj, list):
+        ls=[]
+        for element in obj:
+            ls.append(smart_bytify(element, encoding, decoding))
+        return ls
+    elif isinstance(obj, six.string_types):
+        return smart_binary(obj, encoding, decoding)
+    else:
+        return obj
+    
+def smart_strfy(obj, decoding=None):
+    """recursively convert objects from binary to text
+    """
+    if isinstance(obj, dict):
+        dic={}
+        for key, value in obj.items():
+            dic[smart_strfy(key, decoding)] = smart_strfy(value, decoding)
+        return dic
+    elif isinstance(obj, list):
+        ls=[]
+        for element in obj:
+            ls.append(smart_strfy(element, decoding))
+        return ls
+    elif isinstance(obj, six.string_types):
+        return smart_text(obj, decoding)
+    else:
+        return obj
 
 def get_thread_traceback(thread):
     '''获取用例线程的当前的堆栈
@@ -468,10 +508,10 @@ def to_pretty_xml(doc, encoding="utf-8"):
         """an inner writer to give writer a chance to handle each line
         """
         def write(self, data):
-            data = smart_text(data)
+            data = smart_binary(data)
             self.stream.write(data)
     
-    buff = StringIO()
+    buff = io.BytesIO()
     indent = "    "
     newl = "\n"
     writer = _XMLWriter(buff)
@@ -479,7 +519,7 @@ def to_pretty_xml(doc, encoding="utf-8"):
         doc.writexml(writer, "", indent, newl, encoding)
     else:
         doc.writexml(writer, "", indent, newl)
-    return smart_text(writer.stream.getvalue())
+    return writer.stream.getvalue()
 
 def ensure_binary_stream(stream, encoding="utf-8"):
     encoding = "utf-8"

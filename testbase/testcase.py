@@ -381,7 +381,7 @@ class TestCase(object):
         '''
         #得到上一个函数调用帧所在的文件路径，行号，函数名
         stack = get_last_frame_stack(3)
-        msg = u"检查点不通过\n%s%s\n期望值：%s%s\n实际值：%s%s" % (smart_text(stack), smart_text(message),
+        msg = "检查点不通过\n%s%s\n期望值：%s%s\n实际值：%s%s" % (smart_text(stack), smart_text(message),
                                                     expect.__class__, expect,
                                                     actual.__class__, actual)
         self.__testresult.log_record(EnumLogLevel.ASSERT, msg)
@@ -390,7 +390,7 @@ class TestCase(object):
         """记录断言失败的信息
         """
         stack = get_last_frame_stack(back_count)
-        msg = u"检查点不通过\n%s%s\n" % (smart_text(stack), smart_text(message))
+        msg = "检查点不通过\n%s%s\n" % (smart_text(stack), smart_text(message))
         self.__testresult.log_record(EnumLogLevel.ASSERT, msg)
         
     def assert_(self, message, value):
@@ -815,10 +815,10 @@ class TestCaseRunner(ITestCaseRunner):
                                                     dict(traceback=thread_traceback))
                 else:
                     if self._error:
-                        raise RuntimeError(u"用例执行线程异常：\n%s" % smart_text(self._error))
+                        raise RuntimeError("用例执行线程异常：\n%s" % smart_text(self._error))
             else:
                 if self._error:
-                    raise RuntimeError(u"用例执行线程异常：\n%s" % smart_text(self._error))
+                    raise RuntimeError("用例执行线程异常：\n%s" % smart_text(self._error))
                     
             self.teardown(self._testcase, self._testresult)
             

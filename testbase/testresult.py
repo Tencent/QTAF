@@ -379,7 +379,7 @@ class StreamResult(TestResultBase):
         owner = getattr(testcase, 'owner', None)
         priority = getattr(testcase, 'priority', None)
         timeout = getattr(testcase, 'timeout', None)
-        begin_msg = u"测试用例:%s 所有者:%s 优先级:%s 超时:%s分钟\n" % (testcase.test_name, owner, priority, timeout)
+        begin_msg = "测试用例:%s 所有者:%s 优先级:%s 超时:%s分钟\n" % (testcase.test_name, owner, priority, timeout)
         self._write(begin_msg)
         self._write(self._seperator2)
     
@@ -439,10 +439,10 @@ class StreamResult(TestResultBase):
         if level == EnumLogLevel.ASSERT:
             if "actual" in record:
                 actual=record["actual"]
-                self._write(u"   实际值：%s%s\n" % (actual.__class__,actual))
+                self._write("   实际值：%s%s\n" % (actual.__class__,actual))
             if "expect" in record:
                 expect=record["expect"]
-                self._write(u"   期望值：%s%s\n" % (expect.__class__,expect))
+                self._write("   期望值：%s%s\n" % (expect.__class__,expect))
             if "code_location" in record:
                 self._write(smart_text('  File "%s", line %s, in %s\n' % record["code_location"]))
             
@@ -507,8 +507,8 @@ class XmlResult(TestResultBase):
         self._testnode.setAttribute('endtime', time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(self.end_time)))
         self._testnode.setAttribute('duration', "%02d:%02d:%02.2f\n" %  _convert_timelength(self.end_time- self.begin_time))
         if self._file_path:
-            with codecs.open(smart_text(self._file_path), 'w', encoding="utf-8") as fd:
-                fd.write(self.toxml())
+            with codecs.open(smart_text(self._file_path), 'wb') as fd:
+                fd.write(to_pretty_xml(self._xmldoc))
         
     def handle_step_begin(self, msg ):
         '''处理一个测试步骤的开始

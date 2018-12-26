@@ -43,42 +43,69 @@ class SettingTest(unittest.TestCase):
     def test_iteration(self):
         self.assertEqual("DEBUG" in list(settings), True, "DEBUG should have been in list(settings)")
 
+class Dummy(SettingsMixin):
+    class Settings(object):
+        DUMMY_A = 0
+            
+class Dummy2(SettingsMixin):
+    class Settings(object):
+        B = 1
+        
+class Dummy3(SettingsMixin):
+    class Settings(object):
+        Dummy3_A = 4
+        
+class DummyChild(Dummy):
+    class Settings(object):
+        DUMMYCHILD_A = 2
 
 class SettingsMixinTest(unittest.TestCase):
-    """test case for settings mixin
+    """test case for settings mixin class
     """
-    class Dummy(SettingsMixin):
-        class Settings(object):
-            DUMMY_A = 0
-            
-    class Dummy2(SettingsMixin):
-        class Settings(object):
-            B = 1
-            
-    class Dummy3(SettingsMixin):
-        class Settings(object):
-            a = 4
-#             DUMMY3_c = 3
-    
     def test_get(self):
-        dummy = self.Dummy()
+        self.reset_class_settings(Dummy)
+        dummy = Dummy()
         self.assertEqual(dummy.settings.DUMMY_A, 0)
-        
         self.assertRaises(AttributeError, getattr, dummy.settings, "B")
         
         with modify_settings(GLOBAL_X="xxxx", DUMMY_A=100):
+            self.reset_class_settings(Dummy)
             self.assertEqual(dummy.settings.GLOBAL_X, "xxxx")
             self.assertEqual(dummy.settings.DUMMY_A, 100)
         
     def test_set(self):
-        dummy = self.Dummy()
+        self.reset_class_settings(Dummy)
+        dummy = Dummy()
         self.assertRaises(RuntimeError, setattr, dummy.settings, "C", 2)
         
     def test_declare(self):
-        self.assertRaises(RuntimeError, getattr, self.Dummy2(), "settings")
+        self.assertRaises(RuntimeError, getattr, Dummy2(), "settings")
+        self.assertRaises(RuntimeError, getattr, Dummy3(), "settings")
         
-        self.assertRaises(RuntimeError, getattr, self.Dummy3(), "settings")
+    def test_deriving(self):
+        self.reset_class_settings(DummyChild)
+        child = DummyChild()
+        self.assertEqual(child.settings.DUMMY_A, 2)
+        self.assertEqual(child.settings.DUMMYCHILD_A, 2)
         
+        with modify_settings(DUMMY_A=3):
+            self.reset_class_settings(Dummy)
+            dummy = Dummy()
+            self.assertEqual(dummy.settings.DUMMY_A, 3)
+            
+            self.reset_class_settings(DummyChild)
+            child = DummyChild()
+            self.assertRaises(ValueError, getattr, child, "settings")
+            
+        with modify_settings(DUMMYCHILD_A=4):
+            self.reset_class_settings(DummyChild)
+            self.assertEqual(child.settings.DUMMY_A, 4)
+            self.assertEqual(child.settings.DUMMYCHILD_A, 4)
+            
+    def reset_class_settings(self, cls):
+        settings_key = "_%s_settings" % cls.__name__
+        if hasattr(cls, settings_key):
+            delattr(cls, settings_key)
         
 if __name__ == "__main__":
     unittest.main(defaultTest="SettingsMixinTest")

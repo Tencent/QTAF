@@ -50,10 +50,10 @@ class TestReportTest(unittest.TestCase):
                     os.remove(os.path.join(os.getcwd(), item))
         self.addCleanup(_clean_files)
         
-        test_pairs = [("HelloTest", u"断言失败"),
-                    ("TimeoutTest", u"用例执行超时"),
-                    ("CrashTest", u"App Crash"),
-                    ("QT4iTest", u"run_test执行失败"),]
+        test_pairs = [("HelloTest", "断言失败"),
+                    ("TimeoutTest", "用例执行超时"),
+                    ("CrashTest", "App Crash"),
+                    ("QT4iTest", "run_test执行失败"),]
         
         for test_name, reason in test_pairs:
             test_report = report.report_types["xml"]()
@@ -76,10 +76,10 @@ class TestReportTest(unittest.TestCase):
             self.assertRegexpMatches(failed_reason, reason)
             
     def test_json_report(self):        
-        test_pairs = [("HelloTest", u"断言失败"),
-                    ("TimeoutTest", u"用例执行超时"),
-                    ("CrashTest", u"App Crash"),
-                    ("QT4iTest", u"run_test执行失败"),]
+        test_pairs = [("HelloTest", "断言失败"),
+                    ("TimeoutTest", "用例执行超时"),
+                    ("CrashTest", "App Crash"),
+                    ("QT4iTest", "run_test执行失败"),]
         for test_name, reason in test_pairs:
             time_str = time.strftime("%Y%m%d_%H%M%S", time.localtime(time.time()))
             test_report_name = "%s_%s.json" % (time_str, test_name)
@@ -99,4 +99,5 @@ class TestReportTest(unittest.TestCase):
                 self.assertEqual(test_results[0]["succeed"], False)
                 failed_step = test_results[0]["steps"][-1]
                 self.assertEqual(failed_step["succeed"], False)
-                self.assertRegexpMatches(failed_step["logs"][0]["message"], reason)
+                actual_reson = smart_text(failed_step["logs"][0]["message"])
+                self.assertRegexpMatches(actual_reson, reason)

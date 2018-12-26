@@ -1,11 +1,11 @@
 配置测试项目
-======
+============
 
 本节主要介绍如何修改测试项目的配置文件 settings.py来修改测试框架的行为。如果需要查询QTA框架的全部配置项，请参考《:doc:`./settingslist`》。
 
-====
+==========
 配置语法
-====
+==========
 
 测试项目的配置文件是一个python模块，所以配置项都是python模块的模块变量，如下所示::
 
@@ -27,9 +27,9 @@
    lower_test = 34
    __CONFIG = "XXX"
    
-====
+==========
 配置文件
-====
+==========
 
 QTA配置文件分为三种：
    
@@ -64,9 +64,9 @@ QTA配置文件分为三种：
 
 也就是说，用户配置文件可以重载QTAF配置中的默认配置。
 
-======
+==============
 配置文件定位
-======
+==============
 
 上面提到的三种配置文件，对于存在整个工程的情况来说，就可以直接使用，不需要额外处理。
 如果想要独立使用qtaf或其他qta的egg模块，可以采用定义环境变量的方式告诉qtaf配置文件的位置::
@@ -77,9 +77,9 @@ QTA配置文件分为三种：
 	
 .. warning:: 特别注意，如果环境变量存在，仅仅使用环境变量指定的内容，例如存在QTAF_INSTALLED_LIBS环境变量，就不会使用exlib目录下的installed_libs.txt中的内容了
 
-======
+============
 使用测试配置
-======
+============
 
 配置使用的接口统一使用conf接口，如下::
 
@@ -108,9 +108,9 @@ QTA配置文件分为三种：
      File "build\bdist.win32\egg\testbase\conf.py", line 85, in __setattr__
    RuntimeError: 尝试动态修改配置项"DEBUG"
 
-=====
+===========
 增加配置项
-=====
+===========
 
 QTA对配置项的新增没有严格的限制，但是为避免冲突，最好按照以下的原则：
 
@@ -118,9 +118,9 @@ QTA对配置项的新增没有严格的限制，但是为避免冲突，最好�
   
   * QTA相关组件的配置项目，除了统一增加前缀外，还需要更新到《:doc:`./settingslist`》
   
-================
+======================
 自定义settings所在的文件
-================
+======================
 
 QTA默认是通过加载Python模块`settings`来读取所有配置，用户可以通过设置环境变量`QTAF_SETTINGS_MODULE`来指定配置项所在的模块名。
 
@@ -146,51 +146,3 @@ QTA默认是通过加载Python模块`settings`来读取所有配置，用户可�
 
    $ QTAF_SETTINGS_MODULE=settings.test python manage.py shell
 
-
-使用SettingsMixin
-===============
-
-SettingsMixin是一个混合类，用于方便地跟用户定义的类进行复合，在定义配置项的时候，
-将定义放到lib层，而不是孤立地放在settings.py或配置模块中，再人工进行关联。
-
-=====
-定义配置项
-=====
-
-一个简单的使用例子如下::
-
-   from qt4s.service import Channel
-   from qt4s.conn2 import HttpConn
-   from testbase.conf import SettingsMixin
-   
-   class MyChannel(Channel, SettingsMixin):
-       """define a pseudo channel
-       """
-       class Settings(object):
-           MYCHANNEL_URL = "http://www.xxxx.com"
-           
-       def __init__(self):
-           self._conn = HttpConn()
-           
-       def get(self, uri, params):
-           return self._conn.get(self.settings.MYCHANNEL_URL + uri, params)
-           
-MyChannel多重继承了Channel和SettingsMixin，SettingsMixin要求类的内部定义一个Settings类，
-这个类定义配置项的规则如下：
-
-* 配置项必须以当前类的名字大写+下划线开头，例如这里的"MYCHANNEL_"；
-* 配置项的每个字母都必须大写；
-* 访问配置项，使用self.settings访问，例如self.settings.MYCHANNEL_URL
-
-=====
-重载配置项
-=====
-
-上面，我们已经知道如何在lib层定义配置项，当需要重载某个配置项的值的时候，在全局配置项里面定义该配置就可以了，
-即testbase.conf.settings包含该配置项。lib层的定义跟上面的定义保持一致，而settings.py配置如下
-
-settings.py::
-
-   MYCHANNEL_URL = "http://www.oooo.com"
-   
-那么在访问self.settings.MYCHANNEL_URL的时候，会优先获取testbase.conf.settings中的配置项。
