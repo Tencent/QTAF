@@ -117,7 +117,7 @@ class Session(object):
         """
         return self._backend.destroy_session(self._id)
         
-    def get_file(self,path):
+    def get_file(self, path):
         """获取测试文件资源
 
         :param path: 文件引用路径（相对路径）
@@ -131,9 +131,19 @@ class Session(object):
 
         :param path: 目录引用路径（相对路径）
         :returns: 一个包含该目录下所有文件的绝对路径的list 
-        :rtypes: list[string]
+        :rtypes: list[str]
         """
         return self._backend.list_dir(path)
+    
+    def walk(self,path):
+        """获取目录下文件列表
+
+        :param path: 相对于resources目录的路径，用于遍历文件夹
+        :type  path: str
+        :return iterators: iterator of (dir_path, dirnames, filenames) tuples
+        :type   iterators: iterator
+        """
+        return self._backend.walk(path)
 
     
 class IResourceManagerBackend(object):
@@ -188,13 +198,33 @@ class IResourceManagerBackend(object):
     def get_file(self, path):
         """获取一个文件资源
 
-        :param path: 文件引用路径（相对路径）
+        :param path: 相对于resources目录的文件路径
         :type path: str
         :returns: 文件绝对路径
         :rtypes: str
         """
         raise NotImplementedError()
+    
+    def list_dir(self, path):
+        """获取一个文件资源
 
+        :param path: 相对于resources目录的文件夹路径
+        :type path: str
+        :returns: 文件绝对路径
+        :rtypes: str
+        """
+        raise NotImplementedError()
+    
+    def walk(self, path):
+        """遍历一个文件路径
+
+        :param path: 相对于resources目录的文件夹路径
+        :type path: str
+        :returns: 返回一个迭代器，每次迭代对应一个(dir_path, dir_names, file_names)的元组
+        :rtypes: iterator
+        """
+        raise NotImplementedError()
+    
     def iter_managed_resource(self):
         """查询全部托管的资源（支持初始化&反初始化）
 
@@ -551,6 +581,29 @@ class LocalResourceManagerBackend(IResourceManagerBackend):
         for path in os.listdir(result[0]):
             paths.append(os.path.join(result[0],path))
         return paths
+    
+    def walk(self, path):
+        """获取目录下文件列表
+
+        :param path: 相对于resources目录的路径，用于遍历文件夹
+        :type  path: str
+        :return iterators: iterator of (dir_path, dirnames, filenames) tuples
+        :type   iterators: iterator
+        """
+        sub_dirs = [path]
+        while sub_dirs:
+            sub_dir = sub_dirs.pop()
+            items = self.list_dir(sub_dir)
+            dir_names = []
+            file_names = []
+            for item in items:
+                base_item = os.path.basename(item)
+                if os.path.isdir(item):
+                    dir_names.append(base_item)
+                    sub_dirs.append(base_item)
+                else:
+                    file_names.append(base_item)
+            yield sub_dir, dir_names, file_names
         
     def _clean_cache(self):
         """清理缓存文件
@@ -619,21 +672,31 @@ def _current_resmgr_session():
     return tc.test_resources
 
         
-def get_file(dir_descriptor):
+def get_file(path):
     """查找某个文件
-    :type dir_descriptor:string
-    :param dir_descriptor: ，资源文件相对描述符，相对于setting下的资源目录的路径,支持多级目录
+    :param path: 相对于resources目录的路径，用于查找文件
+    :type path: str
     :return:返回资源文件的绝对路径
     """
-    return _current_resmgr_session().get_file(dir_descriptor)
+    return _current_resmgr_session().get_file(path)
 
-def list_dir(dir_descriptor):
+def list_dir(path):
     """列出某个目录下的文件
-    :type dir_descriptor:string
-    :param dir_descriptor: ，目录的相对路径，相对于setting下的资源目录的路径,支持多级目录
-    :return:返回一个包含资源目录下所有文件或者文件下的绝对路径的list
+    :param path: 相对于resources目录的路径，用于查找文件夹
+    :type path: str
+    :returns :返回一个包含资源目录下所有文件或者文件下的绝对路径的list
     """
-    return _current_resmgr_session().list_dir(dir_descriptor)
+    return _current_resmgr_session().list_dir(path)
+
+def walk(path):
+    """遍历某个路径
+    
+    :param path: 相对于resources目录的路径，用于遍历文件夹
+    :type  path: str
+    :return iterators: iterator of (dir_path, dirnames, filenames) tuples
+    :type   iterators: iterator
+    """
+    return _current_resmgr_session().walk(path)
 
 def acquire_resource(res_type, res_group=None, condition=None):
     """申请资源
