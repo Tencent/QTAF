@@ -16,19 +16,11 @@
 共用类模块
 '''
 
-import io
-import binascii
-import codecs
-import sys
-import re
-import threading
-import time
-import traceback
-import inspect
-import six
-import locale
+import io, binascii, codecs, sys, re, threading, time, traceback
+import inspect, six, locale, os
 
 from xml.dom.minidom import Node
+from datetime import datetime
 
 from tuia.exceptions import TimeoutError
 
@@ -544,5 +536,27 @@ def codecs_open(filename, mode="rb", encoding=None, errors="strict", buffering=1
     filename = smart_binary(filename, encoding=file_encoding)
     return codecs.open(filename, mode=mode, encoding=encoding, errors=errors, buffering=buffering)
 
+def get_os_version():
+    if sys.platform == 'win32':
+        with os.popen("ver") as pipe:
+            osver = smart_text(pipe.read())
+    else:
+        osver = smart_text(str(os.uname()))  # @UndefinedVariable
+    return osver
+
+if six.PY3:
+    maketrans_func = str.maketrans
+else:
+    import string
+    maketrans_func = string.maketrans
+        
+BAD_CHARS = r'\/*?:<>"|~'
+TRANS = maketrans_func(BAD_CHARS, '='*len(BAD_CHARS))
+
+def get_time_str():
+    now = datetime.now()
+    time_str = now.strftime("%Y%m%d_%H%M%S%f")[:-3]
+    return time_str
+        
 if __name__ == "__main__":
     pass
