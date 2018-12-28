@@ -33,7 +33,7 @@ def load_case(case_path):
         except:
             temp_parts.pop()
     if not mod:
-        raise RuntimeError("case path=%s cannot be imported.")
+        raise RuntimeError("case path=%s cannot be imported." % case_path)
         
     case_name = ".".join(parts[len(temp_parts):])
     test_suites = []

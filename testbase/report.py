@@ -24,7 +24,6 @@ import getpass
 import locale
 import argparse
 import pkg_resources
-import six
 import xml.dom.minidom as dom
 import xml.sax.saxutils as saxutils
 
@@ -32,7 +31,8 @@ from datetime import datetime
 
 from testbase import testresult
 from testbase.testresult import EnumLogLevel
-from testbase.util import smart_text, smart_binary, to_pretty_xml, ensure_binary_stream, codecs_open
+from testbase.util import smart_text, smart_binary, to_pretty_xml, ensure_binary_stream, \
+    codecs_open, get_os_version
     
 REPORT_ENTRY_POINT = "qtaf.report"
 report_types = {}
@@ -909,31 +909,17 @@ RESULT_XLS = """<?xml version="1.0" encoding="utf-8"?><!-- DWXMLSource="tmp/qqte
 </xsl:template>
 </xsl:stylesheet>"""
 
-if six.PY3:
-    maketrans_func = str.maketrans
-else:
-    import string
-    maketrans_func = string.maketrans
 
 class XMLTestResultFactory(ITestResultFactory):
     '''XML形式TestResult工厂
     '''
-    BAD_CHARS = r'\/*?:<>"|~'
-    TRANS = maketrans_func(BAD_CHARS, '='*len(BAD_CHARS))
-                    
-    def create(self, testcase ):
+    def create(self, testcase):
         '''创建TestResult对象
         :param testcase: 测试用例
         :type testcase: TestCase
         :return TestResult
         '''
-        time_str=datetime.now().strftime("%Y%m%d_%H%M%S_%f")[:-3]
-        if six.PY2:
-            translated_name = smart_binary(testcase.test_name).translate(self.TRANS)
-        else:
-            translated_name = smart_text(testcase.test_name).translate(self.TRANS)
-        filename = '%s_%s.xml' % (translated_name, time_str)
-        return testresult.XmlResult(filename)
+        return testresult.XmlResult(testcase)
 
 class XMLTestReport(ITestReport):
     '''XML形式的测试报告
@@ -954,12 +940,8 @@ class XMLTestReport(ITestReport):
         
         xmltpl = "<TestEnv><PC>%s</PC><OS>%s</OS></TestEnv>"
         hostname = socket.gethostname()
-        if sys.platform == 'win32':
-            with os.popen("ver") as pipe:
-                osver = smart_binary(pipe.read()) # dom parse needs utf-8
-        else:
-            osver = smart_binary(str(os.uname()))  # @UndefinedVariable
-        envxml = dom.parseString(xmltpl % (hostname, osver))
+        os_ver = get_os_version()
+        envxml = dom.parseString(xmltpl % (hostname, os_ver))
         self._runrstnode.appendChild(envxml.childNodes[0])
         
     def end_report(self):
@@ -1086,7 +1068,7 @@ class JSONTestResultFactory(ITestResultFactory):
     '''JSON形式TestResult工厂
     '''
                     
-    def create(self, testcase ):
+    def create(self, testcase):
         '''创建TestResult对象
         :param testcase: 测试用例
         :type testcase: TestCase
@@ -1097,18 +1079,15 @@ class JSONTestResultFactory(ITestResultFactory):
 class JSONTestReport(ITestReport):
     '''JSON格式的测试报告
     '''
-    def __init__(self, name="调试测试报告", fd=None ):
+    def __init__(self, title="调试测试", fd=sys.stdout):
         '''构造函数
 
-        :param name: 报告名
-        :type name: str
+        :param title: 报告标题
+        :type title: str
         :param fd: 输出流
         :type fd: file object
         '''
-        if fd is None:
-            self._fd = sys.stdout
-        else:
-            self._fd = fd
+        self._fd = fd
         self._results = []
         self._logs = []
         self._filtered_tests = []
@@ -1118,30 +1097,35 @@ class JSONTestReport(ITestReport):
             "version": "1.0",
             "summary": {
                 "tool": "QTA",
-                "name": name,
+                "title": title,
             },
             "results": self._results,
             "logs": self._logs,
             "filtered_tests": self._filtered_tests,
             "load_errors": self._load_errors,
-            "loaded_testcases": self._testcases
+            "loaded_testcases": self._testcases,
         }
-        self._testcase_total = 0
+        self._testcase_names = set()
+        self._testcase_total_run = 0
         self._testcase_passed = 0
+        self._testcase_total_count = 0
 
     def begin_report(self):
         '''开始测试执行
         '''
         self._data["summary"]["start_time"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        self._data["summary"]["hostname"] = socket.gethostname()
+        self._data["summary"]["os"] = get_os_version()
 
     def end_report(self):
         '''结束测试执行
         :param passed: 测试是否通过
         :type passed: boolean
         '''
-        self._data["summary"]["testcase_total"] = self._testcase_total
+        self._data["summary"]["testcase_total_run"] = self._testcase_total_run
+        self._data["summary"]["testcase_total_count"] = self._testcase_total_count
         self._data["summary"]["testcase_passed"] = self._testcase_passed
-        self._data["summary"]["succeed"] = self._testcase_passed == self._testcase_total
+        self._data["summary"]["succeed"] = self._testcase_passed == self._testcase_total_count
         self._data["summary"]["end_time"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         json.dump(self._data, self._fd)
         
@@ -1152,7 +1136,11 @@ class JSONTestReport(ITestReport):
         :param testresult: 测试结果
         :type testresult: TestResult
         '''
-        self._testcase_total += 1
+        self._testcase_total_run += 1
+        if testcase.test_name not in self._testcase_names:
+            self._testcase_names.add(testcase.test_name)
+            self._testcase_total_count += 1
+            
         if testresult.passed:
             self._testcase_passed += 1
         self._results.append(testresult.get_data())
@@ -1230,8 +1218,8 @@ class JSONTestReport(ITestReport):
         :rtype: argparse.ArgumentParser
         '''
         parser = argparse.ArgumentParser(usage=report_usage)
-        parser.add_argument("--name", help="report title", default="Debug test report")
-        parser.add_argument("-o", "--output", help="output file path, can be stdout & stderr", default="stdout")
+        parser.add_argument("--title", help="report title", default="Debug test report")
+        parser.add_argument("-o", "--output", help="output file name", required=True)
         return parser
 
     @classmethod
@@ -1242,15 +1230,8 @@ class JSONTestReport(ITestReport):
         :rtype: cls
         '''
         args = cls.get_parser().parse_args(args_string)
-        if args.output == 'stdout':
-            fd = sys.stdout
-        elif args.output == 'stderr':
-            fd = sys.stderr
-        else:
-            fd = codecs_open(args.output, 'w', encoding="utf-8")
-        return cls(
-            name=args.name,
-            fd=fd)
+        fd = codecs_open(args.output, 'w', encoding="utf-8")
+        return cls(title=args.title, fd=fd)
 
 
 def __init_report_types():

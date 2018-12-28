@@ -63,14 +63,13 @@ class TestResManager(unittest.TestCase):
         os.remove(cls.local_file)
             
     def test_get_local_file(self):
-        local_file, local_dir = _create_local_testfile()
         fm = resource.TestResourceManager(resource.LocalResourceManagerBackend()).create_session()
-        self.assertEqual(local_file, fm.get_file(test_file_name))
-        self.assertEqual(local_file, resource.get_file(test_file_name))
+        self.assertEqual(self.local_file, fm.get_file(test_file_name))
+        self.assertEqual(self.local_file, resource.get_file(test_file_name))
         
         paths =[]
-        for it in os.listdir(local_dir):
-            paths.append(smart_text(os.path.join(local_dir,it)))
+        for it in os.listdir(self.local_dir):
+            paths.append(smart_text(os.path.join(self.local_dir,it)))
         self.assertEqual(paths,fm.list_dir(''))
         self.assertEqual(paths,resource.list_dir(''))
   
@@ -113,5 +112,11 @@ class TestResManager(unittest.TestCase):
         self.assertTrue(test_dir_name in dir_names_set)
         self.assertTrue(test_file_name in file_names_set)
         
+    def test_testcase_resources(self):
+        from test.sampletest.hellotest import ResmgrTest
+        result = ResmgrTest().debug_run()
+        self.assertTrue(result.passed)
+        
+        
 if __name__ == '__main__':
-    unittest.main(defaultTest="TestResManager")
+    unittest.main(defaultTest="TestResManager.test_testcase_resources")

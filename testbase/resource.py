@@ -115,7 +115,11 @@ class Session(object):
     def destroy(self):
         """销毁该会话（全部占用的资源会释放）
         """
-        return self._backend.destroy_session(self._id)
+        if not self._id:
+            return
+        res = self._backend.destroy_session(self._id)
+        self._id = None
+        return res
         
     def get_file(self, path):
         """获取测试文件资源
@@ -598,6 +602,8 @@ class LocalResourceManagerBackend(IResourceManagerBackend):
             file_names = []
             for item in items:
                 base_item = os.path.basename(item)
+                if base_item.endswith(".link"):
+                    base_item = base_item[:-5]
                 if os.path.isdir(item):
                     dir_names.append(base_item)
                     sub_dirs.append(base_item)

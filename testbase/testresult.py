@@ -33,26 +33,25 @@ ITestResultHandler来实现一个新的Handler，详细请参考ITestResultHandl
 
 '''
 
-import codecs
-import sys
-import traceback
-import time
+import codecs, sys, traceback, time, socket, threading
+import os, locale, json, six
 import xml.dom.minidom as dom
 import xml.parsers.expat as xmlexpat
 import xml.sax.saxutils as saxutils
-import socket
-import threading
-import os
-import locale
-import json
-import six
 
 from testbase import context
 from testbase.util import smart_text, get_thread_traceback, get_method_defined_class, \
-to_pretty_xml, smart_binary, ensure_binary_stream
+    to_pretty_xml, smart_binary, ensure_binary_stream, codecs_open, TRANS, get_time_str
 
     
 os_encoding = locale.getdefaultlocale()[1]
+
+def translate_test_name(testname):
+    if six.PY2:
+        translated_name = smart_binary(testname).translate(TRANS)
+    else:
+        translated_name = smart_text(testname).translate(TRANS)
+    return translated_name
 
 class EnumLogLevel(object):
     '''日志级别
@@ -459,7 +458,7 @@ class XmlResult(TestResultBase):
     '''xml格式的测试用例结果
     '''
     
-    def __init__(self, file_path=None ):
+    def __init__(self, testcase):
         '''构造函数
         
         :param file_path: XML文件路径
@@ -467,7 +466,8 @@ class XmlResult(TestResultBase):
         '''
         super(XmlResult, self).__init__()
         self._xmldoc = dom.Document()
-        self._file_path = file_path
+        translated_name = translate_test_name(testcase.test_name)
+        self._file_path = '%s_%s.xml' % (translated_name, get_time_str())
     
     @property
     def file_path(self):
@@ -624,9 +624,15 @@ class JSONResult(TestResultBase):
             "status": testcase.status,
             "steps": self._steps
         }
+        translated_name = translate_test_name(testcase.test_name)
+        file_name = '%s_%s.json' % (translated_name, get_time_str())
+        self._file_path = os.path.join(os.getcwd(), file_name)
         
     def get_data(self):
-        return self._data
+        if not os.path.exists(self._file_path):
+            with codecs_open(self._file_path, mode="w", encoding="utf-8") as fd:
+                fd.write(json.dumps(self._data))
+        return self._file_path
     
     def handle_test_begin(self, testcase ):
         '''处理一个测试用例执行的开始
