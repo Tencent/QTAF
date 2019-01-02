@@ -33,8 +33,15 @@ ITestResultHandler来实现一个新的Handler，详细请参考ITestResultHandl
 
 '''
 
-import codecs, sys, traceback, time, socket, threading
-import os, locale, json, six
+import json
+import locale
+import os
+import six
+import socket
+import sys
+import time
+import threading
+import traceback
 import xml.dom.minidom as dom
 import xml.parsers.expat as xmlexpat
 import xml.sax.saxutils as saxutils
@@ -507,7 +514,7 @@ class XmlResult(TestResultBase):
         self._testnode.setAttribute('endtime', time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(self.end_time)))
         self._testnode.setAttribute('duration', "%02d:%02d:%02.2f\n" %  _convert_timelength(self.end_time- self.begin_time))
         if self._file_path:
-            with codecs.open(smart_text(self._file_path), 'wb') as fd:
+            with codecs_open(smart_text(self._file_path), 'wb') as fd:
                 fd.write(to_pretty_xml(self._xmldoc))
         
     def handle_step_begin(self, msg ):
@@ -629,6 +636,9 @@ class JSONResult(TestResultBase):
         self._file_path = os.path.join(os.getcwd(), file_name)
         
     def get_data(self):
+        return self._data
+    
+    def get_file(self):
         if not os.path.exists(self._file_path):
             with codecs_open(self._file_path, mode="w", encoding="utf-8") as fd:
                 fd.write(json.dumps(self._data))

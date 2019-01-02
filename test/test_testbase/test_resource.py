@@ -15,7 +15,12 @@
 '''runner test
 '''
 
-import unittest, os, shutil, six, sys
+import os
+import shutil
+import six
+import sys
+import unittest
+
 from testbase import resource
 from testbase.conf import settings
 from testbase.test import modify_environ

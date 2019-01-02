@@ -26,9 +26,11 @@ import argparse
 import pkg_resources
 import xml.dom.minidom as dom
 import xml.sax.saxutils as saxutils
+import traceback
 
 from datetime import datetime
 
+from testbase import logger
 from testbase import testresult
 from testbase.testresult import EnumLogLevel
 from testbase.util import smart_text, smart_binary, to_pretty_xml, ensure_binary_stream, \
@@ -1143,7 +1145,7 @@ class JSONTestReport(ITestReport):
             
         if testresult.passed:
             self._testcase_passed += 1
-        self._results.append(testresult.get_data())
+        self._results.append(testresult.get_file())
     
     def log_record(self, level, tag, msg, record):
         '''增加一个记录
@@ -1248,7 +1250,11 @@ def __init_report_types():
     # Register other `ITestReport` implementiations from entry points 
     for ep in pkg_resources.iter_entry_points(REPORT_ENTRY_POINT):
         if ep.name not in report_types:
-            report_types[ep.name] = ep.load()
+            try:
+                report_types[ep.name] = ep.load()
+            except:
+                stack = traceback.format_exc()
+                logger.warn("load ITestReport entry point for %s failed:\n" % (ep.name, stack))
 
 __init_report_types()
 del __init_report_types

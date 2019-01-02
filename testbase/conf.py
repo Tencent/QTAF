@@ -42,10 +42,14 @@ print(settings.CONFIG_OPTION)
 3、用户自定义配置          固定为：test_proj/settings.py
 '''
 
+import imp
 import os
 import sys
-import imp
+import traceback
+
 import qtaf_settings
+
+from testbase import logger
 from testbase.exlib import ExLibManager
 
 _DEFAULT_SETTINSG_MODULE = "settings"
@@ -56,8 +60,7 @@ class _Settings(object):
     def __init__(self):
         self.__keys = set()
         self.__sealed = False
-        self._load()
-        self.__sealed = True
+        self.__loaded = False
         
     def _load(self):
         '''加载配置
@@ -67,6 +70,8 @@ class _Settings(object):
         try:
             pre_settings = self._load_proj_settings_module("testbase.conf.pre_settings")
         except ImportError:  #非测试项目情况下使用没有项目settings.py
+            stack = traceback.format_exc()
+            logger.warn("settings module not found:\n%s" % stack)
             pre_settings = None
         
         mode = getattr(pre_settings, "PROJECT_MODE", getattr(qtaf_settings, 'PROJECT_MODE', None))
@@ -87,7 +92,8 @@ class _Settings(object):
             try:
                 __import__(modname)
             except ImportError:
-                pass
+                stack = traceback.format_exc()
+                logger.warn("load library settings module \"%s\" failed:\n%s" % (modname, stack))
             else:
                 self._load_setting_from_module(sys.modules[modname])
                 
@@ -103,6 +109,11 @@ class _Settings(object):
         if mode != "standard":
             self.PROJECT_ROOT = proj_root
             self.INSTALLED_APPS = ExLibManager(proj_root).list_names()
+        else:
+            proj_root = getattr(self, "PROJECT_ROOT", None)
+            if pre_settings is not None and not proj_root:
+                proj_root = os.path.dirname(pre_settings.__file__)
+                setattr(self, "PROJECT_ROOT", proj_root)
         
     def _load_proj_settings_module(self, import_name ):
         '''加载项目配置文件
@@ -140,24 +151,24 @@ class _Settings(object):
         if proj_root:
             return proj_root
         if os.path.isfile(__file__): #没使用qtaf.egg包
-            pwd=os.getcwd()
+            cwd = os.getcwd()
             #使用外链或拷贝文件的方式
-            dst_path=os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
-            if pwd.find(dst_path)>=0:
+            dst_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
+            if cwd.find(dst_path) >= 0:
                 return os.path.abspath(dst_path)
             
             #eclipse调试使用工程引用的方式
             if 'PYTHONPATH' not in os.environ:
-                return pwd
+                return cwd
             py_paths=os.environ['PYTHONPATH']
             paths=py_paths.split(";")
             if len(paths)>2:
-                dst_path=paths[1]
-            if pwd.find(dst_path)>=0:
+                dst_path = paths[1]
+            if cwd.find(dst_path) >= 0:
                 return dst_path
             
             #非预期的情况，返回当前工作目录
-            return pwd
+            return cwd
         else: #使用的egg包，qtaf.egg包在exlib目录中
             exlib_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..')
             proj_root =  os.path.abspath(os.path.join(exlib_dir, '..'))
@@ -180,7 +191,14 @@ class _Settings(object):
             super(_Settings,self).__setattr__(name, value)
                 
     def __getattribute__(self, name):#加上这个是为了使pydev不显示红叉
-        return super(_Settings,self).__getattribute__(name)
+        try:
+            return super(_Settings,self).__getattribute__(name)
+        except AttributeError:
+            if not self.__loaded:
+                self.__loaded = True
+                self._load()
+                self.__sealed = True
+            return super(_Settings,self).__getattribute__(name)
            
     def __iter__(self):
         return self.__keys.__iter__()

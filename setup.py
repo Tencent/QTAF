@@ -13,7 +13,8 @@
 # governing permissions and limitations under the License.
 #
 
-import os, codecs
+import codecs
+import os
 from setuptools import setup, find_packages
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
