@@ -12,8 +12,16 @@
 # OF ANY KIND, either express or implied. See the License for the specific language
 # governing permissions and limitations under the License.
 #
-
-import unittest, os, sys, argparse, re, pkgutil, importlib, traceback
+"""unit tests entry
+"""
+import argparse
+import importlib
+import pkgutil
+import os
+import re
+import sys
+import traceback
+import unittest
 
 test_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.dirname(test_dir))

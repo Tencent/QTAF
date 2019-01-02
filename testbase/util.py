@@ -16,8 +16,18 @@
 共用类模块
 '''
 
-import io, binascii, codecs, sys, re, threading, time, traceback
-import inspect, six, locale, os
+import binascii
+import codecs
+import inspect
+import io
+import locale
+import os
+import re
+import six
+import sys
+import threading
+import time
+import traceback
 
 from xml.dom.minidom import Node
 from datetime import datetime

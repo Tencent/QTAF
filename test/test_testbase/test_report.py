@@ -15,7 +15,12 @@
 """unittest for module testbase.report
 """
 
-import unittest, six, json, os, sys
+import json
+import os
+import six
+import sys
+import traceback
+import unittest
 
 from xml.dom import minidom
 from testbase import runner
@@ -145,4 +150,5 @@ class TestReportTest(unittest.TestCase):
             self.assertTrue("hostname" in summary)
             self.assertTrue("os" in summary)
             self.addCleanup(_clean_json_report, test_report_name)
-            
+
+

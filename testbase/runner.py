@@ -41,7 +41,10 @@ import socket
 import uuid
 import itertools
 import six
+
 from six.moves import queue
+
+from testbase import logger
 from testbase.loader import TestLoader
 from testbase import serialization
 from testbase.testcase import TestCase, TestCaseRunner
@@ -1106,7 +1109,11 @@ def __init_runner_types():
     runner_types["multiprocess"] = MultiProcessTestRunner
     for ep in pkg_resources.iter_entry_points(RUNNER_ENTRY_POINT):
         if ep.name not in runner_types:
-            runner_types[ep.name] = ep.load()
+            try:
+                runner_types[ep.name] = ep.load()
+            except:
+                stack = traceback.format_exc()
+                logger.warn("load TestRunner type for %s failed:\n%s" % (ep.name, stack))
 
 __init_runner_types()
 del __init_runner_types

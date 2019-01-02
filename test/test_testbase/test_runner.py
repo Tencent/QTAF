@@ -12,16 +12,13 @@
 # OF ANY KIND, either express or implied. See the License for the specific language
 # governing permissions and limitations under the License.
 #
-import six
 '''runner test
 '''
-import os, unittest, time, json
+import unittest
 
-from xml.dom import minidom
 from testbase import runner
 from testbase import report
 from testbase import testresult
-from testbase.util import smart_text
 
 class TestResult(testresult.TestResultBase):
     

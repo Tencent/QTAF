@@ -15,7 +15,9 @@
 """testcase for management
 """
 
-import unittest, shlex, os
+import os
+import shlex
+import unittest
 
 from testbase.management import RunTest
 from testbase.runner import runner_types, multiprocessing

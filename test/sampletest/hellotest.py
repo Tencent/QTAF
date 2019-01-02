@@ -3,10 +3,14 @@
 模块描述
 '''
 
-import time, threading, os, sys
+import os
+import sys
+import threading
+import time
 import testbase
 from testbase import logger
 from testbase import context
+from testbase.datadrive import DataDrive
 from testbase.testresult import EnumLogLevel
 from testbase.util import codecs_open
 
@@ -145,6 +149,18 @@ class ResmgrTest(testbase.TestCase):
     def post_test(self):
         for file_name in [self.file_name, self.link_file_name]:
             os.remove(os.path.join(self.resource_root, file_name))
+
+@DataDrive({"中国":"中国", "xxx":"xxx"})
+class DataDriveCase(testbase.TestCase):
+    '''xxx
+    '''
+    owner='xxx'
+    timeout=5
+    priority=testbase.TestCase.EnumPriority.High
+    status=testbase.TestCase.EnumStatus.Ready
+    
+    def run_test(self):
+        pass
     
 if __name__ == '__main__':
 #     HelloTest().run()
