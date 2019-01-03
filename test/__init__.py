@@ -12,8 +12,16 @@
 # OF ANY KIND, either express or implied. See the License for the specific language
 # governing permissions and limitations under the License.
 #
-
-import unittest, os, sys, argparse, re, pkgutil, importlib, traceback
+"""unit tests entry
+"""
+import argparse
+import importlib
+import pkgutil
+import os
+import re
+import sys
+import traceback
+import unittest
 
 test_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.dirname(test_dir))
@@ -33,7 +41,7 @@ def load_case(case_path):
         except:
             temp_parts.pop()
     if not mod:
-        raise RuntimeError("case path=%s cannot be imported.")
+        raise RuntimeError("case path=%s cannot be imported." % case_path)
         
     case_name = ".".join(parts[len(temp_parts):])
     test_suites = []

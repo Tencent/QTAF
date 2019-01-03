@@ -42,10 +42,14 @@ print(settings.CONFIG_OPTION)
 3、用户自定义配置          固定为：test_proj/settings.py
 '''
 
+import imp
 import os
 import sys
-import imp
+import traceback
+
 import qtaf_settings
+
+from testbase import logger
 from testbase.exlib import ExLibManager
 
 _DEFAULT_SETTINSG_MODULE = "settings"
@@ -56,8 +60,7 @@ class _Settings(object):
     def __init__(self):
         self.__keys = set()
         self.__sealed = False
-        self._load()
-        self.__sealed = True
+        self.__loaded = False
         
     def _load(self):
         '''加载配置
@@ -67,6 +70,8 @@ class _Settings(object):
         try:
             pre_settings = self._load_proj_settings_module("testbase.conf.pre_settings")
         except ImportError:  #非测试项目情况下使用没有项目settings.py
+            stack = traceback.format_exc()
+            logger.warn("settings module not found:\n%s" % stack)
             pre_settings = None
         
         mode = getattr(pre_settings, "PROJECT_MODE", getattr(qtaf_settings, 'PROJECT_MODE', None))
@@ -87,7 +92,8 @@ class _Settings(object):
             try:
                 __import__(modname)
             except ImportError:
-                pass
+                stack = traceback.format_exc()
+                logger.warn("load library settings module \"%s\" failed:\n%s" % (modname, stack))
             else:
                 self._load_setting_from_module(sys.modules[modname])
                 
@@ -103,6 +109,11 @@ class _Settings(object):
         if mode != "standard":
             self.PROJECT_ROOT = proj_root
             self.INSTALLED_APPS = ExLibManager(proj_root).list_names()
+        else:
+            proj_root = getattr(self, "PROJECT_ROOT", None)
+            if pre_settings is not None and not proj_root:
+                proj_root = os.path.dirname(pre_settings.__file__)
+                setattr(self, "PROJECT_ROOT", proj_root)
         
     def _load_proj_settings_module(self, import_name ):
         '''加载项目配置文件
@@ -140,24 +151,24 @@ class _Settings(object):
         if proj_root:
             return proj_root
         if os.path.isfile(__file__): #没使用qtaf.egg包
-            pwd=os.getcwd()
+            cwd = os.getcwd()
             #使用外链或拷贝文件的方式
-            dst_path=os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
-            if pwd.find(dst_path)>=0:
+            dst_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
+            if cwd.find(dst_path) >= 0:
                 return os.path.abspath(dst_path)
             
             #eclipse调试使用工程引用的方式
             if 'PYTHONPATH' not in os.environ:
-                return pwd
+                return cwd
             py_paths=os.environ['PYTHONPATH']
             paths=py_paths.split(";")
             if len(paths)>2:
-                dst_path=paths[1]
-            if pwd.find(dst_path)>=0:
+                dst_path = paths[1]
+            if cwd.find(dst_path) >= 0:
                 return dst_path
             
             #非预期的情况，返回当前工作目录
-            return pwd
+            return cwd
         else: #使用的egg包，qtaf.egg包在exlib目录中
             exlib_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..')
             proj_root =  os.path.abspath(os.path.join(exlib_dir, '..'))
@@ -180,7 +191,14 @@ class _Settings(object):
             super(_Settings,self).__setattr__(name, value)
                 
     def __getattribute__(self, name):#加上这个是为了使pydev不显示红叉
-        return super(_Settings,self).__getattribute__(name)
+        try:
+            return super(_Settings,self).__getattribute__(name)
+        except AttributeError:
+            if not self.__loaded:
+                self.__loaded = True
+                self._load()
+                self.__sealed = True
+            return super(_Settings,self).__getattribute__(name)
            
     def __iter__(self):
         return self.__keys.__iter__()
@@ -191,23 +209,52 @@ class _Settings(object):
 settings = _Settings()
 
 class _InnerSettings(object):
+    """inner settings for a SettingsMixin class
     """
-    """
-    def __init__(self, inner_settings_cls, defined_class):
+    def __init__(self, defined_class):
+        self.__tailor_names = {}
         self.__sealed = False
-        prefix = defined_class.__name__.upper() + "_"
-        class_path = defined_class.__module__ + "." + defined_class.__name__
+        self.__load_settings(defined_class)
+        self.__sealed = True
+        
+    def __load_settings(self, defined_class):
+        classes = [ defined_class ]
+        while classes:
+            cls = classes.pop()
+            for temp_cls in cls.__bases__:
+                if hasattr(temp_cls, "Settings") and issubclass(temp_cls, SettingsMixin):
+                    classes.append(temp_cls)
+            self.__load_class_settings(cls)
+            
+    def __load_class_settings(self, cls):
+        prefix = cls.__name__.upper() + "_"
+        class_path = cls.__module__ + "." + cls.__name__
+        inner_settings_cls = getattr(cls, "Settings")
         for key in dir(inner_settings_cls):
             if key.startswith(prefix) and key.isupper():
-                setattr(self, key,  getattr(inner_settings_cls, key))
+                # handle legacy
+                tailor_name = key[len(prefix):]
+                if tailor_name in self.__tailor_names:
+                    if key in settings:
+                        # we don't think this is a good way to overwrite settings
+                        err_msg = "you may overwriting setting item {} instead of using base item {}."
+                        err_msg = err_msg.format(self.__tailor_names[tailor_name], key)
+                        raise ValueError(err_msg)
+                    else:
+                        value = getattr(self, self.__tailor_names[tailor_name])
+                else:
+                    if key in settings:
+                        value = settings.get(key)
+                    else:
+                        value = getattr(inner_settings_cls, key)
+                    self.__tailor_names[tailor_name] = key
+                setattr(self, key,  value)    
+                
             elif not key.startswith("_"):
                 if not key.startswith(prefix):
                     raise RuntimeError("%s's Settings item `%s` must start with %s like %s%s" % (class_path, key, prefix, prefix, key.upper()))
                 elif not key.isupper():
                     raise RuntimeError("%s's Settings item `%s` must be upper like %s" % (class_path, key, key.upper()))
-            
-                    
-        self.__sealed = True
         
     def __setattr__(self, name, value):
         if not name.startswith('_InnerSettings__') and self.__sealed:
@@ -215,22 +262,24 @@ class _InnerSettings(object):
         super(_InnerSettings, self).__setattr__(name, value)
         
     def __getattribute__(self, name):
-        if name in settings:
-            return settings.get(name)
-        return super(_InnerSettings, self).__getattribute__(name)
+        try:
+            return super(_InnerSettings, self).__getattribute__(name)
+        except AttributeError:
+            if name in settings:
+                return settings.get(name)
+            else:
+                raise
         
 class SettingsMixin(object):
     """a mixin class coordinate with qtaf settings
-    """    
+    """
     @property
     def settings(self):
-        if not hasattr(self, "_settings"):
-            inner_settings_cls = getattr(self, "Settings", None)
-            if inner_settings_cls.__name__ == "Settings":
-                inner_settings = _InnerSettings(inner_settings_cls, self.__class__)
-                setattr(self, "_settings", inner_settings)
-            else:
+        cls = type(self)
+        settings_key = "_%s_settings" % cls.__name__
+        if not hasattr(cls, settings_key):
+            if not hasattr(cls, "Settings"):
                 raise RuntimeError("no inner class Settings defined")
-        return self._settings
-            
-        
+            inner_settings = _InnerSettings(cls)
+            setattr(cls, settings_key, inner_settings)
+        return getattr(cls, settings_key)

@@ -55,7 +55,8 @@ QPath是一个用于定位各个平台的UI控件（除Web控件）的查询语�
 
 '''
 
-import types, six
+import six
+import types
 
 try:
     from .ply import lex, yacc

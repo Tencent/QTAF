@@ -3,34 +3,20 @@
 模块描述
 '''
 
-import time, threading
+import os
+import sys
+import threading
+import time
 import testbase
 from testbase import logger
 from testbase import context
+from testbase.datadrive import DataDrive
 from testbase.testresult import EnumLogLevel
 from testbase.util import codecs_open
 
 def _some_thread():
     logger.info('非测试线程打log, tid=%s' % threading.current_thread().ident)
 
-def _create_sampefile():
-    import os
-    from testbase.conf import settings
-    res_dir = os.path.join(settings.PROJECT_ROOT,'resources')
-    if not os.path.isdir(res_dir):
-        os.mkdir(res_dir)
-    with codecs_open(os.path.join(res_dir,'a.txt'), 'w', encoding="utf-8") as f:
-        f.write('abc')
-    with codecs_open(os.path.join(res_dir,'readme.txt.link'), 'w', encoding="utf-8") as f:
-        f.write(os.path.join(res_dir, 'a.txt'))
-
-def _test_getfile(resmgr):
-    with codecs_open(resmgr.get_file('a.txt'), encoding="utf-8") as f:
-        print(f.read())
-    
-    with codecs_open(resmgr.get_file('test.txt'), encoding="utf-8") as f:
-        print(f.read())
-    
 class HelloTest(testbase.TestCase):
     '''测试示例
     '''
@@ -135,13 +121,46 @@ class ResmgrTest(testbase.TestCase):
     timeout = 1
     priority = testbase.TestCase.EnumPriority.Normal
     dev_owner = "foo"
-    _create_sampefile()
+    
+    def pre_test(self):
+        from testbase.conf import settings
+        self.resource_root = os.path.join(settings.PROJECT_ROOT,'resources')
+        if not os.path.isdir(self.resource_root):
+            os.mkdir(self.resource_root)
+        self.file_name = "a_%s%s_resmgr.txt" % (sys.version_info[0], sys.version_info[1])
+        self.link_file_name = "readme_%s%s.txt.link" % (sys.version_info[0], sys.version_info[1])
+        with codecs_open(os.path.join(self.resource_root, self.file_name), 'w', encoding="utf-8") as f:
+            f.write('abc')
+        with codecs_open(os.path.join(self.resource_root, self.link_file_name), 'w', encoding="utf-8") as f:
+            f.write(os.path.join(self.resource_root, self.file_name))
+    
+    def _test_getfile(self, resmgr):
+        with codecs_open(resmgr.get_file(self.file_name), encoding="utf-8") as f:
+            print(f.read())
+        
+        with codecs_open(resmgr.get_file(self.link_file_name[:-5]), encoding="utf-8") as f:
+            print(f.read())
     
     def run_test(self):
         import testbase.resource as rs
-        _test_getfile(self.test_resources)
-        _test_getfile(rs)
-            
+        self._test_getfile(self.test_resources)
+        self._test_getfile(rs)
+        
+    def post_test(self):
+        for file_name in [self.file_name, self.link_file_name]:
+            os.remove(os.path.join(self.resource_root, file_name))
+
+@DataDrive({"中国":"中国", "xxx":"xxx"})
+class DataDriveCase(testbase.TestCase):
+    '''xxx
+    '''
+    owner='xxx'
+    timeout=5
+    priority=testbase.TestCase.EnumPriority.High
+    status=testbase.TestCase.EnumStatus.Ready
+    
+    def run_test(self):
+        pass
     
 if __name__ == '__main__':
 #     HelloTest().run()

@@ -13,7 +13,8 @@
 # governing permissions and limitations under the License.
 #
 
-import os, codecs
+import codecs
+import os
 from setuptools import setup, find_packages
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -27,7 +28,7 @@ def generate_version():
                 version = content
     with codecs.open(os.path.join(BASE_DIR, "testbase", "version.py"), "w", encoding="utf-8") as fd:
         fd.write('version = "%s"\n' % version)
-    return version
+    return str(version)
   
 def parse_requirements():
     reqs = []
@@ -45,7 +46,6 @@ def get_description():
 
 
 if __name__ == "__main__":
-       
     setup(
       version=generate_version(),
       name="qtaf",

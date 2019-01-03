@@ -228,6 +228,7 @@ def _create_pydev_conffile(proj_path, mode):
     with codecs_open(os.path.join(proj_path, '.pydevproject'), 'w') as fd:
         if mode == EnumProjectMode.Standalone:
             qtaf_egg_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
+            qtaf_egg_path = os.path.abspath(qtaf_egg_path)
             fd.write(PYDEV_CONF_CONTENT_STANDALONE % {"EggName":os.path.basename(qtaf_egg_path)})
         else:
             fd.write(PYDEV_CONF_CONTENT_STANDARD)

@@ -33,26 +33,32 @@ ITestResultHandler来实现一个新的Handler，详细请参考ITestResultHandl
 
 '''
 
-import codecs
+import json
+import locale
+import os
+import six
+import socket
 import sys
-import traceback
 import time
+import threading
+import traceback
 import xml.dom.minidom as dom
 import xml.parsers.expat as xmlexpat
 import xml.sax.saxutils as saxutils
-import socket
-import threading
-import os
-import locale
-import json
-import six
 
 from testbase import context
 from testbase.util import smart_text, get_thread_traceback, get_method_defined_class, \
-to_pretty_xml, smart_binary, ensure_binary_stream
+    to_pretty_xml, smart_binary, ensure_binary_stream, codecs_open, TRANS, get_time_str
 
     
 os_encoding = locale.getdefaultlocale()[1]
+
+def translate_test_name(testname):
+    if six.PY2:
+        translated_name = smart_binary(testname).translate(TRANS)
+    else:
+        translated_name = smart_text(testname).translate(TRANS)
+    return translated_name
 
 class EnumLogLevel(object):
     '''日志级别
@@ -379,7 +385,7 @@ class StreamResult(TestResultBase):
         owner = getattr(testcase, 'owner', None)
         priority = getattr(testcase, 'priority', None)
         timeout = getattr(testcase, 'timeout', None)
-        begin_msg = u"测试用例:%s 所有者:%s 优先级:%s 超时:%s分钟\n" % (testcase.test_name, owner, priority, timeout)
+        begin_msg = "测试用例:%s 所有者:%s 优先级:%s 超时:%s分钟\n" % (testcase.test_name, owner, priority, timeout)
         self._write(begin_msg)
         self._write(self._seperator2)
     
@@ -439,10 +445,10 @@ class StreamResult(TestResultBase):
         if level == EnumLogLevel.ASSERT:
             if "actual" in record:
                 actual=record["actual"]
-                self._write(u"   实际值：%s%s\n" % (actual.__class__,actual))
+                self._write("   实际值：%s%s\n" % (actual.__class__,actual))
             if "expect" in record:
                 expect=record["expect"]
-                self._write(u"   期望值：%s%s\n" % (expect.__class__,expect))
+                self._write("   期望值：%s%s\n" % (expect.__class__,expect))
             if "code_location" in record:
                 self._write(smart_text('  File "%s", line %s, in %s\n' % record["code_location"]))
             
@@ -459,7 +465,7 @@ class XmlResult(TestResultBase):
     '''xml格式的测试用例结果
     '''
     
-    def __init__(self, file_path=None ):
+    def __init__(self, testcase):
         '''构造函数
         
         :param file_path: XML文件路径
@@ -467,7 +473,8 @@ class XmlResult(TestResultBase):
         '''
         super(XmlResult, self).__init__()
         self._xmldoc = dom.Document()
-        self._file_path = file_path
+        translated_name = translate_test_name(testcase.test_name)
+        self._file_path = '%s_%s.xml' % (translated_name, get_time_str())
     
     @property
     def file_path(self):
@@ -507,8 +514,8 @@ class XmlResult(TestResultBase):
         self._testnode.setAttribute('endtime', time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(self.end_time)))
         self._testnode.setAttribute('duration', "%02d:%02d:%02.2f\n" %  _convert_timelength(self.end_time- self.begin_time))
         if self._file_path:
-            with codecs.open(smart_text(self._file_path), 'w', encoding="utf-8") as fd:
-                fd.write(self.toxml())
+            with codecs_open(smart_text(self._file_path), 'wb') as fd:
+                fd.write(to_pretty_xml(self._xmldoc))
         
     def handle_step_begin(self, msg ):
         '''处理一个测试步骤的开始
@@ -624,9 +631,18 @@ class JSONResult(TestResultBase):
             "status": testcase.status,
             "steps": self._steps
         }
+        translated_name = translate_test_name(testcase.test_name)
+        file_name = '%s_%s.json' % (translated_name, get_time_str())
+        self._file_path = os.path.join(os.getcwd(), file_name)
         
     def get_data(self):
         return self._data
+    
+    def get_file(self):
+        if not os.path.exists(self._file_path):
+            with codecs_open(self._file_path, mode="w", encoding="utf-8") as fd:
+                fd.write(json.dumps(self._data))
+        return self._file_path
     
     def handle_test_begin(self, testcase ):
         '''处理一个测试用例执行的开始

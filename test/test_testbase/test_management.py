@@ -15,7 +15,9 @@
 """testcase for management
 """
 
-import unittest, shlex
+import os
+import shlex
+import unittest
 
 from testbase.management import RunTest
 from testbase.runner import runner_types, multiprocessing
@@ -49,11 +51,14 @@ class RuntestTest(unittest.TestCase):
         report_type = report_types[args.report_type]
         report_type.parse_args(shlex.split(args.report_args))
         
-        cmdline = 'xxxx --report-type json --report-args "--output stdout"'
+        output_file = "json_report.json"
+        cmdline = 'xxxx --report-type json --report-args "--output %s"' % output_file
         cmdline = shlex.split(cmdline)
         args = RunTest.parser.parse_args(cmdline)
         report_type = report_types[args.report_type]
         report_type.parse_args(shlex.split(args.report_args))
+        if os.path.exists(output_file):
+            os.remove(output_file)
         
     def test_runner_args_parsing(self):
         test_pairs = [

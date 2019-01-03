@@ -14,12 +14,21 @@
 #
 """assert机制实现
 """
+
 from __future__ import print_function
 
-import ast, copy, inspect, itertools, sys, types, pprint, six
-import threading, traceback
+import ast
+import copy
+import inspect
+import itertools
+import pprint
+import six
+import sys
+import threading
+import traceback
+import types
 
-from testbase.util import Singleton, get_method_defined_class
+from testbase.util import Singleton, get_method_defined_class, smart_text
 
 unary_map = {ast.Not: "not %s", ast.Invert: "~%s", ast.USub: "-%s", ast.UAdd: "+%s"}
 
@@ -500,6 +509,8 @@ def _saferepr(obj):
             obj_repr = "self.%s" % obj.__func__.__name__
     elif isinstance(obj, type):
         obj_repr = obj.__name__
+    elif isinstance(obj, six.string_types):
+        obj_repr = '"%s"' % smart_text(obj)
     else:
         obj_repr = pprint.saferepr(obj)
     return obj_repr
@@ -520,13 +531,13 @@ def _format_assertmsg(obj):
     # .__repr__() which contains newlines it does not get escaped.
     # However in either case we want to preserve the newline.
 #     if isinstance(obj, six.text_type) or isinstance(obj, six.binary_type):
-    if isinstance(obj, six.text_type):
-        s = obj
+    if isinstance(obj, six.string_types):
+        s = smart_text(obj)
         is_repr = False
     else:
         s = pprint.saferepr(obj)
         is_repr = True
-    t = six.text_type
+    t = str
     s = s.replace(t("\n"), t("\n~")).replace(t("%"), t("%%"))
     if is_repr:
         s = s.replace(t("\\n"), t("\n~"))

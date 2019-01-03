@@ -238,6 +238,8 @@ class RunTest(Command):
         runner = runner_type.parse_args(shlex.split(args.runner_args), report_inst, resmgr_backend)
         
         prev_dir = os.getcwd()
+        if not os.path.exists(args.working_dir):
+            os.makedirs(args.working_dir)
         os.chdir(args.working_dir)
         runner.run(test_conf)
         os.chdir(prev_dir)
