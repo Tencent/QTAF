@@ -146,7 +146,6 @@ class TestReportTest(unittest.TestCase):
                     ("TimeoutTest", "用例执行超时"),
                     ("CrashTest", "App Crash"),
                     ("QT4iTest", "run_test执行失败"),]
-        test_pairs = test_pairs[:1]
         
         old_cwd = os.getcwd()
         for test_name, reason in test_pairs:

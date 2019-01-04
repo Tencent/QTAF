@@ -69,9 +69,8 @@ class _Settings(object):
         #先加载一次项目配置
         try:
             pre_settings = self._load_proj_settings_module("testbase.conf.pre_settings")
-        except ImportError:  #非测试项目情况下使用没有项目settings.py
-            stack = traceback.format_exc()
-            logger.warn("settings module not found:\n%s" % stack)
+        except ImportError as e:  #非测试项目情况下使用没有项目settings.py
+            logger.warn("[WARNING]settings module not found: %s" % str(e))
             pre_settings = None
         
         mode = getattr(pre_settings, "PROJECT_MODE", getattr(qtaf_settings, 'PROJECT_MODE', None))
@@ -91,9 +90,8 @@ class _Settings(object):
             modname = "%s.settings" % appname
             try:
                 __import__(modname)
-            except ImportError:
-                stack = traceback.format_exc()
-                logger.warn("load library settings module \"%s\" failed:\n%s" % (modname, stack))
+            except ImportError as e:
+                logger.warn("[WARN]load library settings module \"%s\" failed: %s" % (modname, str(e)))
             else:
                 self._load_setting_from_module(sys.modules[modname])
                 

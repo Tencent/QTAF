@@ -629,6 +629,7 @@ class JSONResult(TestResultBase):
             "owner": testcase.owner,
             "priority": testcase.priority,
             "status": testcase.status,
+            "timeout": testcase.timeout,
             "steps": self._steps
         }
         self._translated_name = translate_test_name(testcase.test_name)
@@ -661,7 +662,7 @@ class JSONResult(TestResultBase):
         '''
         self._data["succeed"] = passed
         self._data["start_time"] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(self.begin_time)), 
-        self._data["end_time"] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(self.begin_time)), 
+        self._data["end_time"] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(self.end_time)), 
 
     def handle_step_begin(self, msg ):
         '''处理一个测试步骤的开始
