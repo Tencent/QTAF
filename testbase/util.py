@@ -18,10 +18,12 @@
 
 import binascii
 import codecs
+import importlib
 import inspect
 import io
 import locale
 import os
+import pkg_resources
 import re
 import six
 import sys
@@ -567,6 +569,17 @@ def get_time_str():
     now = datetime.now()
     time_str = now.strftime("%Y%m%d_%H%M%S%f")[:-3]
     return time_str
+
+def get_inner_resource(resource_module, resource_name):
+    if not os.path.isfile(__file__): # using egg
+        file_path = pkg_resources.resource_filename(resource_module, resource_name)
+    else:
+        mod = importlib.import_module(resource_module)
+        mod_path = mod.__path__[0]
+        file_path = os.path.join(mod_path, resource_name)
+    if not os.path.exists(file_path):
+        raise RuntimeError("resource path: %s not existed." % file_path)
+    return file_path
         
 if __name__ == "__main__":
     pass

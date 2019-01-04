@@ -34,7 +34,7 @@ from testbase import logger
 from testbase import testresult
 from testbase.testresult import EnumLogLevel
 from testbase.util import smart_text, smart_binary, to_pretty_xml, ensure_binary_stream, \
-    codecs_open, get_os_version
+    codecs_open, get_os_version, get_inner_resource
     
 REPORT_ENTRY_POINT = "qtaf.report"
 report_types = {}
@@ -512,406 +512,6 @@ class StreamTestReport(ITestReport):
             output_testresult=not args.no_output_result,
             output_summary=not args.no_summary)
 
-
-REPORT_XSL = """<?xml version="1.0" encoding="utf-8"?>
-<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
-<xsl:template match="/RunResult">
-<html>
-    <head>
-    <style>
-    *{
-    font-size:12px; 
-    font-family: '宋体' , 'Courier New', Arial, 'Arial Unicode MS', '';
-    }
-    .title
-    {
-    font-size:14px;
-    font-weight: bold;
-    margin: 20px auto 5px auto;
-    }
-    table{
-    border:solid 1px #0099CC;
-    border-collapse:collapse;
-    margin: 0px auto;
-    }
-    td
-    {
-    border:solid 1px #0099CC;
-    padding: 6px 6px;
-    }
-    .td_Title
-    {
-    color:#FFF;
-    font-weight: bold;
-    background-color:#66CCFF;
-    }
-    .tr_pass
-    {
-    background-color:#B3E8B8;
-    }
-    .tr_fail
-    {
-    background-color:#F5BCBD;
-    }
-    .success
-    {
-    color:#0000FF;
-    }
-    .fail
-    {
-    color:#FF0000;
-    }
-    .exception
-    {
-    color:#00AA00;
-    }
-    
-    </style>
-    </head>
-    <body>
-    <div class='title'>
-        <td>测试报告链接：</td>
-        <td><a><xsl:attribute name="href"><xsl:value-of select="TestReportLink/Url"/></xsl:attribute>点击这里</a></td>
-    </div>
-    <div class='title'>测试运行环境：</div>
-    <table>
-        <tr>
-            <td class='td_Title'>主机名</td>
-            <td><xsl:value-of select="TestEnv/PC"/></td>
-        </tr>
-        <tr>
-            <td class='td_Title'>操作系统</td>
-            <td><xsl:value-of select="TestEnv/OS"/></td>
-        </tr>
-    </table>
-    <div class='title'>测试运行时间:</div>
-    <table>
-        <tr>
-            <td class='td_Title'>Run开始时间</td>
-            <td><xsl:value-of select="RunTime/StartTime"/></td>
-        </tr>
-        <tr>
-            <td class='td_Title'>Run结束时间</td>
-            <td><xsl:value-of select="RunTime/EndTime"/></td>
-        </tr>
-        <tr>
-            <td class='td_Title'>Run执行时间</td>
-            <td><xsl:value-of select="RunTime/Duration"/></td>
-        </tr>
-    </table>
-    <div class='title'>测试用例汇总：</div>
-    <table>
-    <tr>
-        <td class='td_Title'>用例总数</td>
-        <td class='td_Title'>通过用例数</td>
-        <td class='td_Title'>失败用例数</td>
-    </tr>
-    <tr>
-        <td>
-        <xsl:value-of select="count(TestResult)"/>
-        </td>
-        <td>
-        <xsl:value-of select="count(TestResult[@result='True'])"/>
-        </td>
-        <td>
-        <xsl:value-of select="count(TestResult[@result='False'])"/>
-        </td>
-    </tr>
-    </table>
-    <div class='title'>加载失败模块：</div>
-    <table>
-    <tr>
-    <td class='td_Title'>模块名</td>
-    <td class='td_Title'>失败Log</td>
-    </tr>
-    <tr>
-    <xsl:for-each select="LoadTestError">
-        <tr>
-        <td><xsl:value-of select="@name"/></td>
-        <td><a><xsl:attribute name="href">
-                <xsl:value-of select="@log"/>
-            </xsl:attribute>
-            Log
-        </a></td>
-        </tr>
-    </xsl:for-each>
-    </tr>
-    </table>
-    <div class='title'>测试用例详细信息：</div>
-    <table>
-    <tr>
-    <td class='td_Title'>测试结果</td>
-    <td class='td_Title'>测试用例</td>
-    <td class='td_Title'>负责人</td>
-    <td class='td_Title'>用例描述</td>
-    <td class='td_Title'>用例状态</td>
-    <td class='td_Title'>用例Log</td>
-    </tr>
-    <xsl:for-each select="TestResult">
-    <xsl:if test="@result='False'">
-        <tr class='tr_fail'>
-            <td>失败</td>
-            <td><xsl:value-of select="@name"/></td>
-            <td><xsl:value-of select="@owner"/></td>
-            <td><xsl:value-of select="."/></td>
-            <td><xsl:value-of select="@status"/></td>
-            <td><a><xsl:attribute name="href">
-                    <xsl:value-of select="@log"/>
-                    </xsl:attribute>
-                    Log
-            </a></td>
-        </tr>
-    </xsl:if>
-    <xsl:if test="@result='True'">
-        <tr class='tr_pass'>
-            <td>通过</td>
-            <td><xsl:value-of select="@name"/></td>
-            <td><xsl:value-of select="@owner"/></td>
-            <td><xsl:value-of select="."/></td>
-            <td><xsl:value-of select="@status"/></td>
-            <td><a><xsl:attribute name="href">
-                    <xsl:value-of select="@log"/>
-                    </xsl:attribute>
-                    Log
-            </a></td>
-        </tr>
-    </xsl:if>
-    </xsl:for-each>
-    </table>
-    </body>
-</html>
-</xsl:template>
-</xsl:stylesheet>"""
-
-RESULT_XLS = """<?xml version="1.0" encoding="utf-8"?><!-- DWXMLSource="tmp/qqtest.hello.HelloW.xml" --><!DOCTYPE xsl:stylesheet  [
-    <!ENTITY nbsp   "&#160;">
-    <!ENTITY copy   "&#169;">
-    <!ENTITY reg    "&#174;">
-    <!ENTITY trade  "&#8482;">
-    <!ENTITY mdash  "&#8212;">
-    <!ENTITY ldquo  "&#8220;">
-    <!ENTITY rdquo  "&#8221;"> 
-    <!ENTITY pound  "&#163;">
-    <!ENTITY yen    "&#165;">
-    <!ENTITY euro   "&#8364;">
-]>
-
-<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
-<xsl:strip-space elements="*"/>
-<xsl:template match="/TEST">
-<html>
-    <head>
-    <style>
-    *{
-    font-size:12px; 
-    font-family: '宋体' , 'Courier New', Arial, 'Arial Unicode MS', '';
-    }
-    .title
-    {
-    font-size:14px;
-    font-weight: bold;
-    margin: 20px auto 5px auto;
-    }
-    .subtable{
-    border:solid 1px #0099CC;
-    border-collapse:collapse;
-    margin: 0px auto auto 0px;
-    }
-    .subtable td
-    {
-    border:solid 1px #0099CC;
-    padding: 6px 6px;
-    }
-    .td_title
-    {
-    color:#FFF;
-    font-weight: bold;
-    background-color:#66CCFF;
-    }
-    .tr_pass
-    {
-    background-color:#B3E8B8;
-    }
-    .tr_fail
-    {
-    background-color:#F5BCBD;
-    }
-    .suc_step_title
-    {
-    background-color:#B3E8B8;
-    padding:2px 2px
-    }
-    
-.STYLE1 {font-size: 16px}
-.STYLE3 {font-size: 14px; color:#666666;}
-.STYLE4 {color: #999999}
-.STYLE5 {
-    color: #FF0000;
-    font-weight: bold;
-}
-.STYLE6 {
-    color: #FF9900;
-    font-weight: bold;
-}
-</style>
-    </head>
-    <body>
-    <div>
-    <table class="subtable">
-        <tr>
-            <td class='td_title'>用例名字：</td>
-            <td><xsl:value-of select="@name"/></td>
-            <td class='td_title'>运行结果：</td>
-            <td>
-            <span>
-                <xsl:attribute name="style">
-                <xsl:if test="@result='True'">color: #00FF00</xsl:if>
-                <xsl:if test="@result='False'">color: #FF0000</xsl:if>
-                </xsl:attribute>
-                <xsl:apply-templates select="@result"/>
-            </span>
-            </td>
-        </tr>
-        <tr>
-            <td class='td_title'>开始时间：</td>
-            <td><xsl:value-of select="@begintime"/></td>
-            <td class='td_title'>负责人：</td>
-            <td><xsl:value-of select="@owner"/></td>
-        </tr>
-        <tr>
-            <td class='td_title'>结束时间：</td>
-            <td><xsl:value-of select="@endtime"/></td>
-            <td class='td_title'>优先级：</td>
-            <td><xsl:value-of select="@priority"/></td>
-        </tr>
-        <tr>
-            <td class="td_title">运行时间：</td>
-            <td><xsl:value-of select="@duration"/></td>
-            <td class='td_title'>用例超时：</td>
-            <td><xsl:value-of select="@timeout"/>分钟</td>
-        </tr>
-        
-    </table>
-    </div> 
-
-    <xsl:apply-templates/>
-    </body>
-</html>
-</xsl:template>
-
-<xsl:template name="break_lines">
-  <xsl:param name="text" select="string(.)"/>
-  <xsl:choose>
-    <xsl:when test="contains($text, '&#xa;')">
-      <xsl:value-of select="substring-before($text, '&#xa;')"/>
-      <br/>
-      <xsl:call-template name="break_lines">
-        <xsl:with-param 
-          name="text" 
-          select="substring-after($text, '&#xa;')"
-        />
-      </xsl:call-template>
-    </xsl:when>
-    <xsl:otherwise>
-      <xsl:value-of select="$text"/>
-    </xsl:otherwise>
-  </xsl:choose>
-</xsl:template>
-
-<xsl:template match="@result">
-    <xsl:if test=".='True'">通过</xsl:if>
-    <xsl:if test=".='False'">失败</xsl:if>
-</xsl:template>
-
-<xsl:template match="STEP">
-<hr />
-<div>
-<xsl:if test="@result='True'">
-<xsl:attribute name="style">
-    padding:2px 2px; background-color:#B3E8B8
-</xsl:attribute>
-</xsl:if>
-<xsl:if test="@result='False'">
-<xsl:attribute name="style">
-    padding:2px 2px; background-color:#F5BCBD
-</xsl:attribute>
-</xsl:if>
-
-<table border="0">
-  <tr>
-    <td><span class="STYLE1">步骤：</span></td>
-    <td><span class="STYLE1"><xsl:value-of select="@title"/></span></td>
-    <td><span class="STYLE1">&nbsp;<xsl:value-of select="@time"/></span></td>
-    <td><span class="STYLE1">&nbsp;
-    <xsl:apply-templates select="@result"/>
-    </span></td>
-  </tr>
-</table>
-</div>
-<hr />
-<table>
-    <xsl:apply-templates/>
-</table>
-</xsl:template>
-<xsl:template match="DEBUG">
-    <tr>
-    <td valign="top"><strong>DEBUG:</strong></td>
-    <td><xsl:value-of select="text()"/></td>
-  </tr>
-</xsl:template>
-<xsl:template match="INFO">
-    <tr>
-      <!--<td valign="top"><span class="STYLE4">12:12:11</span></td> -->
-    <td valign="top"><strong>INFO:</strong></td>
-    <td><xsl:value-of select="text()"/></td>
-  </tr>
-</xsl:template>
-<xsl:template match="WARNING">
-  <tr>
-      <!--<td valign="top"><span class="STYLE4">12:12:11</span></td> -->
-    <td valign="top"><span class="STYLE6">WARNING:</span></td>
-    <td><xsl:value-of select="text()"/></td>
-  </tr>
-</xsl:template>
-<xsl:template match="ERROR">
-<tr>
-      <!--<td valign="top"><span class="STYLE4">12:12:11</span></td> -->
-    <td valign="top"><span class="STYLE5">ERROR:</span></td>
-    <td>
-        <xsl:call-template name="break_lines" />
-        <pre>
-            <xsl:value-of select="EXCEPT/text()"/>
-        </pre>
-        <table border="0">
-            <xsl:apply-templates select="EXPECT"/>
-            <xsl:apply-templates select="ACTUAL"/>
-        </table>
-        <xsl:for-each select="ATTACHMENT">
-            <a>
-                <xsl:attribute name="href">
-                    <xsl:value-of select="@filepath"/>
-                </xsl:attribute>
-                [<xsl:value-of select="text()"/>]
-            </a>
-        </xsl:for-each>
-    </td>
-  </tr>
-</xsl:template>
-<xsl:template match="EXPECT">
-    <tr>
-    <td>&nbsp;&nbsp;期望值：</td>
-    <td><xsl:value-of select="text()"/></td>
-      </tr>
-</xsl:template>
-<xsl:template match="ACTUAL">
-    <tr>
-    <td>&nbsp;&nbsp;实际值：</td>
-    <td><xsl:value-of select="text()"/></td>
-      </tr>
-</xsl:template>
-</xsl:stylesheet>"""
-
-
 class XMLTestResultFactory(ITestResultFactory):
     '''XML形式TestResult工厂
     '''
@@ -960,10 +560,10 @@ class XMLTestReport(ITestReport):
         xmldata = to_pretty_xml(self._xmldoc)
         with codecs_open('TestReport.xml', 'wb') as fd:
             fd.write(xmldata)
-        with codecs_open('TestReport.xsl', 'wb') as fd:
-            fd.write(smart_binary(REPORT_XSL))
-        with codecs_open('TestResult.xsl', 'wb') as fd:
-            fd.write(smart_binary(RESULT_XLS))   
+        test_repor_xsl = get_inner_resource("statics", "TestReport.xsl")
+        shutil.copy(test_repor_xsl, os.getcwd())
+        test_result_xsl = get_inner_resource("statics", "TestResult.xsl")
+        shutil.copy(test_result_xsl, os.getcwd())
     
     def log_test_result(self, testcase, testresult ):
         '''记录一个测试结果
@@ -1077,19 +677,16 @@ class JSONTestResultFactory(ITestResultFactory):
         :return TestResult
         '''
         return testresult.JSONResult(testcase)
-
-class JSONTestReport(ITestReport):
-    '''JSON格式的测试报告
+    
+class JSONTestReportBase(ITestReport):
+    '''JSON格式的测试报告基类
     '''
-    def __init__(self, title="调试测试", fd=sys.stdout):
+    def __init__(self, title="调试测试"):
         '''构造函数
 
         :param title: 报告标题
         :type title: str
-        :param fd: 输出流
-        :type fd: file object
         '''
-        self._fd = fd
         self._results = []
         self._logs = []
         self._filtered_tests = []
@@ -1111,7 +708,7 @@ class JSONTestReport(ITestReport):
         self._testcase_total_run = 0
         self._testcase_passed = 0
         self._testcase_total_count = 0
-
+        
     def begin_report(self):
         '''开始测试执行
         '''
@@ -1129,7 +726,6 @@ class JSONTestReport(ITestReport):
         self._data["summary"]["testcase_passed"] = self._testcase_passed
         self._data["summary"]["succeed"] = self._testcase_passed == self._testcase_total_count
         self._data["summary"]["end_time"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        json.dump(self._data, self._fd)
         
     def log_test_result(self, testcase, testresult ):
         '''记录一个测试结果
@@ -1205,7 +801,27 @@ class JSONTestReport(ITestReport):
             "name": name,
             "error": error
         })
-    
+
+class JSONTestReport(JSONTestReportBase):
+    '''JSON格式的测试报告
+    '''
+    def __init__(self, fd, title="调试测试"):
+        '''构造函数
+
+        :param fd: 输出流
+        :type fd: file object
+        :param title: 报告标题
+        :type title: str
+        '''
+        self._fd = fd
+        super(JSONTestReport, self).__init__(title)
+
+    def end_report(self):
+        '''结束测试执行
+        '''
+        super(JSONTestReport, self).end_report()
+        json.dump(self._data, self._fd)
+
     def get_testresult_factory(self):
         '''获取对应的TestResult工厂
         :returns ITestResultFactory
@@ -1233,7 +849,53 @@ class JSONTestReport(ITestReport):
         '''
         args = cls.get_parser().parse_args(args_string)
         fd = codecs_open(args.output, 'w', encoding="utf-8")
-        return cls(title=args.title, fd=fd)
+        return cls(fd, title=args.title)
+    
+class HtmlTestReport(JSONTestReportBase):
+    """html test report
+    """
+    def get_testresult_factory(self):
+        '''获取对应的TestResult工厂
+        :returns ITestResultFactory
+        '''
+        return HtmlTestResultFactory()
+    
+    def end_report(self):
+        super(HtmlTestReport, self).end_report()
+        data = json.dumps(self._data)
+        content = "let qta_report_data = %s" % data
+        with codecs_open("qta-report.js", "w", encoding="utf-8") as fd:
+            fd.write(content)
+        
+        qta_report_html = get_inner_resource("statics", "qta-report.html")
+        shutil.copy(qta_report_html, os.getcwd())
+        
+    @classmethod
+    def get_parser(cls):
+        '''获取命令行参数解析器（如果实现）
+
+        :returns: 解析器对象
+        :rtype: argparse.ArgumentParser
+        '''
+        parser = argparse.ArgumentParser(usage=report_usage)
+        parser.add_argument("--title", help="report title", default="Debug test report")
+        return parser
+
+    @classmethod
+    def parse_args(cls, args_string):
+        '''通过命令行参数构造对象
+        
+        :returns: 测试报告
+        :rtype: cls
+        '''
+        args = cls.get_parser().parse_args(args_string)
+        return cls(title=args.title)
+        
+class HtmlTestResultFactory(ITestResultFactory):
+    """html test result factory
+    """
+    def create(self, testcase):
+        return testresult.HtmlResult(testcase)
 
 
 def __init_report_types():
@@ -1241,10 +903,11 @@ def __init_report_types():
     if report_types:
         return
     report_types.update({
-        "empty":  EmptyTestReport,
-        "stream": StreamTestReport,
-        "xml":    XMLTestReport,
-        "json":   JSONTestReport,
+        "empty"  : EmptyTestReport,
+        "stream" : StreamTestReport,
+        "xml"    : XMLTestReport,
+        "json"   : JSONTestReport,
+        "html"   : HtmlTestReport,
     })
 
     # Register other `ITestReport` implementiations from entry points 
