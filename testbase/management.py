@@ -18,13 +18,13 @@
 
 import argparse 
 import inspect
-import logging
 import os
 import traceback
 import sys
 import shlex
 import six
 
+from testbase import logger
 from testbase import project
 from testbase.conf import settings
 from testbase.version import version
@@ -61,7 +61,7 @@ Available subcommands:
     def print_help(self):
         """打印帮助文档
         """
-        logging.info( self.USAGE % {"ProgramName": self.prog, 
+        logger.info( self.USAGE % {"ProgramName": self.prog, 
                                  "SubcmdList": "\n".join([ '\t%s'%it.name for it in self.subcmd_classes])})
         
     def parse_args(self, args ):
@@ -78,7 +78,7 @@ Available subcommands:
                 parser = it.parser
                 break
         else:
-            logging.error("invalid subcommand \"%s\"\n" % subcmd )
+            logger.error("invalid subcommand \"%s\"\n" % subcmd )
             sys.exit(1)
             
         ns = parser.parse_args(args[1:])
@@ -186,7 +186,7 @@ class RunTest(Command):
             runner_types[args.runner_args_help].get_parser().print_help()
             return
         if not args.tests:
-            print("no test set specified")
+            logger.info("no test set specified")
             exit(1)
         
         from testbase.testcase import TestCase
@@ -216,14 +216,14 @@ class RunTest(Command):
         if args.report_type == 'xml':
             class VerboseXMLTestReport(report_types[args.report_type]):
                 def log_test_result(self, testcase, testresult ):
-                    print ("run test case: %s(pass?:%s)" % (testcase.test_name, testresult.passed))
+                    logger.info("run test case: %s(pass?:%s)" % (testcase.test_name, testresult.passed))
                     super(VerboseXMLTestReport, self).log_test_result(testcase, testresult)
             report_type = VerboseXMLTestReport
             
         elif args.report_type == 'online':
             class VerboseOnlineTestReport(report_types[args.report_type]):
                 def log_test_result(self, testcase, testresult ):
-                    print ("run test case: %s(pass?:%s)" % (testcase.test_name, testresult.passed))
+                    logger.info("run test case: %s(pass?:%s)" % (testcase.test_name, testresult.passed))
                     super(VerboseOnlineTestReport, self).log_test_result(testcase, testresult)
                 def begin_report(self):
                     super(VerboseOnlineTestReport,self).begin_report()
@@ -245,18 +245,18 @@ class RunTest(Command):
         os.chdir(prev_dir)
         if args.report_type == 'online':
             if sys.platform == "win32":
-                print("opening online report url:%s" % report_inst.url)
+                logger.info("opening online report url:%s" % report_inst.url)
                 os.system("start %s" % report_inst.url)
             else:
-                print("online report generated: %s" % report_inst.url)
+                logger.info("online report generated: %s" % report_inst.url)
                 
         elif args.report_type == 'xml':
             if sys.platform == "win32":
-                print("opening XML report with IE...")
+                logger.info("opening XML report with IE...")
                 report_xml = os.path.abspath(os.path.join(args.working_dir, "TestReport.xml"))
                 os.system("start iexplore %s" % report_xml)
             else:
-                print("XML report generated: %s" % os.path.abspath("TestReport.xml"))
+                logger.info("XML report generated: %s" % os.path.abspath("TestReport.xml"))
 
 class RunPlan(Command):
     """执行测试计划
@@ -334,7 +334,7 @@ class CreateProject(Command):
         else:
             mode = project.EnumProjectMode.Standalone
         proj_path = os.path.join(dest, args.name.lower()+'testproj')
-        print('create %s mode test project: %s' % (mode, proj_path))
+        logger.info('create %s mode test project: %s' % (mode, proj_path))
         project.create_project(proj_path, args.name, mode)
 
 
@@ -349,7 +349,7 @@ class UpgradeProject(Command):
         """执行过程
         """
         if os.path.isfile(__file__):
-            logging.error("should run in egg mode")
+            logger.error("should run in egg mode")
             sys.exit(1)
             
         qtaf_path = os.path.dirname(os.path.abspath(__file__))
@@ -517,7 +517,7 @@ class ManagementToolsConsole(object):
         self._argparser = argparser
         
     def cmdloop(self):
-        print("""QTAF %(qtaf_version)s (test project: %(proj_root)s [%(proj_mode)s mode])\n""" % {
+        logger.info("""QTAF %(qtaf_version)s (test project: %(proj_root)s [%(proj_mode)s mode])\n""" % {
             'qtaf_version': version,
             'proj_root': settings.PROJECT_ROOT,
             'proj_mode': settings.PROJECT_MODE,
@@ -539,7 +539,7 @@ class ManagementToolsConsole(object):
                 subcmd, ns = self._argparser.parse_args(args)
                 subcmd.execute(ns)
             except SystemExit:
-                print("command exit")
+                logger.info("command exit")
             except:
                 traceback.print_exc()
 
@@ -604,8 +604,6 @@ class ManagementTools(object):
     def run(self):
         """执行入口
         """
-        logging.root.addHandler(logging.StreamHandler())
-        logging.root.level = logging.INFO
         cmds = self._load_cmds()
         argparser = ArgumentParser(cmds)
         if len(sys.argv) > 1:
@@ -618,8 +616,6 @@ class ManagementTools(object):
 def qta_manage_main():
     """qta-manage工具入口
     """
-    logging.root.addHandler(logging.StreamHandler())
-    logging.root.level = logging.INFO
     use_egg = not os.path.isfile(__file__)
     if use_egg:
         cmds = [CreateProject, UpgradeProject, RunTestDistPackage, RunPlanDistPackage, Help]

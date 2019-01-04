@@ -631,18 +631,19 @@ class JSONResult(TestResultBase):
             "status": testcase.status,
             "steps": self._steps
         }
-        translated_name = translate_test_name(testcase.test_name)
-        file_name = '%s_%s.json' % (translated_name, get_time_str())
-        self._file_path = os.path.join(os.getcwd(), file_name)
+        self._translated_name = translate_test_name(testcase.test_name)
         
     def get_data(self):
         return self._data
     
     def get_file(self):
-        if not os.path.exists(self._file_path):
-            with codecs_open(self._file_path, mode="w", encoding="utf-8") as fd:
-                fd.write(json.dumps(self._data))
-        return self._file_path
+        file_name = '%s_%s.json' % (self._translated_name, get_time_str())
+        file_path = os.path.join(os.getcwd(), file_name)
+        if not os.path.exists(file_path):
+            content = json.dumps(self._data)
+            with codecs_open(file_path, mode="w", encoding="utf-8") as fd:
+                fd.write(content)
+        return file_path
     
     def handle_test_begin(self, testcase ):
         '''处理一个测试用例执行的开始
@@ -704,7 +705,20 @@ class JSONResult(TestResultBase):
             "record": record,
             "attachments": attachments
         })
-
+        
+class HtmlResult(JSONResult):
+    """html test result
+    """
+    def get_file(self):
+        file_name = '%s_%s.js' % (self._translated_name, get_time_str())
+        file_path = os.path.join(os.getcwd(), file_name)
+        if not os.path.exists(file_path):
+            var_name = os.path.basename(file_name)
+            var_name = os.path.splitext(file_name)[0].replace(".", "_")
+            content = "let %s = %s" % (var_name, json.dumps(self._data))
+            with codecs_open(file_path, mode="w", encoding="utf-8") as fd:
+                fd.write(content)
+        return file_path
 
 
 class TestResultCollection(list):

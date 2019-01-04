@@ -88,7 +88,7 @@
 
 测试报告类型的选项：
 
-* \\--report-type，报告类型，可以是xml、json、empty、stream、online，默认是stream。
+* \\--report-type，报告类型，可以是xml、json、empty、stream、html，默认是stream。
 
 * \\--report-args，传递给测试报告对象的命令行参数，**需要使用双引号引用起来，并且尾部至少需要保留一个空格**，具体支持的参数可以通过帮助信息查看。
 
@@ -122,11 +122,16 @@ windows下会自动通过IE打开。无命令行参数。
 
 * \\--no-summary，指定后，将不输出用例执行统计结果。
 
+**html类型**，会生成js和html文件，使用浏览器打开工作目录下的qta-report.html即可查看，命令行参数如下：
+
+* \\--title，测试报告的标题；
+
 例如::
 
    $ python manage.py runtest --report-args-help stream
    $ python manage.py runtest zoo --report-type stream --report-args "--no-output-result --no-summary"
    $ python manage.py runtest zoo --report-type xml -w test_result
+   $ python manage.py runtest zoo --report-type html -w test_result --report-args "--title zootest"
    
 ==========================
 指定资源管理后端
