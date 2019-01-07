@@ -114,19 +114,17 @@ QTA配置文件分为三种：
 
 QTA对配置项的新增没有严格的限制，但是为避免冲突，最好按照以下的原则：
 
-  * 测试项目自定义的配置，增加一个统一的前缀，比如QQ的测试项目增加前缀“QQ_”
-  
+  * 测试项目自定义的配置，增加一个统一的前缀，比如QQ的测试项目增加前缀“QQ\_”
   * QTA相关组件的配置项目，除了统一增加前缀外，还需要更新到《:doc:`./settingslist`》
   
-======================
+==========================
 自定义settings所在的文件
-======================
+==========================
 
 QTA默认是通过加载Python模块`settings`来读取所有配置，用户可以通过设置环境变量`QTAF_SETTINGS_MODULE`来指定配置项所在的模块名。
 
-比如在测试项目中顶层目录中创建多个配置文件::
-
-用户配置文件存放在测试项目的顶层位置；而QTAF配置文件打包在QTAF的egg包中，在QTAF egg包的顶层位置上；如下::
+如果需要切换多套配置文件，可以在根木目创建一个settings pakcage，定义多个配置文件，然后在__init__.py中根据
+需要定义个配置项用于加载子模块的配置项::
 
    test_proj/
             qt4a/
@@ -145,4 +143,112 @@ QTA默认是通过加载Python模块`settings`来读取所有配置，用户可�
 比如需要使用测试环境的配置::
 
    $ QTAF_SETTINGS_MODULE=settings.test python manage.py shell
+
+===================
+使用SettingsMixin
+===================
+
+SettingsMixin是一个混合类，用于方便地跟用户定义的类进行复合，在定义配置项的时候，
+将定义放到lib层，而不是孤立地放在settings.py或配置模块中，再人工进行关联。
+
+-------------
+定义配置项
+-------------
+
+一个简单的使用例子如下::
+
+   from qt4s.service import Channel
+   from qt4s.conn2 import HttpConn
+   from testbase.conf import SettingsMixin
+   
+   class MyChannel(Channel, SettingsMixin):
+       """define a pseudo channel
+       """
+       class Settings(object):
+           MYCHANNEL_URL = "http://www.xxxx.com"
+           
+       def __init__(self):
+           self._conn = HttpConn()
+           
+       def get(self, uri, params):
+           return self._conn.get(self.settings.MYCHANNEL_URL + uri, params)
+           
+MyChannel多重继承了Channel和SettingsMixin，SettingsMixin要求类的内部定义一个Settings类，
+这个类定义配置项的规则如下：
+
+* 配置项必须以当前类的名字大写+下划线开头，例如这里的"MYCHANNEL\_"；
+* 配置项的每个字母都必须大写；
+* 访问配置项，使用self.settings访问，例如self.settings.MYCHANNEL_URL
+
+-------------
+重载配置项
+-------------
+
+重载配置项，分为两种情况
+
+~~~~~~~~~~~~~~
+派生类重载
+~~~~~~~~~~~~~~
+
+如果某个SettingsMixin类被继承，那么子类可以访问父类所拥有的配置项，并且可以重载父类的配置项，但是这里重载的方式比较特殊。
+
+因为SettingsMixin要求当前类下必须定义一个嵌套Settings类，并且配置项必须以类名加下划线开头，因此，子类要重载父类的配置项，
+通过定义相同后缀的配置项来实现，如下面的DUMMY_A和DUMMYCHILD_A，它们的后缀名都是"A"，这样才会生效。
+
+一个具体的例子如下::
+
+    from testbase.conf import SettingsMixin
+
+    class Dummy(SettingsMixin):
+        class Settings(object):
+            DUMMY_A = 0
+            
+        def print_a(self):
+            print("DUMMY_A=%s" % self.settings.DUMMY_A)
+            
+    class DummyChild(Dummy):
+        class Settings(object):
+            DUMMYCHILD_A = 2
+    
+    dummy = Dummy()
+    assert dummy.settings.DUMMY_A == 0
+    dummy.print_a()
+    # DUMMY_A = 0
+            
+    child = DummyChild()
+    assert child.settings.DUMMY_A == 2
+    assert child.settings.DUMMYCHILD_A == 2
+    child.print_a()
+    # DUMMY_A = 2
+    
+如上，我们看到，在覆盖掉父类的配置项后，在父类的方法中访问的配置项也一样会被重载，这样可以复用父类的一些配置项，并根据需要进行重载。
+
+~~~~~~~~~~~~~~~~~~
+全局配置项重载
+~~~~~~~~~~~~~~~~~~
+
+SettingsMixin定义的配置项还可以被全局配置项重载，并且全局配置项的优先级最高。我们仍然用上面的Dummy和DummyChild来说明问题。
+
+settings.py::
+
+    DUMMYCHILD_A = 3
+    
+xxxxcase.py::
+
+    dummy = Dummy()
+    assert dummy.settings.DUMMY_A == 0
+    dummy.print_a()
+    # DUMMY_A = 0
+            
+    child = DummyChild()
+    assert child.settings.DUMMY_A == 3
+    assert child.settings.DUMMYCHILD_A == 3
+    child.print_a()
+    # DUMMY_A = 3
+    
+可以看到，即使子类重载了DUMMY_A的值为2，但是仍然可以在settings.py中已更高的优先级将其修改。
+
+.. warning:: **框架在SettingsMixin定义的某个配置项被子类重载后，是不允许再在settings.py中去重载该配置项的**，
+    即：如果我们在settings.py中添加DUMMY_A = 5，框架会提示错误，要求用户去重载DUMMYCHILD_A，而不是DUMMY_A。
+    这样可以防止使用配置项在派生类之间冲突，并且简化配置项的设置。
 

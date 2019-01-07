@@ -45,7 +45,6 @@ print(settings.CONFIG_OPTION)
 import imp
 import os
 import sys
-import traceback
 
 import qtaf_settings
 
@@ -65,27 +64,27 @@ class _Settings(object):
     def _load(self):
         '''加载配置
         :returns: Settings - 设置读取接口
-        '''    
-        #先加载一次项目配置
+        '''
+        # get PROJECT_MODE from user settings
         try:
             pre_settings = self._load_proj_settings_module("testbase.conf.pre_settings")
-        except ImportError as e:  #非测试项目情况下使用没有项目settings.py
+        except ImportError as e:
             logger.warn("[WARNING]settings module not found: %s" % str(e))
             pre_settings = None
         
         mode = getattr(pre_settings, "PROJECT_MODE", getattr(qtaf_settings, 'PROJECT_MODE', None))
         
-        #加载扩展库或应用配置
-        if mode == "standard": #Python标准模式
+        if mode == "standard": # library mode
             installed_apps = getattr(pre_settings, "INSTALLED_APPS",  getattr(qtaf_settings, 'INSTALLED_APPS', []))
             
-        else: #独立模式
+        else: # egg mode
             proj_root = self._get_standalone_project_root(pre_settings)
             installed_apps = ExLibManager(proj_root).list_names()
             
-        #优先加载QTAF设置
+        # load settings from qtaf
         self._load_setting_from_module(qtaf_settings)
         
+        # load settings from installed apps
         for appname in installed_apps:
             modname = "%s.settings" % appname
             try:
@@ -95,15 +94,15 @@ class _Settings(object):
             else:
                 self._load_setting_from_module(sys.modules[modname])
                 
-        #加载用户自定义设置 
+        # load settings from user settings
         try:
             proj_settings = self._load_proj_settings_module("testbase.conf.settings")
-        except ImportError: #非测试项目情况下使用没有项目settings.py
+        except ImportError:
             pass
         else:
             self._load_setting_from_module(proj_settings)
         
-        #非标准模式下需要设置项目根目录，标准模式要求项目在settings中显式设置
+        # trying to set project root automatically
         if mode != "standard":
             self.PROJECT_ROOT = proj_root
             self.INSTALLED_APPS = ExLibManager(proj_root).list_names()
@@ -182,26 +181,31 @@ class _Settings(object):
         else:
             return getattr(self, name)
         
+    def __ensure_loaded(self):
+        if not self.__loaded:
+            self.__loaded = True
+            self._load()
+            self.__sealed = True
+        
     def __setattr__(self, name, value ):
         if not name.startswith('_Settings__') and self.__sealed:
             raise RuntimeError("尝试动态修改配置项\"%s\""%name)
         else:
             super(_Settings,self).__setattr__(name, value)
                 
-    def __getattribute__(self, name):#加上这个是为了使pydev不显示红叉
+    def __getattribute__(self, name):
         try:
             return super(_Settings,self).__getattribute__(name)
         except AttributeError:
-            if not self.__loaded:
-                self.__loaded = True
-                self._load()
-                self.__sealed = True
+            self.__ensure_loaded()
             return super(_Settings,self).__getattribute__(name)
            
     def __iter__(self):
+        self.__ensure_loaded()
         return self.__keys.__iter__()
                 
     def __contain__(self, key):
+        self.__ensure_loaded()
         return key in self.__keys
                 
 settings = _Settings()

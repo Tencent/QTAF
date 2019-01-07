@@ -560,9 +560,9 @@ class XMLTestReport(ITestReport):
         xmldata = to_pretty_xml(self._xmldoc)
         with codecs_open('TestReport.xml', 'wb') as fd:
             fd.write(xmldata)
-        test_repor_xsl = get_inner_resource("statics", "TestReport.xsl")
+        test_repor_xsl = get_inner_resource("qta_statics", "TestReport.xsl")
         shutil.copy(test_repor_xsl, os.getcwd())
-        test_result_xsl = get_inner_resource("statics", "TestResult.xsl")
+        test_result_xsl = get_inner_resource("qta_statics", "TestResult.xsl")
         shutil.copy(test_result_xsl, os.getcwd())
     
     def log_test_result(self, testcase, testresult ):
@@ -863,11 +863,11 @@ class HtmlTestReport(JSONTestReportBase):
     def end_report(self):
         super(HtmlTestReport, self).end_report()
         data = json.dumps(self._data)
-        content = "let qta_report_data = %s" % data
+        content = "var qta_report_data = %s" % data
         with codecs_open("qta-report.js", "w", encoding="utf-8") as fd:
             fd.write(content)
         
-        qta_report_html = get_inner_resource("statics", "qta-report.html")
+        qta_report_html = get_inner_resource("qta_statics", "qta-report.html")
         shutil.copy(qta_report_html, os.getcwd())
         
     @classmethod

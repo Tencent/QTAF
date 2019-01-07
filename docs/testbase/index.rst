@@ -4,13 +4,13 @@
    contain the root `toctree` directive.
 
 QTA Testbase文档
-==============
+==================
 
 Testbase是所有QTA测试项目的基础，主要提供测试用例管理和执行、测试结果和报告、测试项目管理配置等功能。
 
-====
+========
 使用文档
-====
+========
 
 .. toctree::
    :maxdepth: 1
@@ -26,14 +26,13 @@ Testbase是所有QTA测试项目的基础，主要提供测试用例管理和执
    testrun
    testplan
    settings
-   settingsmixin
    resource
    dist
    extension
 
-====
+========
 接口文档
-====
+========
 
 .. toctree::
    :maxdepth: 1
@@ -43,7 +42,7 @@ Testbase是所有QTA测试项目的基础，主要提供测试用例管理和执
    environ
 
 索引和搜索
-=====
+=============
 
 * :ref:`genindex`
 * :ref:`modindex`

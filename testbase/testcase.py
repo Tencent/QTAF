@@ -142,6 +142,7 @@ class TestCase(object):
     '''测试用例基类
     
             所有测试用例都最终从此基类继承。测试用例的测试脚本主要实现在"runTest()"中，
+            
            而当用例需要初始化和清理测试环境时则分别重写"preTest()"和"postTest()"函数。
     '''
     test_extra_info_def = [] #自定义字段
@@ -151,6 +152,7 @@ class TestCase(object):
         
         :attention: 如果因为特殊原因需要暂时屏蔽某个用例的任务执行（比如有功能缺陷从而导致执行失败），
                                                      则可以先置为该字段为Suspend,等到可用的时候再将该字段置为Ready
+
         '''
         Design, Implement, Review, Ready, Suspend = (TestCaseStatus.Design, 
                                                      TestCaseStatus.Implement,
@@ -590,6 +592,7 @@ class ITestCaseRunner(object):
         :type testcase: TestCase
         :param testresult_factory: 测试结果工厂
         :type testresult_factory: ITestResultFactory
+        
         :return TestResult/TestResultCollection - 测试结果
         '''
         raise NotImplementedError()
@@ -882,6 +885,8 @@ class RepeatTestCaseRunner(ITestCaseRunner):
         :type testcase: TestCase
         :param testresult_factory: 测试结果工厂
         :type testresult_factory: ITestResultFactory
+        
+        :returns : 测试结果
         :rtype TestResult/TestResultCollection - 测试结果
         '''
         passed = True
@@ -922,6 +927,7 @@ class SeqTestCaseRunner(ITestCaseRunner):
         :type testsuite: SeqTestSuite
         :param testresult_factory: 测试结果工厂
         :type testresult_factory: ITestResultFactory
+        
         :return TestResult/TestResultCollection - 测试结果
         '''
         passed = True

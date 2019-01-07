@@ -133,6 +133,7 @@ def is_datadrive( obj ):
     
     :param obj: 测试用例或测试用例类
     :type obj: TestCase/type
+    
     :returns boolean
     '''
     return hasattr(obj, '__qtaf_datadrive__')
@@ -142,6 +143,7 @@ def get_datadrive( obj ):
     
     :param obj: 测试用例或测试用例类
     :type obj: TestCase/type
+    
     :returns DataDrive
     '''
     return obj.__qtaf_datadrive__

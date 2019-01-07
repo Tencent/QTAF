@@ -117,6 +117,7 @@ bingfile.mp4.lnk是一个文本文件，其内容为文件正在的路径，比�
 目前提供两个操作文件资源的方法：
     * get_file:获取指定文件对象，传入参数为上文描述规则的相对路径，返回的是文件对象的绝对路径。
     * list_dir:列举指定目录下文件对象（包括文件夹），传入参数为上文描述规则的相对路径，返回的是一个包含该路径下所有文件对象的绝对路径的list。
+    
 用户如果需要在测试用例中使用特定的文件资源的时候，可以通过访问TestCase基类提供的方法::
 
    from testbase.testcase import TestCase
@@ -164,9 +165,9 @@ bingfile.mp4.lnk是一个文本文件，其内容为文件正在的路径，比�
 
 .. _RegisterResType:
 
-================
+====================
 注册非文件资源类型
-================
+====================
 
 注册资源类型需要通过“:class:`testbase.resource.LocalResourceManagerBackend`”接口注册一个以“:class:`testbase.resource.LocalResourceHandler`”为基类的Handler。
 
