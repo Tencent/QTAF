@@ -18,7 +18,7 @@ Python版本依赖
    
     pip install qtaf
     
-.. warning:: 如果是mac os的用户，在使用pip安装的时候最好指定-\\-user选项，否则安装的script脚本可能无法使用。
+.. warning:: 如果是mac os的用户，在使用pip安装的时候最好指定--user选项，否则安装的script脚本可能无法使用。
 
 ===================
 通过Git拉取最新代码

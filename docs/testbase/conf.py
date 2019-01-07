@@ -51,6 +51,9 @@ source_suffix = '.rst'
 # The master toctree document.
 master_doc = 'index'
 
+# convert quotes and dashes to typographically correct entities
+smartquotes = False
+
 # General information about the project.
 project = u'Testbase'
 copyright = u'2016, QTA'

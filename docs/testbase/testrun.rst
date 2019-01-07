@@ -25,7 +25,7 @@
    $ python manage.py runtest zoo.test # 执行zoo.test模块下所有用例，包括HelloTest等用例
    $ python manage.py runtest zoo # 执行zoo模块下所有用例，包括test等子模块下的所有用例
 
-使用-\\-excluded-name选项，可以排除用例集合，接受多个排除用例集合，例如::
+使用--excluded-name选项，可以排除用例集合，接受多个排除用例集合，例如::
 
    $ python manage.py runtest zoo --excluded zoo.test # 执行zoo模块下所有用例，但是排除zoo.test
    $ python manage.py runtest zoo --excluded zoo.xxxx --excluded zoo.oooo #排除zoo.xxxx和zoo.oooo
@@ -34,7 +34,7 @@
 指定工作目录
 ====================
 
-使用-w或-\\-working-dir可以指定执行用例的工作目录，相关的输出文件也会放到工作目录::
+使用-w或--working-dir可以指定执行用例的工作目录，相关的输出文件也会放到工作目录::
 
    $ python manage.py runtest -w foo zoo
    $ python manage.py runtest --working-dir foo zoo
@@ -47,7 +47,7 @@
 指定用例优先级
 =====================
 
-使用-\\-priority可以根据优先级过滤用例，多个-\\-priority选项可以指定多个优先级，
+使用--priority可以根据优先级过滤用例，多个--priority选项可以指定多个优先级，
 可选的用例优先级为：BVT、High、Normal、Low，例如::
 
    $ python manage.py runtest zoo --priority BVT --priority Normal
@@ -58,7 +58,7 @@
 指定用例状态
 ====================
 
-使用-\\-status可以根据用例状态过滤用例，多个-\\-status选项可以指定多个状态，
+使用--status可以根据用例状态过滤用例，多个--status选项可以指定多个状态，
 可选的用例状态为：Design、Implement、Ready、Review、Suspend，例如::
 
    $ python manage.py runtest zoo --status Design --status Ready
@@ -69,7 +69,7 @@
 指定用例作者
 ====================
 
-使用-\\-owner可以根据用例作者过滤用例，多个-\\-owner选项可以指定多个owner，例如::
+使用--owner可以根据用例作者过滤用例，多个--owner选项可以指定多个owner，例如::
 
    $ python manage.py runtest zoo --owner guying
    
@@ -77,8 +77,8 @@
 指定用例标签
 ====================
 
-使用-\\-tag和-\\-excluded-tag可以根据用例标签过滤用例，多个-\\-tag可以指定多个标签，
-多个-\\-excluded-tag可以排除多个标签，例如::
+使用--tag和--excluded-tag可以根据用例标签过滤用例，多个--tag可以指定多个标签，
+多个--excluded-tag可以排除多个标签，例如::
 
    $ python manage.py runtest zoo --tag foo --excluded-tag bar
    
@@ -88,11 +88,11 @@
 
 测试报告类型的选项：
 
-* -\\-report-type，报告类型，可以是xml、json、empty、stream、html，默认是stream。
+* --report-type，报告类型，可以是xml、json、empty、stream、html，默认是stream。
 
-* -\\-report-args，传递给测试报告对象的命令行参数，**需要使用双引号引用起来，并且尾部至少需要保留一个空格**，具体支持的参数可以通过帮助信息查看。
+* --report-args，传递给测试报告对象的命令行参数，**需要使用双引号引用起来，并且尾部至少需要保留一个空格**，具体支持的参数可以通过帮助信息查看。
 
-* -\\-report-args-help，打印指定报告类型的命令行参数帮助信息。
+* --report-args-help，打印指定报告类型的命令行参数帮助信息。
 
 如果我们想要查看某个测试报告类型所支持的参数，可以使用命令行来打印::
 
@@ -110,21 +110,21 @@ windows下会自动通过IE打开。无命令行参数。
 
 **json类型**，会生成json格式的报告文件，输出到stdout或指定文件路径。命令行参数如下：
 
-* -\\-title，测试报告的标题；
+* --title，测试报告的标题；
 
-* -\\-output/-o，输出文件名称，会将对应文件输出到当前工作目录，必填参数。
+* --output/-o，输出文件名称，会将对应文件输出到当前工作目录，必填参数。
 
 **empty类型**，将不输出报告内容。无命令行参数。
 
 **stream类型**，将报告内容输出到stdout，与调试用例时debug_run输出的信息一致。命令行参数如下：
 
-* -\\-no-output-result，指定后，用例执行的中间内容将不会输出到报告；
+* --no-output-result，指定后，用例执行的中间内容将不会输出到报告；
 
-* -\\-no-summary，指定后，将不输出用例执行统计结果。
+* --no-summary，指定后，将不输出用例执行统计结果。
 
 **html类型**，会生成js和html文件，使用浏览器打开工作目录下的qta-report.html即可查看，命令行参数如下：
 
-* -\\-title，测试报告的标题；
+* --title，测试报告的标题；
 
 例如::
 
@@ -137,7 +137,7 @@ windows下会自动通过IE打开。无命令行参数。
 指定资源管理后端
 ==========================
 
-可以通过-\\-resmgr-backend-type指定资源管理后端的类型，目前仅支持local，可以满足绝大部分的项目测试需求。
+可以通过--resmgr-backend-type指定资源管理后端的类型，目前仅支持local，可以满足绝大部分的项目测试需求。
 
 例如::
 
@@ -151,11 +151,11 @@ windows下会自动通过IE打开。无命令行参数。
 
 测试用例执行器相关的选项：
 
-* -\\-runner-type，用例执行器TestRunner的类型，目前支持multithread,multiprocess,basic。
+* --runner-type，用例执行器TestRunner的类型，目前支持multithread,multiprocess,basic。
 
-* -\\-runner-args，传递给TestRunner的命令行参数，**需要使用双引号引用起来，并且尾部至少需要保留一个空格**，具体的参数信息可以通过帮助信息查看。
+* --runner-args，传递给TestRunner的命令行参数，**需要使用双引号引用起来，并且尾部至少需要保留一个空格**，具体的参数信息可以通过帮助信息查看。
 
-* -\\-runner-args-help，打印指定类型的TestRunner的命令行参数信息。
+* --runner-args-help，打印指定类型的TestRunner的命令行参数信息。
 
 如果我们想要某个执行器类型支持的参数，可以通过下面命令打印::
 
@@ -168,19 +168,19 @@ windows下会自动通过IE打开。无命令行参数。
 
 **multithread类型**，使用多线程来并发执行用例。命令行参数如下：
 
-* -\\-retries，用例失败后的最大重试次数，默认为0，不重试。
+* --retries，用例失败后的最大重试次数，默认为0，不重试。
 
-* -\\-concurrency，用例执行的并发数，默认为0，使用当前cpu核数作为并发数。
+* --concurrency，用例执行的并发数，默认为0，使用当前cpu核数作为并发数。
 
 **multiprocess类型**，使用多进程来并发执行用例。命令行参数如下：
 
-* -\\-retries，用例失败后的最大重试次数，默认为0，不重试。
+* --retries，用例失败后的最大重试次数，默认为0，不重试。
 
-* -\\-concurrency，用例执行的并发数，默认为0，使用当前cpu核数作为并发数。
+* --concurrency，用例执行的并发数，默认为0，使用当前cpu核数作为并发数。
 
 **basic类型**，只能以单个串行方式执行用例，适合调试单个用例的场景。命令行参数如下：
 
-* -\\-retries，用例失败后的最大重试次数，默认为0，不重试。
+* --retries，用例失败后的最大重试次数，默认为0，不重试。
 
 
 自定义代码执行测试
