@@ -716,7 +716,7 @@ class HtmlResult(JSONResult):
         if not os.path.exists(file_path):
             var_name = os.path.basename(file_name)
             var_name = os.path.splitext(file_name)[0].replace(".", "_")
-            content = "let %s = %s" % (var_name, json.dumps(self._data))
+            content = "var %s = %s" % (var_name, json.dumps(self._data))
             with codecs_open(file_path, mode="w", encoding="utf-8") as fd:
                 fd.write(content)
         return file_path

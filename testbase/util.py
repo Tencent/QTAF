@@ -85,7 +85,9 @@ class Timeout(object):
                                                                                当result_match返回True时，直接返回，否则继续retry。
         :type  nothrow:bool
         :param nothrow:如果为True，则不抛出TimeOutError异常
+        
         :return: 返回成功调用func的结果
+        :rtype : any
         """         
         start = time.time()
         waited = 0.0
@@ -158,6 +160,7 @@ class Timeout(object):
         
         :param func: 尝试调用的函数
         :param expect: 设定的期望值
+        
         :returns bool - 检查是否符合预期
         '''
         start = time.time()
@@ -174,7 +177,7 @@ class Timeout(object):
         
 class Singleton(type):
     """单实例元类，用于某个类需要实现单例模式。
-    使用方式示例如下::
+            使用方式示例如下::
           import six
           class MyClass(with_metaclass(Singleton, object)):
               def __init__(self, *args, **kwargs):
@@ -247,6 +250,7 @@ class ThreadGroupLocal(object):
     详细使用方式请参考ThreadGroupScope类
     
     - 当不在ThreadGroupScope中使用时，行为和threading.local()一致
+    
     '''
     def __init__(self):
         curr_thread = threading.current_thread()
