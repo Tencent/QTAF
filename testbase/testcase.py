@@ -435,9 +435,9 @@ class TestCase(object):
         :param expect: 要匹配的正则表达式 
         :return: 匹配成果
         '''
-        if isinstance(actual,six.string_types):
+        if isinstance(actual, six.string_types):
             actual = smart_text(actual)
-        if isinstance(expect,):
+        if isinstance(expect, six.string_types):
             expect = smart_text(expect)        
         if re.search(expect, actual):
             return True

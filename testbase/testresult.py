@@ -117,6 +117,8 @@ class TestResultBase(object):
         self.__begin_time = None
         self.__end_time = None
         self.__error_level = 0
+        self.__failed_info = ""
+        self.__failed_priority = 0
         
     @property
     def testcase(self):
@@ -148,6 +150,14 @@ class TestResultBase(object):
             return levelname.get(self.__error_level, 'unknown')
         else:
             return ''
+    
+    @property
+    def failed_info(self):
+        '''测试用例失败时的执行状况
+        
+        :returns: str
+        '''
+        return self.__failed_info
         
     @property
     def begin_time(self):
@@ -225,12 +235,25 @@ class TestResultBase(object):
             raise ValueError("msg='%r'必须是string类型" % msg)
         msg = smart_text(msg)
         if level >= EnumLogLevel.ERROR:
-                self.__steps_passed[self.__curr_step] = False
-                if level > self.__error_level:
-                    self.__error_level = level
-                extra_record, extra_attachments = self._get_extra_fail_record_safe()
-                record.update(extra_record)
-                attachments.update(extra_attachments)
+            self.__steps_passed[self.__curr_step] = False
+            if level > self.__error_level:
+                self.__error_level = level
+            extra_record, extra_attachments = self._get_extra_fail_record_safe()
+            record.update(extra_record)
+            attachments.update(extra_attachments)
+                
+            if self.__failed_priority <= 3 and level == EnumLogLevel.APPCRASH:
+                self.__failed_info, self.__failed_priority = "Crash", 3
+                    
+            if self.__failed_priority <= 2 and level == EnumLogLevel.TESTTIMEOUT:
+                self.__failed_info, self.__failed_priority = "用例执行超时", 2
+                  
+            if self.__failed_priority <= 1 and level == EnumLogLevel.ASSERT:
+                self.__failed_info, self.__failed_priority = msg, 1
+                    
+            if self.__failed_priority <= 1 and "traceback" in record:
+                if not self.__failed_info: #优先记录第一个异常，第一个异常往往比较大可能是问题的原因
+                    self.__failed_info, self.__failed_priority = record["traceback"].split('\n')[-2], 1
                 
         with self.__lock:
             if not self.__accept_result:
@@ -630,7 +653,8 @@ class JSONResult(TestResultBase):
             "priority": testcase.priority,
             "status": testcase.status,
             "timeout": testcase.timeout,
-            "steps": self._steps
+            "steps": self._steps,
+            "failed_info": "",
         }
         self._translated_name = translate_test_name(testcase.test_name)
         
@@ -661,8 +685,9 @@ class JSONResult(TestResultBase):
         :type passed: boolean
         '''
         self._data["succeed"] = passed
-        self._data["start_time"] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(self.begin_time)), 
-        self._data["end_time"] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(self.end_time)), 
+        self._data["start_time"] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(self.begin_time)) 
+        self._data["end_time"] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(self.end_time))
+        self._data["failed_info"] = self.failed_info
 
     def handle_step_begin(self, msg ):
         '''处理一个测试步骤的开始
@@ -717,7 +742,8 @@ class HtmlResult(JSONResult):
             var_name = os.path.basename(file_name)
             var_name = os.path.splitext(file_name)[0].replace(".", "_")
             content = "var %s = %s" % (var_name, json.dumps(self._data))
-            with codecs_open(file_path, mode="w", encoding="utf-8") as fd:
+            content = smart_binary(content)
+            with codecs_open(file_path, mode="wb") as fd:
                 fd.write(content)
         return file_path
 
