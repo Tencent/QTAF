@@ -53,7 +53,6 @@ if __name__ == "__main__":
       py_modules=["qtaf_settings", "__main__", "qta-manage"],
       include_package_data=True,
       package_data={'':['*.txt', '*.TXT'], },
-      data_files=[(".", ["requirements.txt", "version.txt"])],
       description = "Basic test automation framework for QTA",
       long_description=get_description(),
       long_description_content_type="text/markdown",

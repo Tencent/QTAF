@@ -84,62 +84,68 @@ class TestReportTest(unittest.TestCase):
                 os.chdir(old_cwd)
             
     def test_json_report(self):
-        def _clean_json_report(json_report_file, results=None):
-            if results is None:
-                with codecs_open(json_report_file, "r", encoding="utf-8") as fd:
-                    content = fd.read()
-                    results = json.loads(content)["results"]
-            json_files = results[:]
-            json_files.append(json_report_file)
-            for json_file in json_files:
-                os.remove(json_file)
-               
         test_pairs = [("HelloTest", "断言失败"),
                     ("TimeoutTest", "用例执行超时"),
                     ("CrashTest", "App Crash"),
-                    ("QT4iTest", "run_test执行失败"),]
-        for test_name, reason in test_pairs:
+                    ("QT4iTest", "run_test执行失败")]
+        
+        old_cwd = os.getcwd()
+        try:
+            for test_name, reason in test_pairs:
+                time_str = get_time_str()
+                working_dir = test_name + "_" + time_str
+                os.makedirs(working_dir)
+                os.chdir(working_dir)
+                self.addCleanup(shutil.rmtree, working_dir, True)
+                
+                test_report_name = "%s_%s.json" % (time_str, test_name)
+                with codecs_open(test_report_name, "w", encoding="utf-8") as fd:
+                    test_report = report.report_types["json"](fd=fd)
+                    test_runner = runner.runner_types["basic"](test_report)
+                    test_name = "test.sampletest.hellotest.%s" % test_name
+                    print("json report test for test: " + test_name)
+                    test_runner.run(test_name)
+                with codecs_open(test_report_name, "r", encoding="utf-8") as fd:
+                    content = fd.read()
+                    report_json = json.loads(content)
+                    self.assertEqual(report_json["loaded_testcases"][0]["name"], test_name)
+                    test_results = report_json["results"]
+                    self.assertEqual(len(test_results), 1)
+                    with codecs_open(test_results[test_name][0], "r", encoding="utf-8") as fd2:
+                        content = fd2.read()
+                        result_json = json.loads(content)
+                        self.assertEqual(result_json["succeed"], False)
+                        failed_step = result_json["steps"][-1]
+                        self.assertEqual(failed_step["succeed"], False)
+                        actual_reson = smart_text(failed_step["logs"][0]["message"])
+                        self.assertRegexpMatches(actual_reson, reason)
+        finally:
+            os.chdir(old_cwd)
+            
+        try:
+            test_name = "test.sampletest.hellotest.HelloTest test.sampletest.hellotest.TimeoutTest"
             time_str = get_time_str()
-            test_report_name = "%s_%s.json" % (time_str, test_name)
+            working_dir = test_name + "_" + time_str
+            os.makedirs(working_dir)
+            os.chdir(working_dir)
+            self.addCleanup(shutil.rmtree, working_dir, True)
+            
+            test_report_name = "test_json_report_%s.json" % time_str
+            retry_count = 2
             with codecs_open(test_report_name, "w", encoding="utf-8") as fd:
-                test_report = report.report_types["json"](fd=fd)
-                test_runner = runner.runner_types["basic"](test_report)
-                test_name = "test.sampletest.hellotest.%s" % test_name
-                print("json report test for test: " + test_name)
+                test_report = report.report_types["json"](fd=fd, title="test_json_report")
+                test_runner = runner.runner_types["multithread"](test_report, retries=retry_count)
                 test_runner.run(test_name)
             with codecs_open(test_report_name, "r", encoding="utf-8") as fd:
                 content = fd.read()
                 report_json = json.loads(content)
-                self.assertEqual(report_json["loaded_testcases"][0]["name"], test_name)
-                test_results = report_json["results"]
-                self.addCleanup(_clean_json_report, test_report_name, test_results)
-                self.assertEqual(len(test_results), 1)
-                with codecs_open(test_results[0], "r", encoding="utf-8") as fd2:
-                    content = fd2.read()
-                    result_json = json.loads(content)
-                    self.assertEqual(result_json["succeed"], False)
-                    failed_step = result_json["steps"][-1]
-                    self.assertEqual(failed_step["succeed"], False)
-                    actual_reson = smart_text(failed_step["logs"][0]["message"])
-                    self.assertRegexpMatches(actual_reson, reason)
-            
-        test_name = "test.sampletest.hellotest.HelloTest test.sampletest.hellotest.TimeoutTest"
-        time_str = get_time_str()
-        test_report_name = "test_json_report_%s.json" % time_str
-        retry_count = 2
-        with codecs_open(test_report_name, "w", encoding="utf-8") as fd:
-            test_report = report.report_types["json"](fd=fd, title="test_json_report")
-            test_runner = runner.runner_types["multithread"](test_report, retries=retry_count)
-            test_runner.run(test_name)
-        with codecs_open(test_report_name, "r", encoding="utf-8") as fd:
-            content = fd.read()
-            report_json = json.loads(content)
-            summary = report_json["summary"]
-            self.assertEqual(summary["testcase_total_run"], (retry_count + 1) * 2)
-            self.assertEqual(summary["testcase_total_count"], 2)
-            self.assertTrue("hostname" in summary)
-            self.assertTrue("os" in summary)
-            self.addCleanup(_clean_json_report, test_report_name)
+                summary = report_json["summary"]
+                self.assertEqual(summary["testcase_total_run"], (retry_count + 1) * 2)
+                self.assertEqual(summary["testcase_total_count"], 2)
+                self.assertTrue("hostname" in summary)
+                self.assertTrue("os" in summary)
+        finally:
+            os.chdir(old_cwd)
             
     def test_html_report(self):
         test_pairs = [("HelloTest", "断言失败"),
@@ -154,6 +160,7 @@ class TestReportTest(unittest.TestCase):
                 os.makedirs(working_dir)
                 os.chdir(working_dir)
                 self.addCleanup(shutil.rmtree, working_dir, True)
+                
                 test_report = report.report_types["html"](title="test html report")
                 test_runner = runner.runner_types["basic"](test_report)
                 test_name = "test.sampletest.hellotest.%s" % test_name
@@ -168,7 +175,7 @@ class TestReportTest(unittest.TestCase):
                     self.assertEqual(qta_report["loaded_testcases"][0]["name"], test_name)
                     test_results = qta_report["results"]
                     self.assertEqual(len(test_results), 1)
-                    with codecs_open(test_results[0], "r", encoding="utf-8") as fd2:
+                    with codecs_open(test_results[test_name][0], "r", encoding="utf-8") as fd2:
                         content = fd2.read()
                         index = content.find("{")
                         result_json_data = content[index:]
@@ -181,5 +188,38 @@ class TestReportTest(unittest.TestCase):
                 
             finally:
                 os.chdir(old_cwd)
-
+                
+        try:
+            test_name = "DataDriveCase"
+            working_dir = test_name + "_" + get_time_str()
+            os.makedirs(working_dir)
+            os.chdir(working_dir)
+            self.addCleanup(shutil.rmtree, working_dir, True)
+            
+            test_report = report.report_types["html"](title="test html report")
+            test_runner = runner.runner_types["basic"](test_report)
+            test_name = "test.sampletest.hellotest." + test_name
+            test_runner.run(test_name)
+            
+            with codecs_open("qta-report.js", encoding="utf-8") as fd:
+                content = fd.read()
+                index = content.find("{")
+                qta_report_data = content[index:]
+                qta_report = json.loads(qta_report_data)
+                self.assertEqual(len(qta_report["loaded_testcases"]), 2)
+                for item in ["中国", "xxx"]:
+                    is_ok = map(lambda x: item in smart_text(x["name"]), qta_report["loaded_testcases"])
+                    self.assertTrue(any(is_ok))
+                test_results = qta_report["results"]
+                self.assertEqual(len(test_results), 2)
+                
+                for test_name in map(lambda x: x["name"], qta_report["loaded_testcases"]):
+                    with codecs_open(test_results[test_name][0], "r", encoding="utf-8") as fd2:
+                        content = fd2.read()
+                        index = content.find("{")
+                        result_json_data = content[index:]
+                        result_json = json.loads(result_json_data)
+                        self.assertEqual(result_json["succeed"], True)
+        finally:
+            os.chdir(old_cwd)
 

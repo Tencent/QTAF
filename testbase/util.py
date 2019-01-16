@@ -567,7 +567,7 @@ else:
     maketrans_func = string.maketrans
         
 BAD_CHARS = r'\/*?:<>"|~'
-TRANS = maketrans_func(BAD_CHARS, '='*len(BAD_CHARS))
+TRANS = maketrans_func(BAD_CHARS, '_'*len(BAD_CHARS))
 
 def get_time_str():
     now = datetime.now()

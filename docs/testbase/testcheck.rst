@@ -61,7 +61,7 @@
    ----------------------------------------
    步骤1: 测试字符串拼接
    ASSERT: 检查点不通过:
-     File "D:\Guying\Workspace\DemoProj\test_assert.py", line 22, in run_test
+     File "D:\foo\Workspace\DemoProj\test_assert.py", line 22, in run_test
        self.assert_("检查string_combine调用结果", result == "xxXyy")
     [检查string_combine调用结果] assert  'xxXb' == 'xxXyy'
    ============================================================
@@ -139,7 +139,7 @@ QTA测试用例的代码的执行控制逻辑和一般Python的代码是类似�
    ----------------------------------------
    步骤1: 用例断言失败
    ASSERT: 检查点不通过:
-     File "D:\Guying\Workspace\DemoProj\test_assert.py", line 17, in run_test
+     File "D:\foo\Workspace\DemoProj\test_assert.py", line 17, in run_test
        self.assert_("断言失败", False)
     [断言失败] assert  False
    ----------------------------------------
@@ -200,7 +200,7 @@ QTA测试用例的代码的执行控制逻辑和一般Python的代码是类似�
    <_RetryItem iter=3, ts=1535363023.06>
    <_RetryItem iter=4, ts=1535363023.56>
    Traceback (most recent call last):
-     File "D:\Guying\Workspace\DemoProj\test_assert.py", line 5, in <module>
+     File "D:\foo\Workspace\DemoProj\test_assert.py", line 5, in <module>
        for item in Retry(timeout=2, interval=0.5):
      File "C:\Users\foo\git\qtaf\testbase\retry.py", line 54, in next
        raise RetryLimitExcceeded("funtion retried %s times in %ss" % (self.__count, self.timeout))
@@ -226,7 +226,7 @@ Retry的默认参数是tiemout=10，interval=0.5，使用最大的重试时间�
    <_RetryItem iter=2, ts=1535363745.18>
    <_RetryItem iter=3, ts=1535363745.68>
    Traceback (most recent call last):
-     File "D:\Guying\Workspace\DemoProj\test_assert.py", line 4, in <module>
+     File "D:\foo\Workspace\DemoProj\test_assert.py", line 4, in <module>
        for item in Retry(limit=3, interval=0.5):
      File "C:\Users\foo\git\qtaf\testbase\retry.py", line 78, in next
        raise RetryLimitExcceeded("function retried for %s times" % self.limit)
