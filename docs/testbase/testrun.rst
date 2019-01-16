@@ -71,7 +71,7 @@
 
 使用--owner可以根据用例作者过滤用例，多个--owner选项可以指定多个owner，例如::
 
-   $ python manage.py runtest zoo --owner guying
+   $ python manage.py runtest zoo --owner foo
    
 ====================
 指定用例标签

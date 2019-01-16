@@ -543,10 +543,7 @@ class TestCase(object):
             else:
                 raise RuntimeError("非数据驱动用例请使用debug_run接口进行调试执行")
         else:
-            runner.run([self])
-            return self
-        
-        
+            return runner.run([self])
         
     #----------------------------------------------------   
     #    以下为兼容老的代码风格的接口，新代码请勿再使用

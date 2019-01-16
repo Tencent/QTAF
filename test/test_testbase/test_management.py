@@ -35,13 +35,13 @@ class RuntestTest(unittest.TestCase):
             
         cmdline = "--status Ready --status Design --priority BVT --priority High --priority Normal" \
                   " --tag xxx --tag ooo --excluded-tag aaa --excluded-tag bbb" \
-                  " --owner guying --owner banana xxxx".split()
+                  " --owner apple --owner banana xxxx".split()
         args = RunTest.parser.parse_args(cmdline)
         self.assertEqual(args.status, ["Ready", "Design"])
         self.assertEqual(args.priorities, ["BVT", "High", "Normal"])
         self.assertEqual(args.tags, ["xxx", "ooo"])
         self.assertEqual(args.excluded_tags, ["aaa", "bbb"])
-        self.assertEqual(args.owners, ["guying", "banana"])
+        self.assertEqual(args.owners, ["apple", "banana"])
         self.assertEqual(args.tests, ["xxxx"])
         
     def test_report_args_parsing(self):

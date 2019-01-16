@@ -687,7 +687,7 @@ class JSONTestReportBase(ITestReport):
         :param title: 报告标题
         :type title: str
         '''
-        self._results = []
+        self._results = {}
         self._logs = []
         self._filtered_tests = []
         self._load_errors = []
@@ -741,7 +741,10 @@ class JSONTestReportBase(ITestReport):
             
         if testresult.passed:
             self._testcase_passed += 1
-        self._results.append(testresult.get_file())
+        if testcase.test_name not in self._results:
+            self._results[testcase.test_name] = [testresult.get_file()]
+        else:
+            self._results[testcase.test_name].append(testresult.get_file())
     
     def log_record(self, level, tag, msg, record):
         '''增加一个记录
