@@ -48,17 +48,11 @@ import xml.sax.saxutils as saxutils
 
 from testbase import context
 from testbase.util import smart_text, get_thread_traceback, get_method_defined_class, \
-    to_pretty_xml, smart_binary, ensure_binary_stream, codecs_open, TRANS, get_time_str
+    to_pretty_xml, smart_binary, ensure_binary_stream, codecs_open, get_time_str, \
+    translate_bad_char, file_encoding, path_exists
 
     
 os_encoding = locale.getdefaultlocale()[1]
-
-def translate_test_name(testname):
-    if six.PY2:
-        translated_name = smart_binary(testname).translate(TRANS)
-    else:
-        translated_name = smart_text(testname).translate(TRANS)
-    return translated_name
 
 class EnumLogLevel(object):
     '''日志级别
@@ -480,7 +474,7 @@ class StreamResult(TestResultBase):
             
         for name in attachments:
             file_path = smart_text(attachments[name])
-            if os.path.exists(file_path):
+            if path_exists(file_path):
                 file_path = os.path.abspath(file_path)
             self._write("   %s:%s\n" % (smart_text(name), file_path))
 
@@ -496,7 +490,7 @@ class XmlResult(TestResultBase):
         '''
         super(XmlResult, self).__init__()
         self._xmldoc = dom.Document()
-        translated_name = translate_test_name(testcase.test_name)
+        translated_name = translate_bad_char(testcase.test_name)
         self._file_path = '%s_%s.xml' % (translated_name, get_time_str())
     
     @property
@@ -656,19 +650,18 @@ class JSONResult(TestResultBase):
             "steps": self._steps,
             "failed_info": "",
         }
-        self._translated_name = translate_test_name(testcase.test_name)
+        self._translated_name = translate_bad_char(testcase.test_name)
         
     def get_data(self):
         return self._data
     
     def get_file(self):
         file_name = '%s_%s.json' % (self._translated_name, get_time_str())
-        file_path = os.path.join(os.getcwd(), file_name)
-        if not os.path.exists(file_path):
+        if not path_exists(file_name):
             content = json.dumps(self._data)
-            with codecs_open(file_path, mode="w", encoding="utf-8") as fd:
+            with codecs_open(file_name, mode="w", encoding="utf-8") as fd:
                 fd.write(content)
-        return file_path
+        return file_name
     
     def handle_test_begin(self, testcase ):
         '''处理一个测试用例执行的开始
@@ -737,15 +730,14 @@ class HtmlResult(JSONResult):
     """
     def get_file(self):
         file_name = '%s_%s.js' % (self._translated_name, get_time_str())
-        file_path = os.path.join(os.getcwd(), file_name)
-        if not os.path.exists(file_path):
+        if not path_exists(file_name):
             var_name = os.path.basename(file_name)
             var_name = os.path.splitext(file_name)[0].replace(".", "_")
             content = "var %s = %s" % (var_name, json.dumps(self._data))
             content = smart_binary(content)
-            with codecs_open(file_path, mode="wb") as fd:
+            with codecs_open(file_name, mode="wb") as fd:
                 fd.write(content)
-        return file_path
+        return file_name
 
 
 class TestResultCollection(list):

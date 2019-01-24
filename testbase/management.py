@@ -34,7 +34,7 @@ from testbase.testcase import TestCasePriority, TestCaseStatus
 from testbase.runner import TestCaseSettings, runner_types
 from testbase.report import report_types
 from testbase.resource import resmgr_backend_types
-from testbase.util import codecs_open
+from testbase.util import codecs_open, path_exists
 
 class ArgumentParser(object):
     """参数解析
@@ -238,7 +238,7 @@ class RunTest(Command):
         runner = runner_type.parse_args(shlex.split(args.runner_args), report_inst, resmgr_backend)
         
         prev_dir = os.getcwd()
-        if not os.path.exists(args.working_dir):
+        if not path_exists(args.working_dir):
             os.makedirs(args.working_dir)
         os.chdir(args.working_dir)
         runner.run(test_conf)
