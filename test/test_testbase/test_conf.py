@@ -58,6 +58,14 @@ class Dummy3(SettingsMixin):
 class DummyChild(Dummy):
     class Settings(object):
         DUMMYCHILD_A = 2
+        
+class DummyChild2(Dummy):
+    class Settings(object):
+        DUMMY_A = 1
+        
+class DummyChild3(Dummy):
+    class Settings(object):
+        DUMMYCHILD3_B = -1
 
 class SettingsMixinTest(unittest.TestCase):
     """test case for settings mixin class
@@ -81,6 +89,7 @@ class SettingsMixinTest(unittest.TestCase):
     def test_declare(self):
         self.assertRaises(RuntimeError, getattr, Dummy2(), "settings")
         self.assertRaises(RuntimeError, getattr, Dummy3(), "settings")
+        self.assertRaises(RuntimeError, getattr, Dummy3(), "settings")
         
     def test_deriving(self):
         self.reset_class_settings(DummyChild)
@@ -95,12 +104,18 @@ class SettingsMixinTest(unittest.TestCase):
             
             self.reset_class_settings(DummyChild)
             child = DummyChild()
-            self.assertRaises(ValueError, getattr, child, "settings")
+            self.assertRaises(RuntimeError, getattr, child, "settings")
             
         with modify_settings(DUMMYCHILD_A=4):
             self.reset_class_settings(DummyChild)
             self.assertEqual(child.settings.DUMMY_A, 4)
             self.assertEqual(child.settings.DUMMYCHILD_A, 4)
+            
+        self.assertRaises(RuntimeError, getattr, DummyChild2(), "settings")
+        
+        child = DummyChild3()
+        self.assertEqual(child.settings.DUMMYCHILD3_B, -1)
+        self.assertRaises(AttributeError, getattr, child.settings, "DUMMYCHILD3_A")
             
     def reset_class_settings(self, cls):
         settings_key = "_%s_settings" % cls.__name__
@@ -108,4 +123,4 @@ class SettingsMixinTest(unittest.TestCase):
             delattr(cls, settings_key)
         
 if __name__ == "__main__":
-    unittest.main(defaultTest="SettingsMixinTest")
+    unittest.main(defaultTest="SettingsMixinTest.test_deriving")

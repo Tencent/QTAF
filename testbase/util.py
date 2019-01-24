@@ -408,13 +408,21 @@ def smart_binary(s, encoding="utf8", decoding=None):
                 return bytes(repr(s), encoding)
             else:
                 return bytes(repr(s))
+
+def smart_bytes(data):
+    if not isinstance(data, (six.string_types, six.binary_type)):
+        raise ValueError("data=%r does not match string or bytes type" % data)
+    if isinstance(data, six.text_type):
+        return smart_binary(data)
+    else:
+        return data
             
-def text_to_hex(s, encoding="utf8", decoding=None):
+def smart_to_hex(s, encoding="utf8", decoding=None):
     s = smart_binary(s, encoding=encoding, decoding=decoding)
     binary_s = binascii.hexlify(s)
     return smart_text(binary_s)
 
-def text_from_hex(s):
+def smart_from_hex(s):
     s = smart_binary(s)
     binary_s = binascii.unhexlify(s)
     return smart_text(binary_s)
@@ -530,19 +538,18 @@ def to_pretty_xml(doc, encoding="utf-8"):
     return writer.stream.getvalue()
 
 def ensure_binary_stream(stream, encoding="utf-8"):
-    encoding = "utf-8"
     if six.PY3:
         stream_type = type(stream)
         if not issubclass(stream_type, io.IOBase):
-            raise ValueError("stream=%r does not match subclass of io.IOBase", stream)
+            raise ValueError("stream=%r does not match subclass of io.IOBase" % stream)
         if not hasattr(stream, "mode"):
-            raise ValueError("stream=%r does not have attribute mode", stream)
+            raise ValueError("stream=%r does not have attribute mode" % stream)
         if "b" in stream.mode:
             new_stream = stream
         else:
             new_stream = stream.buffer
     else:
-        if stream.encoding:
+        if getattr(stream, "encoding", None):
             if not stream.encoding.lower().startswith('ansi'): # linux ascii
                 encoding = stream.encoding
         new_stream = stream
@@ -551,6 +558,10 @@ def ensure_binary_stream(stream, encoding="utf-8"):
 def codecs_open(filename, mode="rb", encoding=None, errors="strict", buffering=1):
     filename = smart_binary(filename, encoding=file_encoding)
     return codecs.open(filename, mode=mode, encoding=encoding, errors=errors, buffering=buffering)
+
+def path_exists(filename):
+    filename = smart_binary(filename, encoding=file_encoding)
+    return os.path.exists(filename)
 
 def get_os_version():
     if sys.platform == 'win32':
@@ -581,9 +592,34 @@ def get_inner_resource(resource_module, resource_name):
         mod = importlib.import_module(resource_module)
         mod_path = mod.__path__[0]
         file_path = os.path.join(mod_path, resource_name)
-    if not os.path.exists(file_path):
+    if not path_exists(file_path):
         raise RuntimeError("resource path: %s not existed." % file_path)
     return file_path
+
+def translate_bad_char(input_string):
+    if six.PY2:
+        translated_string = smart_binary(input_string).translate(TRANS)
+    else:
+        translated_string = smart_text(input_string).translate(TRANS)
+    return translated_string
+
+def get_attribute_from_string(object_path):
+    parts = object_path.split(".")
+    parts_len = len(parts)
+    mod = None
+    for index in range(parts_len):
+        mod_path = ".".join(parts[:index + 1])
+        try:
+            mod = importlib.import_module(mod_path)
+        except ImportError:
+            break
+    value = mod
+    for new_index in range(index, parts_len):
+        try:
+            value = getattr(value, parts[new_index])
+        except AttributeError:
+            raise AttributeError("%s has no attribute or submodule named \"%s\"" % (value, parts[new_index]))
+    return value
         
 if __name__ == "__main__":
     pass

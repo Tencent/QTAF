@@ -35,6 +35,7 @@ from testbase import testresult
 from testbase.testresult import EnumLogLevel
 from testbase.util import smart_text, smart_binary, to_pretty_xml, ensure_binary_stream, \
     codecs_open, get_os_version, get_inner_resource
+from testbase.version import version
     
 REPORT_ENTRY_POINT = "qtaf.report"
 report_types = {}
@@ -697,6 +698,7 @@ class JSONTestReportBase(ITestReport):
             "summary": {
                 "tool": "QTA",
                 "title": title,
+                "environment" : {}
             },
             "results": self._results,
             "logs": self._logs,
@@ -713,8 +715,14 @@ class JSONTestReportBase(ITestReport):
         '''开始测试执行
         '''
         self._data["summary"]["start_time"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        self._data["summary"]["hostname"] = socket.gethostname()
-        self._data["summary"]["os"] = get_os_version()
+        self._data["summary"]["environment"]["hostname"] = socket.gethostname()
+        self._data["summary"]["environment"]["os"] = get_os_version()
+        self._data["summary"]["environment"]["qtaf_version"] = version
+        python_version = "%s.%s.%s[%s]" % (sys.version_info[0],
+                                           sys.version_info[1],
+                                           sys.version_info[2],
+                                           sys.platform)
+        self._data["summary"]["environment"]["python_version"] = python_version
 
     def end_report(self):
         '''结束测试执行
@@ -920,7 +928,7 @@ def __init_report_types():
                 report_types[ep.name] = ep.load()
             except:
                 stack = traceback.format_exc()
-                logger.warn("load ITestReport entry point for %s failed:\n" % (ep.name, stack))
+                logger.warn("load ITestReport entry point for %s failed:\n%s" % (ep.name, stack))
 
 __init_report_types()
 del __init_report_types

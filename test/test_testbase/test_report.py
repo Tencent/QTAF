@@ -142,8 +142,10 @@ class TestReportTest(unittest.TestCase):
                 summary = report_json["summary"]
                 self.assertEqual(summary["testcase_total_run"], (retry_count + 1) * 2)
                 self.assertEqual(summary["testcase_total_count"], 2)
-                self.assertTrue("hostname" in summary)
-                self.assertTrue("os" in summary)
+                self.assertTrue("hostname" in summary["environment"])
+                self.assertTrue("os" in summary["environment"])
+                self.assertTrue("qtaf_version" in summary["environment"])
+                self.assertTrue("python_version" in summary["environment"])
         finally:
             os.chdir(old_cwd)
             

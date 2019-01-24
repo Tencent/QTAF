@@ -214,19 +214,26 @@ class _InnerSettings(object):
     """inner settings for a SettingsMixin class
     """
     def __init__(self, defined_class):
-        self.__tailor_names = {}
+        self.__tailer_names = {}
+        self.__allowed_prefix = set()
         self.__sealed = False
         self.__load_settings(defined_class)
         self.__sealed = True
         
     def __load_settings(self, defined_class):
+        self.__allowed_prefix.add(defined_class.__name__.upper())
         classes = [ defined_class ]
         while classes:
             cls = classes.pop()
+            need_load = True
             for temp_cls in cls.__bases__:
                 if hasattr(temp_cls, "Settings") and issubclass(temp_cls, SettingsMixin):
+                    if getattr(cls, "Settings") == getattr(temp_cls, "Settings"):
+                        need_load = False # class Settings derived from parent 
                     classes.append(temp_cls)
-            self.__load_class_settings(cls)
+                    self.__allowed_prefix.add(temp_cls.__name__.upper())
+            if need_load: 
+                self.__load_class_settings(cls)
             
     def __load_class_settings(self, cls):
         prefix = cls.__name__.upper() + "_"
@@ -236,27 +243,31 @@ class _InnerSettings(object):
             if key.startswith(prefix) and key.isupper():
                 # handle legacy
                 tailor_name = key[len(prefix):]
-                if tailor_name in self.__tailor_names:
+                if tailor_name in self.__tailer_names:
                     if key in settings:
                         # we don't think this is a good way to overwrite settings
-                        err_msg = "you may overwriting setting item {} instead of using base item {}."
-                        err_msg = err_msg.format(self.__tailor_names[tailor_name], key)
-                        raise ValueError(err_msg)
+                        err_msg = "overwriting settings in project using {} instead of {}."
+                        err_msg = err_msg.format(self.__tailer_names[tailor_name], key)
+                        raise RuntimeError(err_msg)
                     else:
-                        value = getattr(self, self.__tailor_names[tailor_name])
+                        value = getattr(self, self.__tailer_names[tailor_name])
                 else:
                     if key in settings:
                         value = settings.get(key)
                     else:
                         value = getattr(inner_settings_cls, key)
-                    self.__tailor_names[tailor_name] = key
+                    self.__tailer_names[tailor_name] = key
                 setattr(self, key,  value)    
                 
             elif not key.startswith("_"):
-                if not key.startswith(prefix):
-                    raise RuntimeError("%s's Settings item `%s` must start with %s like %s%s" % (class_path, key, prefix, prefix, key.upper()))
-                elif not key.isupper():
-                    raise RuntimeError("%s's Settings item `%s` must be upper like %s" % (class_path, key, key.upper()))
+                for item in self.__allowed_prefix:
+                    if key.startswith(item):
+                        tailor_name = key[len(item) + 1:]
+                        break
+                else:
+                    tailor_name = key.upper()
+                err_msg = "%s's Settings item `%s` must start with %s like %s%s" % (class_path, key, prefix, prefix, tailor_name)
+                raise RuntimeError(err_msg)
         
     def __setattr__(self, name, value):
         if not name.startswith('_InnerSettings__') and self.__sealed:
