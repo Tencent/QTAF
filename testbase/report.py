@@ -2,12 +2,12 @@
 #
 # Tencent is pleased to support the open source community by making QTA available.
 # Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
-# Licensed under the BSD 3-Clause License (the "License"); you may not use this 
+# Licensed under the BSD 3-Clause License (the "License"); you may not use this
 # file except in compliance with the License. You may obtain a copy of the License at
-# 
+#
 # https://opensource.org/licenses/BSD-3-Clause
-# 
-# Unless required by applicable law or agreed to in writing, software distributed 
+#
+# Unless required by applicable law or agreed to in writing, software distributed
 # under the License is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
 # OF ANY KIND, either express or implied. See the License for the specific language
 # governing permissions and limitations under the License.
@@ -36,12 +36,12 @@ from testbase.testresult import EnumLogLevel
 from testbase.util import smart_text, smart_binary, to_pretty_xml, ensure_binary_stream, \
     codecs_open, get_os_version, get_inner_resource
 from testbase.version import version
-    
+
 REPORT_ENTRY_POINT = "qtaf.report"
 report_types = {}
 os_encoding = locale.getdefaultlocale()[1]
 report_usage = 'runtest <test ...> --report-type <report-type> [--report-args "<report-args>"]'
-        
+
 class ITestReport(object):
     '''测试报告接口
     '''
@@ -49,7 +49,7 @@ class ITestReport(object):
         '''开始测试执行
         '''
         pass
-    
+
     def end_report(self):
         '''结束测试执行
 
@@ -57,7 +57,7 @@ class ITestReport(object):
         :type passed: boolean
         '''
         pass
-        
+
     def log_test_result(self, testcase, testresult ):
         '''记录一个测试结果
 
@@ -67,7 +67,7 @@ class ITestReport(object):
         :type testresult: TestResult
         '''
         pass
-    
+
     def log_record(self, level, tag, msg, record):
         '''增加一个记录
 
@@ -133,14 +133,14 @@ class ITestReport(object):
         :type resource: dict
         '''
         pass
-    
+
     def get_testresult_factory(self):
         '''获取对应的TestResult工厂
 
         :returns ITestResultFactory
         '''
         raise NotImplementedError()
-    
+
     def debug(self, tag, msg, record=None):
         '''记录一个DEBUG日志
         :param msg: 日志消息
@@ -153,7 +153,7 @@ class ITestReport(object):
         if record is None:
             record = {}
         self.log_record(EnumLogLevel.DEBUG, tag, msg, record)
-        
+
     def info(self, tag, msg, record=None):
         '''记录一个INFO日志
         :param msg: 日志消息
@@ -166,7 +166,7 @@ class ITestReport(object):
         if record is None:
             record = {}
         self.log_record(EnumLogLevel.INFO, tag, msg, record)
-        
+
     def warning(self, tag, msg, record=None):
         '''记录一个WARN日志
         :param msg: 日志消息
@@ -179,7 +179,7 @@ class ITestReport(object):
         if record is None:
             record = {}
         self.log_record(EnumLogLevel.WARNING, tag, msg, record)
-        
+
     def error(self, tag, msg, record=None):
         '''记录一个ERROR日志
         :param msg: 日志消息
@@ -192,7 +192,7 @@ class ITestReport(object):
         if record is None:
             record = {}
         self.log_record(EnumLogLevel.ERROR, tag, msg, record)
-        
+
     def critical(self, tag, msg, record=None):
         '''记录一个CRITICAL日志
         :param msg: 日志消息
@@ -205,6 +205,13 @@ class ITestReport(object):
         if record is None:
             record = {}
         self.log_record(EnumLogLevel.CRITICAL, tag, msg, record)
+
+    def is_passed(self):
+        '''报告中所有用例是否都通过
+
+        :return: boolean
+        '''
+        pass
 
     @classmethod
     def get_parser(cls):
@@ -223,7 +230,32 @@ class ITestReport(object):
         :rtype: cls
         '''
         raise NotImplementedError()
+
+class TestReportBase(ITestReport):
+    '''TestReport基类
+    '''
+    def __init__(self):
+        '''构造函数
+        '''
+        self._cases_passed = {}
+
+    def log_test_result(self, testcase, testresult ):
+        '''记录一个测试结果
+
+        :param testcase: 测试用例
+        :type testcase: TestCase
+        :param testresult: 测试结果
+        :type testresult: TestResult
+        '''
+        self._cases_passed[testcase.test_name] = testresult.passed
+
+    def is_passed(self):
+        '''报告中是否所有用例都通过，兼容已有EmptyTestReport
         
+        :return: boolean
+        '''
+        return all(self._cases_passed.values())
+
 class ITestResultFactory(object):
     '''TestResult工厂接口
     '''
@@ -234,20 +266,20 @@ class ITestResultFactory(object):
         :return TestResult
         '''
         raise NotImplementedError()
-    
+
     def dumps(self):
         '''序列化
         :return picklable object
         '''
         pass
-    
+
     def loads(self, buf):
         '''反序列化
         :param buf: dumps返回的序列化后的数据
         :type buf: object
         '''
         pass
-        
+
 class EmptyTestResultFactory(ITestResultFactory):
     '''测试结果工厂
     '''
@@ -257,7 +289,7 @@ class EmptyTestResultFactory(ITestResultFactory):
         :type result_factory_func: Function
         '''
         self._result_factory_func = result_factory_func
-        
+
     def create(self, testcase ):
         '''创建TestResult对象
         :param testcase: 测试用例
@@ -268,21 +300,21 @@ class EmptyTestResultFactory(ITestResultFactory):
             return testresult.EmptyResult()
         else:
             return self._result_factory_func(testcase)
-        
+
     def dumps(self):
         '''序列化
         :return picklable object
         '''
         return self._result_factory_func
-    
+
     def loads(self, buf):
         '''反序列化
         :param buf: dumps返回的序列化后的数据
         :type buf: object
         '''
         self._result_factory_func = buf
-        
-class EmptyTestReport(ITestReport):
+
+class EmptyTestReport(TestReportBase):
     '''不输出测试报告
     '''
     def __init__(self, result_factory_func=None ):
@@ -290,31 +322,14 @@ class EmptyTestReport(ITestReport):
         :param result_factory_func: TestResult工厂函数
         :type result_factory_func: callable
         '''
+        super(EmptyTestReport, self).__init__()
         self._result_factory_func = result_factory_func
-        self._is_passed = True
-    
+
     def get_testresult_factory(self):
         '''获取对应的TestResult工厂
         :returns ITestResultFactory
         '''
         return EmptyTestResultFactory(self._result_factory_func)
-
-    def log_test_result(self, testcase, testresult ):
-        '''记录一个测试结果
-
-        :param testcase: 测试用例
-        :type testcase: TestCase
-        :param testresult: 测试结果
-        :type testresult: TestResult
-        '''
-        if not testresult.passed:
-            self._is_passed = False
-    
-    @property
-    def passed(self):
-        '''测试是否通过
-        '''
-        return self._is_passed
 
     @classmethod
     def get_parser(cls):
@@ -343,7 +358,7 @@ class StreamTestResultFactory(ITestResultFactory):
         :type stream: file
         '''
         self._stream = stream
-        
+
     def create(self, testcase ):
         '''创建TestResult对象
         :param testcase: 测试用例
@@ -351,7 +366,7 @@ class StreamTestResultFactory(ITestResultFactory):
         :return TestResult
         '''
         return testresult.StreamResult(self._stream)
-    
+
     def dumps(self):
         '''序列化
         :return picklable object
@@ -360,7 +375,7 @@ class StreamTestResultFactory(ITestResultFactory):
         if fileno not in [0, 1]:
             raise ValueError("不支持的流对象: %s" % self._stream)
         return fileno
-    
+
     def loads(self, buf):
         '''反序列化
         :param buf: dumps返回的序列化后的数据
@@ -373,8 +388,8 @@ class StreamTestResultFactory(ITestResultFactory):
             self._stream = sys.stderr
         else:
             raise ValueError("invalid fd: %s" % fileno )
-    
-class StreamTestReport(ITestReport):
+
+class StreamTestReport(TestReportBase):
     '''流形式的测试报告
     '''
     def __init__(self, stream=sys.stdout, error_stream=sys.stderr, output_testresult=False, output_summary=True ):
@@ -386,22 +401,23 @@ class StreamTestReport(ITestReport):
         :param output_summary: 是否输出执行汇总信息
         :type output_summary: boolean
         '''
+        super(StreamTestReport, self).__init__()
         self._stream, encoding = ensure_binary_stream(stream)
         self._err_stream, _ = ensure_binary_stream(error_stream)
         self._write = lambda x: self._stream.write(smart_binary(x, encoding=encoding))
         self._write_err = lambda x: self._err_stream.write(smart_binary(x, encoding=encoding))
-                    
+
         self._output_testresult = output_testresult
         self._output_summary = output_summary
         self._passed_testresults = []
-        self._failed_testresults = [] 
-            
+        self._failed_testresults = []
+
     def begin_report(self):
         '''开始测试执行
         '''
         self._start_time = datetime.now()
         self._write("Test runs at:%s.\n" % self._start_time.strftime("%Y-%m-%d %H:%M:%S"))
-    
+
     def end_report(self):
         '''结束测试执行
         :param passed: 测试是否通过
@@ -410,24 +426,24 @@ class StreamTestReport(ITestReport):
         end_time = datetime.now()
         self._write("Test ends at:%s.\n" % end_time.strftime("%Y-%m-%d %H:%M:%S"))
         #self._write("Total execution time is :%s\n" % str(end_time-self._start_time).split('.')[0])
-    
+
         if self._output_summary:
             self._write("\n" + "="*60 + "\n")
             self._write("SUMMARY:\n\n")
             self._write(" Totals: %s\t%0.4fs\n\n" % (len(self._failed_testresults) + len(self._passed_testresults),
                                                      (end_time-self._start_time).total_seconds()))
-            
+
             self._write(" Passed: %s\n" % len(self._passed_testresults))
             for it in self._passed_testresults:
                 self._write(" \t%s\t%0.4fs\n" % (it.testcase.test_name,
                                                  it.end_time-it.begin_time))
             self._write("\n")
-            
+
             self._write(" Failed: %s\n" % len(self._failed_testresults))
             for it in self._failed_testresults:
                 self._write_err(" \t%s\t%0.4fs\n" % (it.testcase.test_name,
                                                      it.end_time-it.begin_time))
-            
+
     def log_test_result(self, testcase, testresult ):
         '''记录一个测试结果
         :param testcase: 测试用例
@@ -435,12 +451,13 @@ class StreamTestReport(ITestReport):
         :param testresult: 测试结果
         :type testresult: TestResult
         '''
+        super(StreamTestReport, self).log_test_result(testcase, testresult)
         if testresult.passed:
             self._passed_testresults.append(testresult)
         else:
             self._failed_testresults.append(testresult)
         self._write("run test case: %s(pass?:%s)\n" % (testcase.test_name, testresult.passed))
-                    
+
     def log_record(self, level, tag, msg, record={}):
         '''增加一个记录
         :param level: 日志级别
@@ -453,7 +470,7 @@ class StreamTestReport(ITestReport):
         :type record: dict
         '''
         self._write("%s\n" % (msg))
-    
+
     def log_filtered_test(self, loader, testcase, reason):
         '''记录一个被过滤的测试用例
         :param loader: 用例加载器
@@ -488,7 +505,7 @@ class StreamTestReport(ITestReport):
             return StreamTestResultFactory(self._stream)
         else:
             return EmptyTestResultFactory()
-        
+
     @classmethod
     def get_parser(cls):
         '''获取命令行参数解析器（如果实现）
@@ -524,29 +541,30 @@ class XMLTestResultFactory(ITestResultFactory):
         '''
         return testresult.XmlResult(testcase)
 
-class XMLTestReport(ITestReport):
+class XMLTestReport(TestReportBase):
     '''XML形式的测试报告
     '''
     def __init__(self):
         '''构造函数
         '''
+        super(XMLTestReport, self).__init__()
         self._xmldoc = dom.Document()
         self._xmldoc.appendChild(self._xmldoc.createProcessingInstruction("xml-stylesheet", 'type="text/xsl" href="TestReport.xsl"'))
         self._runrstnode = self._xmldoc.createElement("RunResult")
         self._xmldoc.appendChild(self._runrstnode)
         self._result_factory = XMLTestResultFactory()
-        
+
     def begin_report(self):
         '''开始测试执行
         '''
         self._time_start = datetime.now()
-        
+
         xmltpl = "<TestEnv><PC>%s</PC><OS>%s</OS></TestEnv>"
         hostname = socket.gethostname()
         os_ver = get_os_version()
         envxml = dom.parseString(xmltpl % (hostname, os_ver))
         self._runrstnode.appendChild(envxml.childNodes[0])
-        
+
     def end_report(self):
         '''结束测试执行
         :param passed: 测试是否通过
@@ -557,7 +575,7 @@ class XMLTestReport(ITestReport):
         timexml = timexml % (self._time_start.strftime("%Y-%m-%d %H:%M:%S"), time_end.strftime("%Y-%m-%d %H:%M:%S"), str(time_end-self._time_start).split('.')[0] )
         timenodes = dom.parseString(timexml)
         self._runrstnode.appendChild(timenodes.childNodes[0])
-        
+
         xmldata = to_pretty_xml(self._xmldoc)
         with codecs_open('TestReport.xml', 'wb') as fd:
             fd.write(xmldata)
@@ -565,7 +583,7 @@ class XMLTestReport(ITestReport):
         shutil.copy(test_repor_xsl, os.getcwd())
         test_result_xsl = get_inner_resource("qta_statics", "TestResult.xsl")
         shutil.copy(test_result_xsl, os.getcwd())
-    
+
     def log_test_result(self, testcase, testresult ):
         '''记录一个测试结果
         :param testcase: 测试用例
@@ -573,6 +591,7 @@ class XMLTestReport(ITestReport):
         :param testresult: 测试结果
         :type testresult: XmlResult
         '''
+        super(XMLTestReport, self).log_test_result(testcase, testresult)
         casemark = saxutils.escape(testcase.test_doc)
         nodestr = """<TestResult result="%s" log="%s" status="%s">%s</TestResult>
         """ % (testresult.passed, testresult.file_path, testcase.status, casemark)
@@ -581,7 +600,7 @@ class XMLTestReport(ITestReport):
         resultNode.setAttribute("name", smart_text(saxutils.escape(testcase.test_name)))
         resultNode.setAttribute("owner", smart_text(saxutils.escape(testcase.owner)))
         self._runrstnode.appendChild(resultNode)
-    
+
     def log_record(self, level, tag, msg, record={}):
         '''增加一个记录
         :param level: 日志级别
@@ -592,7 +611,7 @@ class XMLTestReport(ITestReport):
         :type tag: string
         :type msg: string
         :type record: dict
-        '''        
+        '''
         if tag == 'LOADER' and level == EnumLogLevel.ERROR:
             if 'error_testname' in record and 'error' in record:
                 testname = record['error_testname']
@@ -603,7 +622,7 @@ class XMLTestReport(ITestReport):
                 mdfailsnode.appendChild(dom.parseString(xmltpl).childNodes[0])
                 with codecs_open(logfile, 'w', encoding="utf-8") as fd:
                     fd.write(record['error'])
-                
+
     def log_filtered_test(self, loader, testcase, reason):
         '''记录一个被过滤的测试用例
         :param loader: 用例加载器
@@ -648,7 +667,7 @@ class XMLTestReport(ITestReport):
         :returns ITestResultFactory
         '''
         return self._result_factory
-    
+
     @classmethod
     def get_parser(cls):
         '''获取命令行参数解析器（如果实现）
@@ -670,7 +689,7 @@ class XMLTestReport(ITestReport):
 class JSONTestResultFactory(ITestResultFactory):
     '''JSON形式TestResult工厂
     '''
-                    
+
     def create(self, testcase):
         '''创建TestResult对象
         :param testcase: 测试用例
@@ -678,8 +697,8 @@ class JSONTestResultFactory(ITestResultFactory):
         :return TestResult
         '''
         return testresult.JSONResult(testcase)
-    
-class JSONTestReportBase(ITestReport):
+
+class JSONTestReportBase(TestReportBase):
     '''JSON格式的测试报告基类
     '''
     def __init__(self, title="调试测试"):
@@ -688,6 +707,7 @@ class JSONTestReportBase(ITestReport):
         :param title: 报告标题
         :type title: str
         '''
+        super(JSONTestReportBase, self).__init__()
         self._results = {}
         self._logs = []
         self._filtered_tests = []
@@ -710,7 +730,7 @@ class JSONTestReportBase(ITestReport):
         self._testcase_total_run = 0
         self._testcase_passed = 0
         self._testcase_total_count = 0
-        
+
     def begin_report(self):
         '''开始测试执行
         '''
@@ -734,7 +754,7 @@ class JSONTestReportBase(ITestReport):
         self._data["summary"]["testcase_passed"] = self._testcase_passed
         self._data["summary"]["succeed"] = self._testcase_passed == self._testcase_total_count
         self._data["summary"]["end_time"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        
+
     def log_test_result(self, testcase, testresult ):
         '''记录一个测试结果
         :param testcase: 测试用例
@@ -742,18 +762,19 @@ class JSONTestReportBase(ITestReport):
         :param testresult: 测试结果
         :type testresult: TestResult
         '''
+        super(JSONTestReportBase, self).log_test_result(testcase, testresult)
         self._testcase_total_run += 1
         if testcase.test_name not in self._testcase_names:
             self._testcase_names.add(testcase.test_name)
             self._testcase_total_count += 1
-            
+
         if testresult.passed:
             self._testcase_passed += 1
         if testcase.test_name not in self._results:
             self._results[testcase.test_name] = [testresult.get_file()]
         else:
             self._results[testcase.test_name].append(testresult.get_file())
-    
+
     def log_record(self, level, tag, msg, record):
         '''增加一个记录
         :param level: 日志级别
@@ -781,7 +802,7 @@ class JSONTestReportBase(ITestReport):
         :type testcases: list
         '''
         self._testcases += [
-            {"name": testcase.test_name} 
+            {"name": testcase.test_name}
             for testcase in testcases
         ]
 
@@ -861,7 +882,7 @@ class JSONTestReport(JSONTestReportBase):
         args = cls.get_parser().parse_args(args_string)
         fd = codecs_open(args.output, 'w', encoding="utf-8")
         return cls(fd, title=args.title)
-    
+
 class HtmlTestReport(JSONTestReportBase):
     """html test report
     """
@@ -870,17 +891,17 @@ class HtmlTestReport(JSONTestReportBase):
         :returns ITestResultFactory
         '''
         return HtmlTestResultFactory()
-    
+
     def end_report(self):
         super(HtmlTestReport, self).end_report()
         data = json.dumps(self._data)
         content = "var qta_report_data = %s" % data
         with codecs_open("qta-report.js", "w", encoding="utf-8") as fd:
             fd.write(content)
-        
+
         qta_report_html = get_inner_resource("qta_statics", "qta-report.html")
         shutil.copy(qta_report_html, os.getcwd())
-        
+
     @classmethod
     def get_parser(cls):
         '''获取命令行参数解析器（如果实现）
@@ -901,7 +922,7 @@ class HtmlTestReport(JSONTestReportBase):
         '''
         args = cls.get_parser().parse_args(args_string)
         return cls(title=args.title)
-        
+
 class HtmlTestResultFactory(ITestResultFactory):
     """html test result factory
     """
@@ -921,7 +942,7 @@ def __init_report_types():
         "html"   : HtmlTestReport,
     })
 
-    # Register other `ITestReport` implementiations from entry points 
+    # Register other `ITestReport` implementiations from entry points
     for ep in pkg_resources.iter_entry_points(REPORT_ENTRY_POINT):
         if ep.name not in report_types:
             try:

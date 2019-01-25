@@ -36,7 +36,7 @@ class SingleDataTest(testbase.TestCase):
         self.logInfo(str(self.casedata))
     
     
-@datadrive.DataDrive(["A", "V", "XX"])
+@datadrive.DataDrive(["A", "V", "XX", 0])
 class ArrayDataTest(testbase.TestCase):
     '''数据驱动测试用例
     '''
@@ -58,9 +58,38 @@ class ProjDataTest(testbase.TestCase):
     def runTest(self):
         self.logInfo(str(context.current_testcase().casedata)) 
         self.logInfo(str(self.casedata))
+
+bad_names = [
+    "foo test",
+    "a&b",
+    "2*2",
+    "5-1",
+    "foo|bar",
+    "ok?",
+    "about<xxx>",
+    "10/2",
+    "go~",
+    "a=1",
+    "a(good)",
+    "b[bad]"
+]
+
+bad_drive_data = dict(zip(bad_names, bad_names))
+
+@datadrive.DataDrive(bad_drive_data)        
+class BadCharCaseTest(testbase.TestCase):
+    """bad char test
+    """
+    owner = "foo"
+    timeout = 1
+    priority = testbase.TestCase.EnumPriority.High
+    status = testbase.TestCase.EnumStatus.Ready
+    
+    def run_test(self):
+        self.log_info("bad char test's case name is \"%s\"" % self.test_name)
  
 if __name__ == '__main__':
-    #执行全部的数据驱动用例
-    #DataTest().run()
-    #DataTest(3).run()
+#     DataTest().run()
+#     DataTest(3).run()
     ProjDataTest().run()
+    

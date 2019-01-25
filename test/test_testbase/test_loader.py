@@ -2,12 +2,12 @@
 #
 # Tencent is pleased to support the open source community by making QTA available.
 # Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
-# Licensed under the BSD 3-Clause License (the "License"); you may not use this 
+# Licensed under the BSD 3-Clause License (the "License"); you may not use this
 # file except in compliance with the License. You may obtain a copy of the License at
-# 
+#
 # https://opensource.org/licenses/BSD-3-Clause
-# 
-# Unless required by applicable law or agreed to in writing, software distributed 
+#
+# Unless required by applicable law or agreed to in writing, software distributed
 # under the License is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
 # OF ANY KIND, either express or implied. See the License for the specific language
 # governing permissions and limitations under the License.
@@ -18,13 +18,14 @@
 import unittest
 
 from testbase.loader import TestLoader
+from testbase.test import modify_settings
 
-TestLoader.__test__ = False # for nauseated Nose
+TestLoader.__test__ = False  # for nauseated Nose
 
 
 class TestLoaderTest(unittest.TestCase):
     loader = TestLoader()
-    
+
     def test_load_testcase(self):
         '''load test cases from class path
         '''
@@ -32,16 +33,7 @@ class TestLoaderTest(unittest.TestCase):
         self.assertEqual(len(tests), 1)
         from test.sampletest.hellotest import HelloTest
         self.assertEqual(type(tests[0]), HelloTest)
-        
-    def test_load_datadrive(self):
-        '''load test cases from a data-driver class path
-        '''
-        from test.sampletest.datatest import DataTest
-        tests = self.loader.load("test.sampletest.datatest.DataTest")
-        self.assertEqual(len(tests), 3)
-        self.assertEqual(type(tests[0]), DataTest)
-        
-        
+
     def test_load_failed_not_found(self):
         tests = self.loader.load("test.sampletest.notfound")
         self.assertEqual(len(tests), 0)
@@ -49,7 +41,7 @@ class TestLoaderTest(unittest.TestCase):
         self.assertEqual(len(errors), 1)
         self.assertIn("test.sampletest.notfound", errors)
         self.assertRegexpMatches(list(errors.values())[0], "No module named .*notfound.*")
-        
+
     def test_load_failed_runtime_error(self):
         tests = self.loader.load("test.sampletest.loaderr")
         self.assertEqual(len(tests), 0)
@@ -57,12 +49,14 @@ class TestLoaderTest(unittest.TestCase):
         self.assertEqual(len(errors), 1)
         self.assertIn("test.sampletest.loaderr", errors)
         self.assertIn("RuntimeError", list(errors.values())[0])
-        
+
     def test_load_filter(self):
         filtered_test = 'test.sampletest.hellotest.HelloTest'
+
         def filter_func(test):
             if test.test_class_name == filtered_test:
                 return "hello filtered"
+
         loader = TestLoader(filter_func)
         tests = loader.load("test.sampletest")
         testnames = [ it.test_class_name for it in tests ]
@@ -74,51 +68,66 @@ class TestLoaderTest(unittest.TestCase):
         self.assertEqual(len(tests), 1)
         self.assertEqual(list(result.keys())[0].test_class_name, filtered_test)
         self.assertEqual("hello filtered", list(result.values())[0])
-        
-        
-class SettingWarpper(object):
-    
-    __test__ = False # for nauseated Nose
-        
-    def __init__(self, settings):
-        self.real_settings = settings
-    
-    def __getattribute__(self, name):
-        if name.isupper():
-            if name == 'DATA_DRIVE':
-                return True
-            else:
-                return getattr(self.real_settings, name)
-        else:
-            return super(SettingWarpper,self).__getattribute__(name)
-            
-class DataDriveTestLoaderTest(unittest.TestCase):
-    '''global data-drive test loader
-    '''  
 
-    def setUp(self):
-        from testbase import loader
-        from testbase import conf
-        new_settiongs = SettingWarpper(loader.settings)
-        loader.settings = new_settiongs
-        conf.settings = new_settiongs
-        
 
-    def tearDown(self):
-        from testbase import loader
-        from testbase import conf
-        loader.settings = loader.settings.real_settings
-        conf.settings = loader.settings
-        
-    def test_load_testcase(self):
-        '''load a test with global data-drive
+class LoadDataDriveReversibleTest(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        cls.loader = TestLoader()
+
+    def test_dict_data_reversible(self):
+        '''load test cases from dict data and can be reverted loaded
         '''
-        from test.data import server
-        tests = TestLoader().load("test.sampletest.hellotest.HelloTest")
+        from test.sampletest.datatest import DataTest
+        tests = self.loader.load("test.sampletest.datatest.DataTest")
         self.assertEqual(len(tests), 3)
-        casedatas = set()
-        for test in tests:
-            self.assertEqual(test.test_class_name, "test.sampletest.hellotest.HelloTest")
-            casedatas.add(str(test.casedata))
-        self.assertEqual(casedatas, set([str(it) for it in server.DATASET]))    
+        self.assertEqual(type(tests[0]), DataTest)
 
+        test_set = " ".join(map(lambda x: x.test_name, tests)).split()
+        loader = TestLoader()
+        new_tests = loader.load(test_set)
+        self.assertEqual(len(new_tests), len(tests))
+
+    def test_list_data_reversible(self):
+        from test.sampletest.datatest import ArrayDataTest
+        tests = self.loader.load("test.sampletest.datatest.ArrayDataTest")
+        self.assertEqual(len(tests), 4)
+        self.assertEqual(type(tests[0]), ArrayDataTest)
+
+        test_set = " ".join(map(lambda x: x.test_name, tests)).split()
+        loader = TestLoader()
+        new_tests = loader.load(test_set)
+        self.assertEqual(len(new_tests), len(tests))
+
+    def test_global_data_reversible(self):
+        from test.data import server
+        with modify_settings(DATA_DRIVE=True, DATA_SOURCE='test/data/server.py'):
+            tests = TestLoader().load("test.sampletest.hellotest.HelloTest")
+            self.assertEqual(len(tests), 3)
+            casedata = set()
+            for test in tests:
+                self.assertEqual(test.test_class_name, "test.sampletest.hellotest.HelloTest")
+                casedata.add(str(test.casedata))
+            self.assertEqual(casedata, set([str(it) for it in server.DATASET]))
+
+            test_set = " ".join(map(lambda x: x.test_name, tests)).split()
+            loader = TestLoader()
+            new_tests = loader.load(test_set)
+            self.assertEqual(len(new_tests), len(tests))
+
+    def test_bad_name_reversible(self):
+        from test.sampletest.datatest import BadCharCaseTest, bad_drive_data
+        tests = self.loader.load("test.sampletest.datatest.BadCharCaseTest")
+        self.assertEqual(len(tests), len(bad_drive_data))
+        self.assertEqual(type(tests[0]), BadCharCaseTest)
+
+        test_set = " ".join(map(lambda x: x.test_name, tests)).split()
+        loader = TestLoader()
+        new_tests = loader.load(test_set)
+        self.assertEqual(len(new_tests), len(tests))
+
+
+if __name__ == "__main__":
+#     unittest.main(defaultTest="LoadDataDriveReversibleTest")
+    unittest.main()

@@ -2,12 +2,12 @@
 #
 # Tencent is pleased to support the open source community by making QTA available.
 # Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
-# Licensed under the BSD 3-Clause License (the "License"); you may not use this 
+# Licensed under the BSD 3-Clause License (the "License"); you may not use this
 # file except in compliance with the License. You may obtain a copy of the License at
-# 
+#
 # https://opensource.org/licenses/BSD-3-Clause
-# 
-# Unless required by applicable law or agreed to in writing, software distributed 
+#
+# Unless required by applicable law or agreed to in writing, software distributed
 # under the License is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
 # OF ANY KIND, either express or implied. See the License for the specific language
 # governing permissions and limitations under the License.
@@ -48,11 +48,11 @@ from testbase import logger
 from testbase.loader import TestLoader
 from testbase import serialization
 from testbase.testcase import TestCase, TestCaseRunner
-from testbase.report import ITestReport
+from testbase.report import TestReportBase
 from testbase.testresult import TestResultCollection
 from testbase.resource import TestResourceManager, LocalResourceManagerBackend
 from testbase.plan import TestPlan
-            
+
 RUNNER_ENTRY_POINT = "qtaf.runner"
 runner_usage = 'runtest <test ...> --runner-type <runner-type> [--runner-args "<runner-args>"]'
 runner_types = {}
@@ -121,7 +121,7 @@ class TestCaseSettings(object):
 
         self.tags = set(tags) if tags else None
         self.excluded_tags = set(excluded_tags) if excluded_tags else None
-                        
+
     def _is_test_class(self, name ):
         '''判断路径是否是一个类名
         '''
@@ -129,7 +129,7 @@ class TestCaseSettings(object):
             return True
         if '.' not in name: #不可能直接引用类名
             return False
-        
+
         try:
             __import__(name)
             return False #为模块
@@ -142,7 +142,7 @@ class TestCaseSettings(object):
                 return False #不存在的模块
             else:
                 return hasattr(mod, clsname)
-            
+
     def filter(self, testcase ):
         '''测试用例过滤函数
         
@@ -167,7 +167,7 @@ class TestCaseSettings(object):
         if self.excluded_tags and not self.excluded_tags.isdisjoint(testcase.tags):
             return "testcase is tag with %s" % ( "/".join(self.excluded_tags) )
         return False
-        
+
 class BaseTestRunner(object):
     '''测试执行器基类
     '''
@@ -189,19 +189,19 @@ class BaseTestRunner(object):
         :returns: ITestReport
         '''
         return self.__report
-        
+
     def load(self, target ):
         '''加载测试用例
 
         :param target: 指定要执行的测试用例
         :type target: list(TestCase) or list(string) or string or TestCaseSettings
         :returns: 测试用例列表
-        '''  
+        '''
         if isinstance(target, str):
             target = TestCaseSettings(names=target.split(" "))
         elif isinstance(target, list) and len(target) and isinstance(target[0], six.string_types):
             target = TestCaseSettings(names=target)
-            
+
         if isinstance(target, TestCaseSettings):
             loader = TestLoader(target.filter)
             tests = loader.load(target.names)
@@ -241,14 +241,14 @@ class BaseTestRunner(object):
         self.__report.end_report()
         self.clean_up()
         return self.__report
-    
+
     def resource_setup(self, plan):
         '''资源初始化
 
         :param plan: 测试计划
         :type plan: TestPlan
         '''
-        for res_type, resource in itertools.chain([("node", {"host": socket.gethostname(), "id": uuid.getnode() })], 
+        for res_type, resource in itertools.chain([("node", {"host": socket.gethostname(), "id": uuid.getnode() })],
                                                   self._resmgr.iter_managed_resource()):
             ret_resource = plan.resource_setup(self.__report, res_type, resource)
             if ret_resource:
@@ -262,7 +262,7 @@ class BaseTestRunner(object):
         :type plan: TestPlan
         '''
         for res_type, resource in self._resmgr.iter_managed_resource():
-            plan.resource_teardown(self.__report, res_type, resource)   
+            plan.resource_teardown(self.__report, res_type, resource)
         plan.resource_teardown(self.__report, "node", {"host": socket.gethostname(), "id": uuid.getnode() })
 
     def run_all_tests(self, tests ):
@@ -274,7 +274,7 @@ class BaseTestRunner(object):
         random.shuffle(tests)
         for test in tests:
             self.run_test(test)
-        
+
     def run_test(self, test ):
         '''执行一个测试用例
         
@@ -290,12 +290,12 @@ class BaseTestRunner(object):
         else:
             self.__report.log_test_result(result.testcase, result)
         return result.passed
-    
+
     def clean_up(self):
         '''执行清理动作
         '''
         pass
-    
+
     def _log_collection_result(self, result_collection ):
         '''记录结果集合
         '''
@@ -304,7 +304,7 @@ class BaseTestRunner(object):
                 self._log_collection_result(it)
             else:
                 self.__report.log_test_result(it.testcase, it)
-            
+
     @classmethod
     def get_parser(cls):
         '''获取命令行参数解析器（如果实现）
@@ -322,8 +322,8 @@ class BaseTestRunner(object):
         :rtype: cls
         '''
         raise NotImplementedError()
-    
-            
+
+
 class TestRunner(BaseTestRunner):
     '''测试执行器
     '''
@@ -376,8 +376,8 @@ class TestRunner(BaseTestRunner):
         '''
         args = cls.get_parser().parse_args(args_string)
         return cls(report, args.retries, resmgr_backend)
-                    
-class ThreadSafetyReport(ITestReport):
+
+class ThreadSafetyReport(TestReportBase):
     '''TestReport修饰器，保证线程安全
     '''
     def __init__(self, report ):
@@ -386,15 +386,16 @@ class ThreadSafetyReport(ITestReport):
         :param result: 测试报告
         :type result: ITestReport
         '''
+        super(ThreadSafetyReport, self).__init__()
         self._lock = threading.Lock()
         self._report = report
-        
+
     def begin_report(self):
         '''开始测试执行
         '''
         with self._lock:
             return self._report.begin_report()
-    
+
     def end_report(self):
         '''结束测试执行
         
@@ -403,7 +404,7 @@ class ThreadSafetyReport(ITestReport):
         '''
         with self._lock:
             return self._report.end_report()
-    
+
     def log_test_result(self, testcase, testresult ):
         '''记录一个测试结果
         
@@ -413,8 +414,9 @@ class ThreadSafetyReport(ITestReport):
         :type testresult: TestResult
         '''
         with self._lock:
+            super(ThreadSafetyReport, self).log_test_result(testcase, testresult)
             return self._report.log_test_result(testcase, testresult)
-    
+
     def log_loaded_tests(self, loader, testcases):
         '''记录加载成功的用例
 
@@ -449,7 +451,7 @@ class ThreadSafetyReport(ITestReport):
         '''
         with self._lock:
             return self._report.log_load_error(loader, name, error)
-        
+
     def get_testresult_factory(self):
         '''获取对应的TestResult工厂
         
@@ -457,7 +459,7 @@ class ThreadSafetyReport(ITestReport):
         '''
         with self._lock:
             return self._report.get_testresult_factory()
-    
+
     def log_record(self, level, tag, msg, record):
         '''增加一个记录
         
@@ -472,7 +474,7 @@ class ThreadSafetyReport(ITestReport):
         '''
         with self._lock:
             return self._report.log_record(level, tag, msg, record)
-    
+
 class ThreadingTestRunner(BaseTestRunner):
     '''使用多线程并发执行用例
     '''
@@ -492,7 +494,7 @@ class ThreadingTestRunner(BaseTestRunner):
         if self.concurrency > 1:
             report = ThreadSafetyReport(report)
         super(ThreadingTestRunner, self).__init__(report, resmgr_backend)
-        
+
     def run_all_tests(self, tests ):
         '''执行全部的测试用例
         
@@ -509,7 +511,7 @@ class ThreadingTestRunner(BaseTestRunner):
             threads.append(thread)
         for thread in threads:
             thread.join()
-                
+
     def _run_test_from_queue(self, tests_queue, tests_retry_dict):
         '''从队列中不断取用例并执行
         
@@ -518,13 +520,13 @@ class ThreadingTestRunner(BaseTestRunner):
         :param tests_retry_dict: 测试用例重跑记录
         :type tests_retry_dict: dict
         '''
-        while len(tests_queue)>0 :            
+        while len(tests_queue)>0 :
             with self._lock:
                 if len(tests_queue)<=0:
                     break
                 test = tests_queue.pop()
             passed = self.run_test(test)
-            with self._lock:    
+            with self._lock:
                 if not passed:
                     tests_retry_dict.setdefault(test, 0)
                     if tests_retry_dict[test] < self._retries:
@@ -569,10 +571,10 @@ class EnumProcessMsgType(object):
     Result_CallFunc = 8
     Result_Return = 9
     Result_Raise = 10
-    
+
     Report_LogTestResult = 12
     Report_LogRecord = 13
-    
+
 class TestResultFunctionProxy(object):
     '''测试结果函数代理
     '''
@@ -588,8 +590,8 @@ class TestResultFunctionProxy(object):
         '''
         self._worker = from_worker
         self._objid = obj_id
-        self._func_name = func_name        
-        
+        self._func_name = func_name
+
     def __call__(self, *args, **kwargs ):
         self._worker.send_message((EnumProcessMsgType.Result_CallFunc, self._objid, self._func_name,
                                    args, kwargs))
@@ -601,7 +603,7 @@ class TestResultFunctionProxy(object):
             raise RuntimeError(str(msg[1]))
         else:
             raise RuntimeError("unexpect message: %s" % msg)
-        
+
 class TestResultProxy(object):
     '''测试结果代理
     '''
@@ -640,14 +642,14 @@ class TestResultProxy(object):
             raise AttributeError(msg[1])
         else:
             raise RuntimeError("unexpect message: %s" % msg)
-        
+
     def __setattr__(self, name, value ):
         if name.startswith('_TestResultProxy__'):
             super(TestResultProxy,self).__setattr__(name, value)
         else:
             raise RuntimeError("read only")
-        
-class TestReportProxy(ITestReport):
+
+class TestReportProxy(TestReportBase):
     '''测试报告代理
     '''
     def __init__(self, worker_id, ctrl_msg_queue, result_factory, result_manager ):
@@ -662,16 +664,17 @@ class TestReportProxy(ITestReport):
         :param result_manager: 测试结果残根管理器
         :type result_manager：TestResultStubManager
         '''
+        super(TestReportProxy, self).__init__()
         self._worker_id = worker_id
         self._ctrl_msg_queue = ctrl_msg_queue
         self._result_factory = result_factory
         self._result_manager = result_manager
-            
+
     def begin_report(self):
         '''开始测试执行
         '''
         raise RuntimeError("should not call this")
-    
+
     def end_report(self):
         '''结束测试执行
         
@@ -679,7 +682,7 @@ class TestReportProxy(ITestReport):
         :type passed: boolean
         '''
         raise RuntimeError("should not call this")
-        
+
     def log_test_result(self, testcase, testresult ):
         '''记录一个测试结果
         
@@ -688,10 +691,11 @@ class TestReportProxy(ITestReport):
         :param testresult: 测试结果
         :type testresult: TestResult
         '''
+        super(TestReportProxy, self).log_test_result(testcase, testresult)
         objid = self._result_manager.add_result(testresult)
-        self._ctrl_msg_queue.put((EnumProcessMsgType.Report_LogTestResult, 
+        self._ctrl_msg_queue.put((EnumProcessMsgType.Report_LogTestResult,
                                   self._worker_id, serialization.dumps(testcase), objid, testresult.passed))
-    
+
     def log_record(self, level, tag, msg, record):
         '''增加一个记录
         
@@ -705,20 +709,20 @@ class TestReportProxy(ITestReport):
         :type record: dict
         '''
         self._ctrl_msg_queue.put((EnumProcessMsgType.Report_LogRecord, (level, tag, msg, record)))
-    
+
     def get_testresult_factory(self):
         '''获取对应的TestResult工厂
         
         :returns: ITestResultFactory
         '''
         return self._result_factory
-    
-    
+
+
 class _EmptyClass(object):
     pass
 
 
-    
+
 class TestResultStubManager(object):
     '''测试结果桩管理器
     '''
@@ -730,13 +734,13 @@ class TestResultStubManager(object):
         '''
         self._rsp_queue = rsp_queue
         self._result_dict = {}
-        
+
     def add_result(self, result ):
         '''增加一个测试结果
         '''
         self._result_dict[id(result)] = result
         return id(result)
-        
+
     def get_result_attr(self, objid, attrname ):
         '''获取一个测试结果的属性值
         
@@ -751,12 +755,12 @@ class TestResultStubManager(object):
             if not isinstance(attr, types.MethodType):
                 rsp = EnumProcessMsgType.Result_AttrValue, attr
             else:
-                rsp = EnumProcessMsgType.Result_Func, 
+                rsp = EnumProcessMsgType.Result_Func,
             self._rsp_queue.put(rsp)
         except:
-            self._rsp_queue.put((EnumProcessMsgType.Result_AttrError, 
+            self._rsp_queue.put((EnumProcessMsgType.Result_AttrError,
                                  "'%s' object has no attribute '%s'" % (type(result).__name__, attrname) ))
-            
+
     def call_result_func(self, objid, funcname, args, kwargs ):
         '''调用一个测试结果的函数
         
@@ -775,7 +779,7 @@ class TestResultStubManager(object):
         except:
             rsp = EnumProcessMsgType.Result_Raise, traceback.format_exc()
         self._rsp_queue.put(rsp)
-            
+
 
 def _log_collection_result( testreport, result_collection ):
     '''记录结果集合
@@ -785,7 +789,7 @@ def _log_collection_result( testreport, result_collection ):
             _log_collection_result(testreport, it)
         else:
             testreport.log_test_result(it.testcase, it)
-                
+
 def _run_test_thread( worker_id, ctrl_msg_queue, testcase, testreport, resmgr ):
     '''执行测试用例的线程
     
@@ -808,13 +812,13 @@ def _run_test_thread( worker_id, ctrl_msg_queue, testcase, testreport, resmgr ):
             _log_collection_result(testreport, result)
         else:
             testreport.log_test_result(result.testcase, result)
-        
+
         ctrl_msg_queue.put((EnumProcessMsgType.Worker_Idle, worker_id, serialization.dumps(testcase), result.passed))
     except:
         ctrl_msg_queue.put((EnumProcessMsgType.Worker_Error, worker_id, traceback.format_exc()))
-            
-   
-def _worker_process( worker_id, 
+
+
+def _worker_process( worker_id,
                      ctrl_msg_queue, msg_queue, rsp_queue,
                      result_factory_type, result_factory_data, resmgr):
     '''执行测试的子进程过程
@@ -844,30 +848,30 @@ def _worker_process( worker_id,
             msg = msg_queue.get()
             msg_type = msg[0]
             msg_data = msg[1:]
-            
+
             if msg_type == EnumProcessMsgType.Worker_Quit:
                 break
-            
+
             elif msg_type == EnumProcessMsgType.Worker_RunTest:
                 testcase = serialization.loads(msg_data[0])
-                t = threading.Thread(target=_run_test_thread, 
+                t = threading.Thread(target=_run_test_thread,
                                      args=(worker_id, ctrl_msg_queue, testcase, report, resmgr))
                 t.daemon = True
                 t.start()
-                
+
             elif msg_type == EnumProcessMsgType.Result_GetAttr:
                 objid, name = msg_data
                 result_manager.get_result_attr(objid, name)
-                
+
             elif msg_type == EnumProcessMsgType.Result_CallFunc:
                 objid, func, args, kwargs = msg_data
                 result_manager.call_result_func(objid, func, args, kwargs)
     except:
         ctrl_msg_queue.put((EnumProcessMsgType.Worker_Error, worker_id, traceback.format_exc()))
-    
+
 class TestWorker(object):
     '''多进程执行用例时，执行测试的子进程
-    '''    
+    '''
     def __init__(self, worker_id, ctrl_msg_queue, result_factory, resmgr ):
         '''构造函数
         
@@ -885,15 +889,15 @@ class TestWorker(object):
         self._ctrl_msg_queue = ctrl_msg_queue
         self._resmgr = resmgr
         self._reset()
-        
+
     def _reset(self):
         '''重置内部状态
         '''
         self._rsp_queue = multiprocessing.Queue()
         self._msg_queue = multiprocessing.Queue()
         self._process = multiprocessing.Process(target=_worker_process,
-                                                args=(self._worker_id, 
-                                                      self._ctrl_msg_queue, 
+                                                args=(self._worker_id,
+                                                      self._ctrl_msg_queue,
                                                       self._msg_queue,
                                                       self._rsp_queue,
                                                       type(self._result_factory),
@@ -903,20 +907,20 @@ class TestWorker(object):
         self._monitor.daemon = True
         self._testcase = None
         self._stopping = False
-    
+
     def _process_monitor(self):
         '''监控线程
         '''
         self._process.join()
         if not self._stopping:
             self._ctrl_msg_queue.put((EnumProcessMsgType.Worker_Error, self._worker_id, 'process exit unexpectedly'))
-    
+
     def start(self):
         '''开始执行
         '''
         self._process.start()
         self._monitor.start()
-                
+
     def stop(self):
         '''结束执行
         '''
@@ -925,13 +929,13 @@ class TestWorker(object):
         self._process.join(5)
         if self._process.is_alive():
             self._process.terminate()
-    
+
     def restart(self):
         '''重新开始执行
         '''
         self._reset()
         self.start()
-        
+
     def run_testcase(self, testcase ):
         '''分配一个测试用例
         
@@ -940,14 +944,14 @@ class TestWorker(object):
         '''
         self.send_message((EnumProcessMsgType.Worker_RunTest, serialization.dumps(testcase)))
         self._testcase = testcase
-        
+
     def current_testcase(self):
         '''当前正在执行的测试用例
         
         :returns: TestCase
         '''
         return self._testcase
-    
+
     def send_message(self, msg ):
         '''发送消息到工作者
         
@@ -955,7 +959,7 @@ class TestWorker(object):
         :type msg: tuple
         '''
         self._msg_queue.put(msg)
-        
+
     def recv_message(self, timeout=None ):
         '''接收工作者的答复消息
         '''
@@ -967,7 +971,7 @@ class TestWorker(object):
             except queue.Empty:
                 raise RuntimeError("waiting response message from worker timeout")
 
-    
+
 class MultiProcessTestRunner(BaseTestRunner):
     '''使用多进程并发执行用例
     
@@ -999,16 +1003,16 @@ class MultiProcessTestRunner(BaseTestRunner):
         self._retries = retries
         self._workers_dict = {}
         super(MultiProcessTestRunner,self).__init__(report,resmgr_backend)
-        
+
     def run_all_tests(self, tests ):
         '''执行全部的测试用例
         
         :param test: 测试用例对象列表
         :type tests: list
-        '''         
+        '''
         if len(tests) < self.concurrency:
             self.concurrency = len(tests)
-                         
+
         random.shuffle(tests)
         tests_queue = collections.deque(tests)
         tests_retry_dict = {}
@@ -1019,22 +1023,22 @@ class MultiProcessTestRunner(BaseTestRunner):
             worker.start()
             worker.run_testcase(tests_queue.popleft())
             self._workers_dict[i] = worker
-        
+
         idle_workers = []
         error_counts = {}
         while True:
             msg = msg_queue.get()
             msg_type = msg[0]
-                        
+
             if msg_type == EnumProcessMsgType.Report_LogTestResult:
                 worker = self._workers_dict[msg[1]]
                 testcase = serialization.loads(msg[2])
                 objid, passed = msg[3], msg[4]
                 self.report.log_test_result(testcase, TestResultProxy(worker, objid, passed, testcase))
-            
+
             elif msg_type == EnumProcessMsgType.Report_LogRecord:
                 self.report.log_record(msg[1], msg[2], msg[3], msg[4])
-                
+
             elif msg_type == EnumProcessMsgType.Worker_Idle:
                 worker = self._workers_dict[msg[1]]
                 test = serialization.loads(msg[2])
@@ -1044,14 +1048,14 @@ class MultiProcessTestRunner(BaseTestRunner):
                     if tests_retry_dict[test.test_name] < self._retries:
                         tests_retry_dict[test.test_name] += 1
                         tests_queue.append(test)
-                
-                if len(tests_queue) > 0:    
+
+                if len(tests_queue) > 0:
                     worker.run_testcase(tests_queue.popleft())
                 else:
                     idle_workers.append(worker)
                     if len(idle_workers) == len(self._workers_dict):
                         break
-                
+
             elif msg_type == EnumProcessMsgType.Worker_Error:
                 if msg[1] not in self._workers_dict:
                     continue
@@ -1071,7 +1075,7 @@ class MultiProcessTestRunner(BaseTestRunner):
                         tests_queue.append(worker.current_testcase())
                         worker.restart()
                         worker.run_testcase(tests_queue.popleft())
-        
+
     def clean_up(self):
         BaseTestRunner.clean_up(self)
         for it in self._workers_dict.values():

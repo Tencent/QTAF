@@ -2,12 +2,12 @@
 #
 # Tencent is pleased to support the open source community by making QTA available.
 # Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
-# Licensed under the BSD 3-Clause License (the "License"); you may not use this 
+# Licensed under the BSD 3-Clause License (the "License"); you may not use this
 # file except in compliance with the License. You may obtain a copy of the License at
-# 
+#
 # https://opensource.org/licenses/BSD-3-Clause
-# 
-# Unless required by applicable law or agreed to in writing, software distributed 
+#
+# Unless required by applicable law or agreed to in writing, software distributed
 # under the License is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
 # OF ANY KIND, either express or implied. See the License for the specific language
 # governing permissions and limitations under the License.
@@ -38,7 +38,7 @@ def _create_local_testfile():
     local_file = os.path.join(root_dir,'a_%s.txt' % suffix)
     with codecs_open(local_file, 'w', encoding="utf-8") as f:
         f.write('abc')
-    
+
     return local_file, root_dir
 
 
@@ -59,33 +59,33 @@ class TestResManager(unittest.TestCase):
     def setUpClass(cls):
         if six.PY2:
             cls.assertRaisesRegex = cls.assertRaisesRegexp
-            
+
         cls.local_file, cls.local_dir = _create_local_testfile()
-        
+
     @classmethod
     def tearDownClass(cls):
         shutil.rmtree(os.path.join(root_dir, test_dir_name), True)
         os.remove(cls.local_file)
-            
+
     def test_get_local_file(self):
         fm = resource.TestResourceManager(resource.LocalResourceManagerBackend()).create_session()
         self.assertEqual(self.local_file, fm.get_file(test_file_name))
         self.assertEqual(self.local_file, resource.get_file(test_file_name))
-        
+
         paths =[]
         for it in os.listdir(self.local_dir):
             paths.append(smart_text(os.path.join(self.local_dir,it)))
         self.assertEqual(paths,fm.list_dir(''))
         self.assertEqual(paths,resource.list_dir(''))
-  
-         
+
+
     def test_nofile_raise(self):
         fm = resource.TestResourceManager(resource.LocalResourceManagerBackend()).create_session()
         self.assertRaisesRegex(Exception, "文件不存在", fm.get_file,'a_xxx.txt')
         self.assertRaisesRegex(Exception, "文件不存在", resource.get_file,'a_xxx.txt')
         self.assertRaisesRegex(Exception, "目录不存在", fm.list_dir, 'xxx_xxx')
         self.assertRaisesRegex(Exception, "目录不存在", resource.list_dir,'xxx_xxx')
-                 
+
     def test_duplicated_raise(self):
         _, local_dir=_create_local_testfile()
         dup_dir = _copy_testfile(local_dir)
@@ -95,14 +95,14 @@ class TestResManager(unittest.TestCase):
         self.assertRaisesRegex(Exception, "存在多个", fm.list_dir, test_dir_name)
         self.assertRaisesRegex(Exception, "存在多个", resource.get_file, test_file_name)
         self.assertRaisesRegex(Exception, "存在多个", resource.list_dir, test_dir_name)
-        
+
     def test_unregisted_restype(self):
         rm = resource.TestResourceManager(resource.LocalResourceManagerBackend()).create_session()
         with self.assertRaises(ValueError):
-            rm.acquire_resource("xxx")      
+            rm.acquire_resource("xxx")
         with self.assertRaises(ValueError):
             rm.release_resource("xxx", 12)
-            
+
     def test_walk_dir(self):
         dir_path_set = set()
         dir_names_set = set()
@@ -116,12 +116,12 @@ class TestResManager(unittest.TestCase):
         self.assertTrue(test_dir_name in dir_path_set)
         self.assertTrue(test_dir_name in dir_names_set)
         self.assertTrue(test_file_name in file_names_set)
-        
+
     def test_testcase_resources(self):
         from test.sampletest.hellotest import ResmgrTest
         result = ResmgrTest().debug_run()
-        self.assertTrue(result.passed)
-        
-        
+        self.assertTrue(result.is_passed())
+
+
 if __name__ == '__main__':
     unittest.main(defaultTest="TestResManager.test_testcase_resources")
