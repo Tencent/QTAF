@@ -209,8 +209,7 @@ def load_datadrive_tests(cls, name=None):
             logger.warn(warn_msg)
 
         if isinstance(testdata, dict) and "__attrs__" in testdata:
-            testdata = testdata.copy()  # using copy, so we won't mess up origin drive data
-            attrs = testdata.pop("__attrs__")
+            attrs = testdata.get("__attrs__")
         else:
             attrs = None
         tests.append(cls(testdata, casedata_name, attrs))

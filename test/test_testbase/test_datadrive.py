@@ -187,7 +187,7 @@ class GlobalDataDriveTest(unittest.TestCase):
             for char, field, value in data_map:
                 test = datadrive.load_datadrive_tests(Demo, char)[0]
                 self.assertEqual(test.casedataname, char)
-                self.assertEqual(test.casedata, {"data_%s" % char : char})
+                self.assertEqual(test.casedata["data_%s" % char], char)
                 if field == "__doc__":
                     field = "test_doc"
                 field_value = getattr(test, field)
