@@ -2,12 +2,12 @@
 #
 # Tencent is pleased to support the open source community by making QTA available.
 # Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
-# Licensed under the BSD 3-Clause License (the "License"); you may not use this 
+# Licensed under the BSD 3-Clause License (the "License"); you may not use this
 # file except in compliance with the License. You may obtain a copy of the License at
-# 
+#
 # https://opensource.org/licenses/BSD-3-Clause
-# 
-# Unless required by applicable law or agreed to in writing, software distributed 
+#
+# Unless required by applicable law or agreed to in writing, software distributed
 # under the License is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
 # OF ANY KIND, either express or implied. See the License for the specific language
 # governing permissions and limitations under the License.
@@ -82,22 +82,28 @@
         MyTest().run()
         
 '''
-
+import six
 import types
+
+from testbase import logger
+from testbase.conf import settings
 from testbase.testcase import TestCase
+from testbase.util import translate_bad_char, has_bad_char, smart_text
+
 
 class DataDrive(object):
     '''数据驱动类修饰器，标识一个测试用例类使用数据驱动
-    '''    
-    def __init__(self, case_datas ):
+    '''
+
+    def __init__(self, case_data):
         '''构造函数
         
         :param case_datas: 数据驱动测试数据集
         :type case_datas: list/tuple/dict
         '''
-        self._case_datas = case_datas
-                
-    def __call__(self, testcase_class ):
+        self._case_data = case_data
+
+    def __call__(self, testcase_class):
         '''修饰器
         
         :param testcase_class: 要修饰的测试用例
@@ -107,28 +113,29 @@ class DataDrive(object):
             raise TypeError('数据驱动使用错误，只能对testcase类使用')
         testcase_class.__qtaf_datadrive__ = self
         return testcase_class
-    
+
     def __iter__(self):
         '''遍历全部的数据名
         '''
-        if isinstance(self._case_datas, types.GeneratorType):
-            self._case_datas = list(self._case_datas)
-        if isinstance(self._case_datas, list) or isinstance(self._case_datas, tuple):
-            for it in range(len(self._case_datas)):
+        if isinstance(self._case_data, types.GeneratorType):
+            self._case_data = list(self._case_data)
+        if isinstance(self._case_data, list) or isinstance(self._case_data, tuple):
+            for it in range(len(self._case_data)):
                 yield it
         else:
-            for it in self._case_datas:
+            for it in self._case_data:
                 yield it
-                
+
     def __getitem__(self, name):
         '''获取对应名称的数据
         '''
-        return self._case_datas[name]
-    
+        return self._case_data[name]
+
     def __len__(self):
-        return len(self._case_datas)
-        
-def is_datadrive( obj ):
+        return len(self._case_data)
+
+
+def is_datadrive(obj):
     '''是否为数据驱动用例
     
     :param obj: 测试用例或测试用例类
@@ -138,7 +145,8 @@ def is_datadrive( obj ):
     '''
     return hasattr(obj, '__qtaf_datadrive__')
 
-def get_datadrive( obj ):
+
+def get_datadrive(obj):
     '''获取对应用例的数据驱动
     
     :param obj: 测试用例或测试用例类
@@ -148,26 +156,63 @@ def get_datadrive( obj ):
     '''
     return obj.__qtaf_datadrive__
 
-def load_datadrive_tests( cls, name=None ):
+
+def _get_translated_in_datadrive(name, dd):
+    if isinstance(name, six.string_types):
+        name = smart_text(name)
+    else:
+        name = str(name)
+    translated_name = translate_bad_char(name)
+    for item in dd:
+        if isinstance(item, six.string_types):
+            item_string = smart_text(item)
+        else:
+            item_string = str(item)
+        if translated_name == translate_bad_char(item_string):
+            return dd[item]
+    else:
+        raise ValueError("找不到对应名字'%s'的数据驱动用例" % name)
+
+
+def load_datadrive_tests(cls, name=None):
     '''加载对应数据驱动测试用例类的数据驱动用例
     '''
-    dd = get_datadrive(cls)
+    if is_datadrive(cls):
+        dd = get_datadrive(cls)
+    else:
+        if not settings.DATA_DRIVE:
+            raise RuntimeError("DATA_DRIVE is not set to True")
+
+        from testbase.loader import TestDataLoader
+        dd = TestDataLoader().load()
+
     if name:
-        if name not in dd:
-            raise ValueError("找不到对应名字'%s'的数据驱动用例"%name)
-        testdata = dd[name]
+        if name in dd:
+            drive_data = {name : dd[name]}
+        else:
+            drive_value = _get_translated_in_datadrive(name, dd)
+            drive_data = {name : drive_value}
+    else:
+        drive_data = dd
+
+    tests = []
+    for item in drive_data:
+        testdata = drive_data[item]
+        if isinstance(item, six.string_types):
+            item = smart_text(item)
+        else:
+            item = str(item)
+        casedata_name = item
+        if has_bad_char(item):
+            casedata_name = translate_bad_char(item)
+            warn_msg = "[WARNING]%r's drive data should use \"%s\" instread of \"%s\"" % (cls, casedata_name, item)
+            logger.warn(warn_msg)
+
         if isinstance(testdata, dict) and "__attrs__" in testdata:
-            attrs = testdata["__attrs__"]
+            testdata = testdata.copy()  # using copy, so we won't mess up origin drive data
+            attrs = testdata.pop("__attrs__")
         else:
             attrs = None
-        tests = [cls(dd[name], str(name), attrs)]
-    else:
-        tests = []
-        for name in dd:
-            testdata = dd[name]
-            if isinstance(testdata, dict) and "__attrs__" in testdata:
-                attrs = testdata["__attrs__"]
-            else:
-                attrs = None
-            tests.append(cls(dd[name], str(name), attrs))
+        tests.append(cls(testdata, casedata_name, attrs))
     return tests
+

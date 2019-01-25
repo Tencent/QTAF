@@ -24,14 +24,14 @@ class HelloTest(testbase.TestCase):
     status = testbase.TestCase.EnumStatus.Ready
     timeout = 1
     priority = testbase.TestCase.EnumPriority.Normal
-    
+
     def run_test(self):
         #-----------------------------
         self.startStep("测试")
         #-----------------------------
         self.assert_equal('断言失败', False, True)
-        
-    
+
+
     def get_extra_record(self):
         return {
             'screenshots':{
@@ -39,7 +39,7 @@ class HelloTest(testbase.TestCase):
                 '设备723982ef8截图':__file__,
             }
         }
-        
+
 class TimeoutTest(testbase.TestCase):
     '''超时示例
     '''
@@ -47,10 +47,10 @@ class TimeoutTest(testbase.TestCase):
     status = testbase.TestCase.EnumStatus.Ready
     timeout = 0.01
     priority = testbase.TestCase.EnumPriority.Normal
-    
+
     def run_test(self):
         time.sleep(2)
-        
+
 class CrashTest(testbase.TestCase):
     '''发生Crash
     '''
@@ -58,11 +58,11 @@ class CrashTest(testbase.TestCase):
     status = testbase.TestCase.EnumStatus.Ready
     timeout = 1
     priority = testbase.TestCase.EnumPriority.Normal
-    
+
     def run_test(self):
         context.current_testresult().log_record(EnumLogLevel.APPCRASH, "App Crash", attachments={'QQ12e6.dmp':__file__, 'QQ12e6.txt':__file__})
-                
-    
+
+
 class App(object):
     def __init__(self, name):
         self._name = name
@@ -71,8 +71,8 @@ class App(object):
         return self._name
     def get_creenshot(self):
         return __file__
-    
-    
+
+
 class QT4iTest(testbase.TestCase):
     '''QT4i测试用例
     '''
@@ -80,22 +80,22 @@ class QT4iTest(testbase.TestCase):
     status = testbase.TestCase.EnumStatus.Ready
     timeout = 0.1
     priority = testbase.TestCase.EnumPriority.Normal
-    
+
     def init_test(self, testresult):
         super(QT4iTest,self).initTest(testresult)
         self._apps = []
-        
+
     def run_test(self):
         self._apps.append(App("A"))
         self._apps.append(App("B"))
         raise RuntimeError("XXX")
-    
+
     def get_extra_fail_record(self):
         attachments = {}
         for app in self._apps:
             attachments[app.name+'的截图'] = app.get_creenshot()
         return {},attachments
-    
+
 
 class ExtraInfoTest(testbase.TestCase):
     '''带test_extra_info_def的用例
@@ -105,11 +105,11 @@ class ExtraInfoTest(testbase.TestCase):
     timeout = 1
     priority = testbase.TestCase.EnumPriority.Normal
     dev_owner = "foo"
-    
+
     test_extra_info_def = [
         ("dev_owner", "开发负责人")
     ]
-    
+
     def run_test(self):
         pass
 
@@ -121,7 +121,7 @@ class ResmgrTest(testbase.TestCase):
     timeout = 1
     priority = testbase.TestCase.EnumPriority.Normal
     dev_owner = "foo"
-    
+
     def pre_test(self):
         from testbase.conf import settings
         self.resource_root = os.path.join(settings.PROJECT_ROOT,'resources')
@@ -133,19 +133,19 @@ class ResmgrTest(testbase.TestCase):
             f.write('abc')
         with codecs_open(os.path.join(self.resource_root, self.link_file_name), 'w', encoding="utf-8") as f:
             f.write(os.path.join(self.resource_root, self.file_name))
-    
+
     def _test_getfile(self, resmgr):
         with codecs_open(resmgr.get_file(self.file_name), encoding="utf-8") as f:
             print(f.read())
-        
+
         with codecs_open(resmgr.get_file(self.link_file_name[:-5]), encoding="utf-8") as f:
             print(f.read())
-    
+
     def run_test(self):
         import testbase.resource as rs
         self._test_getfile(self.test_resources)
         self._test_getfile(rs)
-        
+
     def post_test(self):
         for file_name in [self.file_name, self.link_file_name]:
             os.remove(os.path.join(self.resource_root, file_name))
@@ -158,10 +158,32 @@ class DataDriveCase(testbase.TestCase):
     timeout=5
     priority=testbase.TestCase.EnumPriority.High
     status=testbase.TestCase.EnumStatus.Ready
-    
+
     def run_test(self):
         pass
-    
+
+class FailedCase(testbase.TestCase):
+    '''xxx
+    '''
+    owner = 'xxx'
+    timeout = 5
+    priority = testbase.TestCase.EnumPriority.High
+    status = testbase.TestCase.EnumStatus.Ready
+
+    def run_test(self):
+        self.assert_equal("assert failed", False, True)
+
+class PassedCase(testbase.TestCase):
+    '''xxx
+    '''
+    owner = 'xxx'
+    timeout = 5
+    priority = testbase.TestCase.EnumPriority.High
+    status = testbase.TestCase.EnumStatus.Ready
+
+    def run_test(self):
+        self.assert_equal("assert success", True, True)
+
 if __name__ == '__main__':
 #     HelloTest().run()
 #     x = CrashTest().debug_run()

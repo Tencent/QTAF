@@ -2,12 +2,12 @@
 #
 # Tencent is pleased to support the open source community by making QTA available.
 # Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
-# Licensed under the BSD 3-Clause License (the "License"); you may not use this 
+# Licensed under the BSD 3-Clause License (the "License"); you may not use this
 # file except in compliance with the License. You may obtain a copy of the License at
-# 
+#
 # https://opensource.org/licenses/BSD-3-Clause
-# 
-# Unless required by applicable law or agreed to in writing, software distributed 
+#
+# Unless required by applicable law or agreed to in writing, software distributed
 # under the License is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
 # OF ANY KIND, either express or implied. See the License for the specific language
 # governing permissions and limitations under the License.
@@ -34,7 +34,7 @@ class TestReportTest(unittest.TestCase):
     def setUp(self):
         if six.PY3:
             self.assertRegexpMatches = self.assertRegex
-    
+
     def test_stream_report(self):
         test_pairs = [("HelloTest", "ASSERT"),
                       ("TimeoutTest", "TESTTIMEOUT"),
@@ -48,13 +48,13 @@ class TestReportTest(unittest.TestCase):
             test_runner.run(test_name)
             test_result = test_report._failed_testresults[0]
             self.assertEqual(test_result.failed_reason, reason)
-            
+
     def test_xml_report(self):
         test_pairs = [("HelloTest", "断言失败"),
                     ("TimeoutTest", "用例执行超时"),
                     ("CrashTest", "App Crash"),
                     ("QT4iTest", "run_test执行失败"),]
-        
+
         old_cwd = os.getcwd()
         for test_name, reason in test_pairs:
             try:
@@ -82,13 +82,13 @@ class TestReportTest(unittest.TestCase):
                 self.assertRegexpMatches(failed_reason, reason)
             finally:
                 os.chdir(old_cwd)
-            
+
     def test_json_report(self):
         test_pairs = [("HelloTest", "断言失败"),
                     ("TimeoutTest", "用例执行超时"),
                     ("CrashTest", "App Crash"),
                     ("QT4iTest", "run_test执行失败")]
-        
+
         old_cwd = os.getcwd()
         try:
             for test_name, reason in test_pairs:
@@ -97,7 +97,7 @@ class TestReportTest(unittest.TestCase):
                 os.makedirs(working_dir)
                 os.chdir(working_dir)
                 self.addCleanup(shutil.rmtree, working_dir, True)
-                
+
                 test_report_name = "%s_%s.json" % (time_str, test_name)
                 with codecs_open(test_report_name, "w", encoding="utf-8") as fd:
                     test_report = report.report_types["json"](fd=fd)
@@ -121,7 +121,7 @@ class TestReportTest(unittest.TestCase):
                         self.assertRegexpMatches(actual_reson, reason)
         finally:
             os.chdir(old_cwd)
-            
+
         try:
             test_name = "test.sampletest.hellotest.HelloTest test.sampletest.hellotest.TimeoutTest"
             time_str = get_time_str()
@@ -129,7 +129,7 @@ class TestReportTest(unittest.TestCase):
             os.makedirs(working_dir)
             os.chdir(working_dir)
             self.addCleanup(shutil.rmtree, working_dir, True)
-            
+
             test_report_name = "test_json_report_%s.json" % time_str
             retry_count = 2
             with codecs_open(test_report_name, "w", encoding="utf-8") as fd:
@@ -148,13 +148,13 @@ class TestReportTest(unittest.TestCase):
                 self.assertTrue("python_version" in summary["environment"])
         finally:
             os.chdir(old_cwd)
-            
+
     def test_html_report(self):
         test_pairs = [("HelloTest", "断言失败"),
                     ("TimeoutTest", "用例执行超时"),
                     ("CrashTest", "App Crash"),
                     ("QT4iTest", "run_test执行失败"),]
-        
+
         old_cwd = os.getcwd()
         for test_name, reason in test_pairs:
             try:
@@ -162,7 +162,7 @@ class TestReportTest(unittest.TestCase):
                 os.makedirs(working_dir)
                 os.chdir(working_dir)
                 self.addCleanup(shutil.rmtree, working_dir, True)
-                
+
                 test_report = report.report_types["html"](title="test html report")
                 test_runner = runner.runner_types["basic"](test_report)
                 test_name = "test.sampletest.hellotest.%s" % test_name
@@ -187,22 +187,22 @@ class TestReportTest(unittest.TestCase):
                         self.assertEqual(failed_step["succeed"], False)
                         actual_reson = smart_text(failed_step["logs"][0]["message"])
                         self.assertRegexpMatches(actual_reson, reason)
-                
+
             finally:
                 os.chdir(old_cwd)
-                
+
         try:
             test_name = "DataDriveCase"
             working_dir = test_name + "_" + get_time_str()
             os.makedirs(working_dir)
             os.chdir(working_dir)
             self.addCleanup(shutil.rmtree, working_dir, True)
-            
+
             test_report = report.report_types["html"](title="test html report")
             test_runner = runner.runner_types["basic"](test_report)
             test_name = "test.sampletest.hellotest." + test_name
             test_runner.run(test_name)
-            
+
             with codecs_open("qta-report.js", encoding="utf-8") as fd:
                 content = fd.read()
                 index = content.find("{")
@@ -214,7 +214,7 @@ class TestReportTest(unittest.TestCase):
                     self.assertTrue(any(is_ok))
                 test_results = qta_report["results"]
                 self.assertEqual(len(test_results), 2)
-                
+
                 for test_name in map(lambda x: x["name"], qta_report["loaded_testcases"]):
                     with codecs_open(test_results[test_name][0], "r", encoding="utf-8") as fd2:
                         content = fd2.read()
@@ -225,3 +225,23 @@ class TestReportTest(unittest.TestCase):
         finally:
             os.chdir(old_cwd)
 
+
+    def test_failed_report(self):
+        test_pairs = ["HelloTest", "FailedCase"]
+        for test_name in test_pairs:
+            test_report = report.report_types["stream"](output_testresult=True)
+            test_runner = runner.runner_types["basic"](test_report)
+            test_name = "test.sampletest.hellotest.%s" % test_name
+            print("#### stream report test for test: " + test_name + "###")
+            res_report = test_runner.run(test_name)
+            self.assertEqual(False, res_report.is_passed())
+
+    def test_success_report(self):
+        test_pairs = ["PassedCase"]
+        for test_name in test_pairs:
+            test_report = report.report_types["stream"](output_testresult=True)
+            test_runner = runner.runner_types["basic"](test_report)
+            test_name = "test.sampletest.hellotest.%s" % test_name
+            print("#### stream report test for test: " + test_name + "###")
+            res_report = test_runner.run(test_name)
+            self.assertEqual(True, res_report.is_passed())

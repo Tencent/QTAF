@@ -577,8 +577,23 @@ else:
     import string
     maketrans_func = string.maketrans
         
-BAD_CHARS = r'\/*?:<>"|~'
-TRANS = maketrans_func(BAD_CHARS, '_'*len(BAD_CHARS))
+BAD_FILE_CHARS = r'\/*?:<>"|~'
+BAD_VAR_CHAR = BAD_FILE_CHARS + '()[]+-=& '
+TRANS = maketrans_func(BAD_VAR_CHAR, '_'*len(BAD_VAR_CHAR))
+BAD_VAR_CHAR_SET = set(BAD_VAR_CHAR)
+
+def translate_bad_char(input_string):
+    if six.PY2:
+        translated_string = smart_binary(input_string).translate(TRANS)
+    else:
+        translated_string = smart_text(input_string).translate(TRANS)
+    return translated_string
+
+def has_bad_char(input_string):
+    if set(input_string) & BAD_VAR_CHAR_SET:
+        return True
+    else:
+        return False
 
 def get_time_str():
     now = datetime.now()
@@ -595,13 +610,6 @@ def get_inner_resource(resource_module, resource_name):
     if not path_exists(file_path):
         raise RuntimeError("resource path: %s not existed." % file_path)
     return file_path
-
-def translate_bad_char(input_string):
-    if six.PY2:
-        translated_string = smart_binary(input_string).translate(TRANS)
-    else:
-        translated_string = smart_text(input_string).translate(TRANS)
-    return translated_string
 
 def get_attribute_from_string(object_path):
     parts = object_path.split(".")
