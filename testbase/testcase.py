@@ -982,6 +982,9 @@ class SeqTestSuite(TestSuite):
         for it in self._testcases:
             yield it
 
+    def __len__(self):
+        return len(self._testcases)
+
     def __repr__(self):
         return '<SeqTestSuite module:%s>' % self.test_class_name
 
