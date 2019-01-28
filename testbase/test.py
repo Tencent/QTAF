@@ -15,6 +15,7 @@
 """a module for unittest
 """
 import os
+import threading
 
 from testbase.conf import settings
 
@@ -71,3 +72,28 @@ class modify_environ(object):
                 del os.environ[key]
             else:
                 os.environ[key] = old_value
+
+
+class modify_attributes(object):
+    """temporarily modify attributes
+    """
+    _lock = threading.Lock()
+
+    def __init__(self, target, key_values):
+        self._target = target
+        self._old_values = {}
+        self._new_values = key_values
+        for key in key_values.keys():
+            self._old_values[key] = getattr(target, key)
+
+    def __enter__(self):
+        self._lock.acquire()
+        for key in self._new_values:
+            setattr(self._target, key, self._new_values[key])
+
+    def __exit__(self, *args):
+        try:
+            for key in self._old_values:
+                setattr(self._target, key, self._old_values[key])
+        finally:
+            self._lock.release()
