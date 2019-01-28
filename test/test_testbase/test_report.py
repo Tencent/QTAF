@@ -15,6 +15,7 @@
 """unittest for module testbase.report
 """
 
+import argparse
 import json
 import os
 import shutil
@@ -26,11 +27,14 @@ import unittest
 from xml.dom import minidom
 from testbase import runner
 from testbase import report
+from testbase.test import modify_attributes
 from testbase.util import smart_text, codecs_open, get_time_str
 
 suffix = "%s%s" % (sys.version_info[0], sys.version_info[1])
 
+
 class TestReportTest(unittest.TestCase):
+
     def setUp(self):
         if six.PY3:
             self.assertRegexpMatches = self.assertRegex
@@ -39,7 +43,7 @@ class TestReportTest(unittest.TestCase):
         test_pairs = [("HelloTest", "ASSERT"),
                       ("TimeoutTest", "TESTTIMEOUT"),
                       ("CrashTest", "APPCRASH"),
-                      ("QT4iTest", "CRITICAL"),]
+                      ("QT4iTest", "CRITICAL"), ]
         for test_name, reason in test_pairs:
             test_report = report.report_types["stream"](output_testresult=True)
             test_runner = runner.runner_types["basic"](test_report)
@@ -53,7 +57,7 @@ class TestReportTest(unittest.TestCase):
         test_pairs = [("HelloTest", "断言失败"),
                     ("TimeoutTest", "用例执行超时"),
                     ("CrashTest", "App Crash"),
-                    ("QT4iTest", "run_test执行失败"),]
+                    ("QT4iTest", "run_test执行失败"), ]
 
         old_cwd = os.getcwd()
         for test_name, reason in test_pairs:
@@ -153,7 +157,7 @@ class TestReportTest(unittest.TestCase):
         test_pairs = [("HelloTest", "断言失败"),
                     ("TimeoutTest", "用例执行超时"),
                     ("CrashTest", "App Crash"),
-                    ("QT4iTest", "run_test执行失败"),]
+                    ("QT4iTest", "run_test执行失败"), ]
 
         old_cwd = os.getcwd()
         for test_name, reason in test_pairs:
@@ -226,22 +230,53 @@ class TestReportTest(unittest.TestCase):
             os.chdir(old_cwd)
 
 
-    def test_failed_report(self):
-        test_pairs = ["HelloTest", "FailedCase"]
-        for test_name in test_pairs:
-            test_report = report.report_types["stream"](output_testresult=True)
-            test_runner = runner.runner_types["basic"](test_report)
-            test_name = "test.sampletest.hellotest.%s" % test_name
-            print("#### stream report test for test: " + test_name + "###")
-            res_report = test_runner.run(test_name)
-            self.assertEqual(False, res_report.is_passed())
+    def test_runtest_return_code(self):
+        from testbase.management import RunTest
+        test_cases = list(map(lambda x: "test.sampletest.hellotest." + x, ["PassedCase",
+                                                                      "FailedCase",
+                                                                      "PassedCase", ]))
+        report_pairs = [
+            ("stream", ""),
+            ("json", "-o xxxx.json"),
+            ("html", ""),
+            ("xml", "")
+        ]
+        context = modify_attributes(os, {"system" : lambda _: None})
+        for report_type, report_args in report_pairs:
+            args = argparse.Namespace()
+            args.tests = test_cases
+            args.working_dir = "runtest_%s" % get_time_str()
+            self.addCleanup(shutil.rmtree, args.working_dir, True)
+            args.report_type = report_type
+            args.report_args = report_args
+            args.report_args_help = None
+            args.runner_type = "basic"
+            args.runner_args = ""
+            args.runner_args_help = None
+            args.priorities = None
+            args.status = None
+            args.owners = None
+            args.excluded_names = None
+            args.tags = None
+            args.excluded_tags = None
+            args.resmgr_backend_type = "local"
+            try:
+                with context:
+                    RunTest().execute(args)
+            except SystemExit as e:
+                self.assertEqual(e.args[0], 1)
+            else:
+                self.fail("runtest didn't failed with code 1 for report type: %s" % report_type)
 
-    def test_success_report(self):
-        test_pairs = ["PassedCase"]
-        for test_name in test_pairs:
-            test_report = report.report_types["stream"](output_testresult=True)
-            test_runner = runner.runner_types["basic"](test_report)
-            test_name = "test.sampletest.hellotest.%s" % test_name
-            print("#### stream report test for test: " + test_name + "###")
-            res_report = test_runner.run(test_name)
-            self.assertEqual(True, res_report.is_passed())
+            args.working_dir = "runtest_%s" % get_time_str()
+            self.addCleanup(shutil.rmtree, args.working_dir, True)
+            args.tests = test_cases[:1]
+            try:
+                with context:
+                    RunTest().execute(args)
+            except SystemExit as e:
+                self.fail("online test report return non-zero: \n%s" % traceback.format_exc())
+
+
+if __name__ == "__main__":
+    TestReportTest("test_runtest_return_code").debug()

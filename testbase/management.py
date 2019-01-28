@@ -193,6 +193,10 @@ class RunTest(Command):
 
         if args.working_dir is None:
             args.working_dir = os.getcwd()
+        prev_dir = os.getcwd()
+        if not path_exists(args.working_dir):
+            os.makedirs(args.working_dir)
+        os.chdir(args.working_dir)
 
         priorities = args.priorities or [TestCase.EnumPriority.Low,
                                           TestCase.EnumPriority.Normal,
@@ -244,10 +248,6 @@ class RunTest(Command):
         runner_type = runner_types[args.runner_type]
         runner = runner_type.parse_args(shlex.split(args.runner_args), report, resmgr_backend)
 
-        prev_dir = os.getcwd()
-        if not path_exists(args.working_dir):
-            os.makedirs(args.working_dir)
-        os.chdir(args.working_dir)
         runner.run(test_conf)
         os.chdir(prev_dir)
         if args.report_type == 'online':

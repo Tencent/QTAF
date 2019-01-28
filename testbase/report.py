@@ -42,9 +42,11 @@ report_types = {}
 os_encoding = locale.getdefaultlocale()[1]
 report_usage = 'runtest <test ...> --report-type <report-type> [--report-args "<report-args>"]'
 
+
 class ITestReport(object):
     '''测试报告接口
     '''
+
     def begin_report(self):
         '''开始测试执行
         '''
@@ -58,7 +60,7 @@ class ITestReport(object):
         '''
         pass
 
-    def log_test_result(self, testcase, testresult ):
+    def log_test_result(self, testcase, testresult):
         '''记录一个测试结果
 
         :param testcase: 测试用例
@@ -231,15 +233,17 @@ class ITestReport(object):
         '''
         raise NotImplementedError()
 
+
 class TestReportBase(ITestReport):
     '''TestReport基类
     '''
+
     def __init__(self):
         '''构造函数
         '''
         self._cases_passed = {}
 
-    def log_test_result(self, testcase, testresult ):
+    def log_test_result(self, testcase, testresult):
         '''记录一个测试结果
 
         :param testcase: 测试用例
@@ -256,10 +260,12 @@ class TestReportBase(ITestReport):
         '''
         return all(self._cases_passed.values())
 
+
 class ITestResultFactory(object):
     '''TestResult工厂接口
     '''
-    def create(self, testcase ):
+
+    def create(self, testcase):
         '''创建TestResult对象
         :param testcase: 测试用例
         :type testcase: TestCase
@@ -280,17 +286,19 @@ class ITestResultFactory(object):
         '''
         pass
 
+
 class EmptyTestResultFactory(ITestResultFactory):
     '''测试结果工厂
     '''
-    def __init__(self, result_factory_func=None ):
+
+    def __init__(self, result_factory_func=None):
         '''构造函数
         :param result_factory_func: TestResult工厂函数
         :type result_factory_func: Function
         '''
         self._result_factory_func = result_factory_func
 
-    def create(self, testcase ):
+    def create(self, testcase):
         '''创建TestResult对象
         :param testcase: 测试用例
         :type testcase: TestCase
@@ -314,10 +322,12 @@ class EmptyTestResultFactory(ITestResultFactory):
         '''
         self._result_factory_func = buf
 
+
 class EmptyTestReport(TestReportBase):
     '''不输出测试报告
     '''
-    def __init__(self, result_factory_func=None ):
+
+    def __init__(self, result_factory_func=None):
         '''构造函数
         :param result_factory_func: TestResult工厂函数
         :type result_factory_func: callable
@@ -349,17 +359,19 @@ class EmptyTestReport(TestReportBase):
         '''
         return EmptyTestReport()
 
+
 class StreamTestResultFactory(ITestResultFactory):
     '''流形式TestResult工厂
     '''
-    def __init__(self, stream ):
+
+    def __init__(self, stream):
         '''构造函数
         :param stream: 指定要输出的流设备
         :type stream: file
         '''
         self._stream = stream
 
-    def create(self, testcase ):
+    def create(self, testcase):
         '''创建TestResult对象
         :param testcase: 测试用例
         :type testcase: TestCase
@@ -387,12 +399,14 @@ class StreamTestResultFactory(ITestResultFactory):
         elif fileno == 2:
             self._stream = sys.stderr
         else:
-            raise ValueError("invalid fd: %s" % fileno )
+            raise ValueError("invalid fd: %s" % fileno)
+
 
 class StreamTestReport(TestReportBase):
     '''流形式的测试报告
     '''
-    def __init__(self, stream=sys.stdout, error_stream=sys.stderr, output_testresult=False, output_summary=True ):
+
+    def __init__(self, stream=sys.stdout, error_stream=sys.stderr, output_testresult=False, output_summary=True):
         '''构造函数
         :param stream: 指定要输出的流设备
         :type stream: file
@@ -425,26 +439,26 @@ class StreamTestReport(TestReportBase):
         '''
         end_time = datetime.now()
         self._write("Test ends at:%s.\n" % end_time.strftime("%Y-%m-%d %H:%M:%S"))
-        #self._write("Total execution time is :%s\n" % str(end_time-self._start_time).split('.')[0])
+        # self._write("Total execution time is :%s\n" % str(end_time-self._start_time).split('.')[0])
 
         if self._output_summary:
             self._write("\n" + "="*60 + "\n")
             self._write("SUMMARY:\n\n")
             self._write(" Totals: %s\t%0.4fs\n\n" % (len(self._failed_testresults) + len(self._passed_testresults),
-                                                     (end_time-self._start_time).total_seconds()))
+                                                     (end_time - self._start_time).total_seconds()))
 
             self._write(" Passed: %s\n" % len(self._passed_testresults))
             for it in self._passed_testresults:
                 self._write(" \t%s\t%0.4fs\n" % (it.testcase.test_name,
-                                                 it.end_time-it.begin_time))
+                                                 it.end_time - it.begin_time))
             self._write("\n")
 
             self._write(" Failed: %s\n" % len(self._failed_testresults))
             for it in self._failed_testresults:
                 self._write_err(" \t%s\t%0.4fs\n" % (it.testcase.test_name,
-                                                     it.end_time-it.begin_time))
+                                                     it.end_time - it.begin_time))
 
-    def log_test_result(self, testcase, testresult ):
+    def log_test_result(self, testcase, testresult):
         '''记录一个测试结果
         :param testcase: 测试用例
         :type testcase: TestCase
@@ -530,9 +544,11 @@ class StreamTestReport(TestReportBase):
             output_testresult=not args.no_output_result,
             output_summary=not args.no_summary)
 
+
 class XMLTestResultFactory(ITestResultFactory):
     '''XML形式TestResult工厂
     '''
+
     def create(self, testcase):
         '''创建TestResult对象
         :param testcase: 测试用例
@@ -541,9 +557,11 @@ class XMLTestResultFactory(ITestResultFactory):
         '''
         return testresult.XmlResult(testcase)
 
+
 class XMLTestReport(TestReportBase):
     '''XML形式的测试报告
     '''
+
     def __init__(self):
         '''构造函数
         '''
@@ -572,7 +590,7 @@ class XMLTestReport(TestReportBase):
         '''
         time_end = datetime.now()
         timexml = "<RunTime><StartTime>%s</StartTime><EndTime>%s</EndTime><Duration>%s</Duration></RunTime>"
-        timexml = timexml % (self._time_start.strftime("%Y-%m-%d %H:%M:%S"), time_end.strftime("%Y-%m-%d %H:%M:%S"), str(time_end-self._time_start).split('.')[0] )
+        timexml = timexml % (self._time_start.strftime("%Y-%m-%d %H:%M:%S"), time_end.strftime("%Y-%m-%d %H:%M:%S"), str(time_end - self._time_start).split('.')[0])
         timenodes = dom.parseString(timexml)
         self._runrstnode.appendChild(timenodes.childNodes[0])
 
@@ -584,7 +602,7 @@ class XMLTestReport(TestReportBase):
         test_result_xsl = get_inner_resource("qta_statics", "TestResult.xsl")
         shutil.copy(test_result_xsl, os.getcwd())
 
-    def log_test_result(self, testcase, testresult ):
+    def log_test_result(self, testcase, testresult):
         '''记录一个测试结果
         :param testcase: 测试用例
         :type testcase: TestCase
@@ -686,6 +704,7 @@ class XMLTestReport(TestReportBase):
         '''
         return cls()
 
+
 class JSONTestResultFactory(ITestResultFactory):
     '''JSON形式TestResult工厂
     '''
@@ -698,9 +717,11 @@ class JSONTestResultFactory(ITestResultFactory):
         '''
         return testresult.JSONResult(testcase)
 
+
 class JSONTestReportBase(TestReportBase):
     '''JSON格式的测试报告基类
     '''
+
     def __init__(self, title="调试测试"):
         '''构造函数
 
@@ -755,7 +776,7 @@ class JSONTestReportBase(TestReportBase):
         self._data["summary"]["succeed"] = self._testcase_passed == self._testcase_total_count
         self._data["summary"]["end_time"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-    def log_test_result(self, testcase, testresult ):
+    def log_test_result(self, testcase, testresult):
         '''记录一个测试结果
         :param testcase: 测试用例
         :type testcase: TestCase
@@ -834,9 +855,11 @@ class JSONTestReportBase(TestReportBase):
             "error": error
         })
 
+
 class JSONTestReport(JSONTestReportBase):
     '''JSON格式的测试报告
     '''
+
     def __init__(self, fd, title="调试测试"):
         '''构造函数
 
@@ -883,9 +906,11 @@ class JSONTestReport(JSONTestReportBase):
         fd = codecs_open(args.output, 'w', encoding="utf-8")
         return cls(fd, title=args.title)
 
+
 class HtmlTestReport(JSONTestReportBase):
     """html test report
     """
+
     def get_testresult_factory(self):
         '''获取对应的TestResult工厂
         :returns ITestResultFactory
@@ -923,11 +948,14 @@ class HtmlTestReport(JSONTestReportBase):
         args = cls.get_parser().parse_args(args_string)
         return cls(title=args.title)
 
+
 class HtmlTestResultFactory(ITestResultFactory):
     """html test result factory
     """
+
     def create(self, testcase):
         return testresult.HtmlResult(testcase)
+
 
 
 def __init_report_types():
@@ -950,6 +978,7 @@ def __init_report_types():
             except:
                 stack = traceback.format_exc()
                 logger.warn("load ITestReport entry point for %s failed:\n%s" % (ep.name, stack))
+
 
 __init_report_types()
 del __init_report_types
