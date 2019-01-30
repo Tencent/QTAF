@@ -57,9 +57,11 @@ RUNNER_ENTRY_POINT = "qtaf.runner"
 runner_usage = 'runtest <test ...> --runner-type <runner-type> [--runner-args "<runner-args>"]'
 runner_types = {}
 
+
 class TestCaseSettings(object):
     '''目标测试用例配置
     '''
+
     def __init__(self, names=None, excluded_names=None, priorities=None, status=None, owners=None, tags=None, excluded_tags=None):
         '''构造函数
         
@@ -122,28 +124,28 @@ class TestCaseSettings(object):
         self.tags = set(tags) if tags else None
         self.excluded_tags = set(excluded_tags) if excluded_tags else None
 
-    def _is_test_class(self, name ):
+    def _is_test_class(self, name):
         '''判断路径是否是一个类名
         '''
-        if '/' in name: #数据驱动相关的类
+        if '/' in name:  # 数据驱动相关的类
             return True
-        if '.' not in name: #不可能直接引用类名
+        if '.' not in name:  # 不可能直接引用类名
             return False
 
         try:
             __import__(name)
-            return False #为模块
+            return False  # 为模块
         except ImportError:
-            modname, clsname = name.rsplit('.',1)
+            modname, clsname = name.rsplit('.', 1)
             try:
                 __import__(modname)
                 mod = sys.modules[modname]
             except:
-                return False #不存在的模块
+                return False  # 不存在的模块
             else:
                 return hasattr(mod, clsname)
 
-    def filter(self, testcase ):
+    def filter(self, testcase):
         '''测试用例过滤函数
         
         :param testcase: 测试用例
@@ -154,7 +156,7 @@ class TestCaseSettings(object):
             if name.startswith(it):
                 return "match excluded list: '%s'" % it
         for it in self.excluded_mod_names:
-            if name.startswith(it+'.'):
+            if name.startswith(it + '.'):
                 return "match excluded list: '%s'" % it
         if testcase.status not in self.status:
             return "testcase with status '%s' is excluded" % testcase.status
@@ -163,15 +165,17 @@ class TestCaseSettings(object):
         if self.owners and testcase.owner not in self.owners:
             return "testcase with owner '%s' is excluded" % testcase.owner
         if self.tags and self.tags.isdisjoint(testcase.tags):
-            return "testcase is not tag with %s" % ( "/".join(self.tags) )
+            return "testcase is not tag with %s" % ("/".join(self.tags))
         if self.excluded_tags and not self.excluded_tags.isdisjoint(testcase.tags):
-            return "testcase is tag with %s" % ( "/".join(self.excluded_tags) )
+            return "testcase is tag with %s" % ("/".join(self.excluded_tags))
         return False
+
 
 class BaseTestRunner(object):
     '''测试执行器基类
     '''
-    def __init__(self, report,  resmgr_backend=None):
+
+    def __init__(self, report, resmgr_backend=None):
         '''构造函数
         
         :param report: 测试报告
@@ -190,7 +194,7 @@ class BaseTestRunner(object):
         '''
         return self.__report
 
-    def load(self, target ):
+    def load(self, target):
         '''加载测试用例
 
         :param target: 指定要执行的测试用例
@@ -205,7 +209,7 @@ class BaseTestRunner(object):
         if isinstance(target, TestCaseSettings):
             loader = TestLoader(target.filter)
             tests = loader.load(target.names)
-            self.__report.log_loaded_tests(loader,tests)
+            self.__report.log_loaded_tests(loader, tests)
             filtered_tests = loader.get_filtered_tests_with_reason().items()
             for test, reason in filtered_tests:
                 self.__report.log_filtered_test(loader, test, reason)
@@ -227,9 +231,11 @@ class BaseTestRunner(object):
             plan = target
             target = plan.get_tests()
         else:
+
             class SimplePlan(TestPlan):
                 tests = target
                 test_target_args = {}
+
             plan = SimplePlan()
         self.__report.begin_report()
         plan.test_setup(self.__report)
@@ -265,7 +271,7 @@ class BaseTestRunner(object):
             plan.resource_teardown(self.__report, res_type, resource)
         plan.resource_teardown(self.__report, "node", {"host": socket.gethostname(), "id": uuid.getnode() })
 
-    def run_all_tests(self, tests ):
+    def run_all_tests(self, tests):
         '''执行全部的测试用例
         
         :param tests: 测试用例对象列表
@@ -275,7 +281,7 @@ class BaseTestRunner(object):
         for test in tests:
             self.run_test(test)
 
-    def run_test(self, test ):
+    def run_test(self, test):
         '''执行一个测试用例
         
         :param test: 测试用例
@@ -296,7 +302,7 @@ class BaseTestRunner(object):
         '''
         pass
 
-    def _log_collection_result(self, result_collection ):
+    def _log_collection_result(self, result_collection):
         '''记录结果集合
         '''
         for it in result_collection:
@@ -327,6 +333,7 @@ class BaseTestRunner(object):
 class TestRunner(BaseTestRunner):
     '''测试执行器
     '''
+
     def __init__(self, report, retries=0, resmgr_backend=None):
         '''构造函数
         
@@ -335,10 +342,10 @@ class TestRunner(BaseTestRunner):
         :param retries: 用例失败时重试次数
         :type retries: int
         '''
-        super(TestRunner, self).__init__(report,  resmgr_backend)
+        super(TestRunner, self).__init__(report, resmgr_backend)
         self._retries = retries
 
-    def run_all_tests(self, tests ):
+    def run_all_tests(self, tests):
         '''执行全部的测试用例
         
         :param test: 测试用例对象列表
@@ -377,10 +384,12 @@ class TestRunner(BaseTestRunner):
         args = cls.get_parser().parse_args(args_string)
         return cls(report, args.retries, resmgr_backend)
 
+
 class ThreadSafetyReport(TestReportBase):
     '''TestReport修饰器，保证线程安全
     '''
-    def __init__(self, report ):
+
+    def __init__(self, report):
         '''构造函数
         
         :param result: 测试报告
@@ -405,7 +414,7 @@ class ThreadSafetyReport(TestReportBase):
         with self._lock:
             return self._report.end_report()
 
-    def log_test_result(self, testcase, testresult ):
+    def log_test_result(self, testcase, testresult):
         '''记录一个测试结果
         
         :param testcase: 测试用例
@@ -475,10 +484,12 @@ class ThreadSafetyReport(TestReportBase):
         with self._lock:
             return self._report.log_record(level, tag, msg, record)
 
+
 class ThreadingTestRunner(BaseTestRunner):
     '''使用多线程并发执行用例
     '''
-    def __init__(self, report, thread_cnt=0, retries=0,  resmgr_backend=None):
+
+    def __init__(self, report, thread_cnt=0, retries=0, resmgr_backend=None):
         '''构造函数
         
         :param report: 测试报告
@@ -495,7 +506,7 @@ class ThreadingTestRunner(BaseTestRunner):
             report = ThreadSafetyReport(report)
         super(ThreadingTestRunner, self).__init__(report, resmgr_backend)
 
-    def run_all_tests(self, tests ):
+    def run_all_tests(self, tests):
         '''执行全部的测试用例
         
         :param test: 测试用例对象列表
@@ -520,9 +531,9 @@ class ThreadingTestRunner(BaseTestRunner):
         :param tests_retry_dict: 测试用例重跑记录
         :type tests_retry_dict: dict
         '''
-        while len(tests_queue)>0 :
+        while len(tests_queue) > 0 :
             with self._lock:
-                if len(tests_queue)<=0:
+                if len(tests_queue) <= 0:
                     break
                 test = tests_queue.pop()
             passed = self.run_test(test)
@@ -575,9 +586,11 @@ class EnumProcessMsgType(object):
     Report_LogTestResult = 12
     Report_LogRecord = 13
 
+
 class TestResultFunctionProxy(object):
     '''测试结果函数代理
     '''
+
     def __init__(self, from_worker, obj_id, func_name):
         '''构造函数
         
@@ -592,7 +605,7 @@ class TestResultFunctionProxy(object):
         self._objid = obj_id
         self._func_name = func_name
 
-    def __call__(self, *args, **kwargs ):
+    def __call__(self, *args, **kwargs):
         self._worker.send_message((EnumProcessMsgType.Result_CallFunc, self._objid, self._func_name,
                                    args, kwargs))
         msg = self._worker.recv_message(5)
@@ -604,10 +617,12 @@ class TestResultFunctionProxy(object):
         else:
             raise RuntimeError("unexpect message: %s" % msg)
 
+
 class TestResultProxy(object):
     '''测试结果代理
     '''
-    def __init__(self, from_worker, obj_id, passed, testcase ):
+
+    def __init__(self, from_worker, obj_id, passed, testcase):
         '''构造函数
         
         :param from_worker: 来源的工作者
@@ -624,10 +639,10 @@ class TestResultProxy(object):
         self.__objid = obj_id
         self.__testcase = testcase
 
-    def __getattr__(self, name ):
+    def __getattr__(self, name):
         if name.startswith('_TestResultProxy__'):
-            return super(TestResultProxy,self).__getattr__(name)
-        if name == 'passed': #shortcut
+            return super(TestResultProxy, self).__getattr__(name)
+        if name == 'passed':  # shortcut
             return self.__passed
         if name == 'testcase':
             return self.__testcase
@@ -643,16 +658,18 @@ class TestResultProxy(object):
         else:
             raise RuntimeError("unexpect message: %s" % msg)
 
-    def __setattr__(self, name, value ):
+    def __setattr__(self, name, value):
         if name.startswith('_TestResultProxy__'):
-            super(TestResultProxy,self).__setattr__(name, value)
+            super(TestResultProxy, self).__setattr__(name, value)
         else:
             raise RuntimeError("read only")
+
 
 class TestReportProxy(TestReportBase):
     '''测试报告代理
     '''
-    def __init__(self, worker_id, ctrl_msg_queue, result_factory, result_manager ):
+
+    def __init__(self, worker_id, ctrl_msg_queue, result_factory, result_manager):
         '''构造函数
         
         :param worker_id: 工作者ID
@@ -683,7 +700,7 @@ class TestReportProxy(TestReportBase):
         '''
         raise RuntimeError("should not call this")
 
-    def log_test_result(self, testcase, testresult ):
+    def log_test_result(self, testcase, testresult):
         '''记录一个测试结果
         
         :param testcase: 测试用例
@@ -722,11 +739,11 @@ class _EmptyClass(object):
     pass
 
 
-
 class TestResultStubManager(object):
     '''测试结果桩管理器
     '''
-    def __init__(self, rsp_queue ):
+
+    def __init__(self, rsp_queue):
         '''构造函数
         
         :param rsp_queue: 对工作者请求结果的答复消息队列
@@ -735,13 +752,13 @@ class TestResultStubManager(object):
         self._rsp_queue = rsp_queue
         self._result_dict = {}
 
-    def add_result(self, result ):
+    def add_result(self, result):
         '''增加一个测试结果
         '''
         self._result_dict[id(result)] = result
         return id(result)
 
-    def get_result_attr(self, objid, attrname ):
+    def get_result_attr(self, objid, attrname):
         '''获取一个测试结果的属性值
         
         :param objid: 对象ID
@@ -759,9 +776,9 @@ class TestResultStubManager(object):
             self._rsp_queue.put(rsp)
         except:
             self._rsp_queue.put((EnumProcessMsgType.Result_AttrError,
-                                 "'%s' object has no attribute '%s'" % (type(result).__name__, attrname) ))
+                                 "'%s' object has no attribute '%s'" % (type(result).__name__, attrname)))
 
-    def call_result_func(self, objid, funcname, args, kwargs ):
+    def call_result_func(self, objid, funcname, args, kwargs):
         '''调用一个测试结果的函数
         
         :param objid: 对象ID
@@ -781,7 +798,7 @@ class TestResultStubManager(object):
         self._rsp_queue.put(rsp)
 
 
-def _log_collection_result( testreport, result_collection ):
+def _log_collection_result(testreport, result_collection):
     '''记录结果集合
     '''
     for it in result_collection:
@@ -790,7 +807,8 @@ def _log_collection_result( testreport, result_collection ):
         else:
             testreport.log_test_result(it.testcase, it)
 
-def _run_test_thread( worker_id, ctrl_msg_queue, testcase, testreport, resmgr ):
+
+def _run_test_thread(worker_id, ctrl_msg_queue, testcase, testreport, resmgr):
     '''执行测试用例的线程
     
     :param worker_id: 工作者ID
@@ -818,7 +836,7 @@ def _run_test_thread( worker_id, ctrl_msg_queue, testcase, testreport, resmgr ):
         ctrl_msg_queue.put((EnumProcessMsgType.Worker_Error, worker_id, traceback.format_exc()))
 
 
-def _worker_process( worker_id,
+def _worker_process(worker_id,
                      ctrl_msg_queue, msg_queue, rsp_queue,
                      result_factory_type, result_factory_data, resmgr):
     '''执行测试的子进程过程
@@ -869,10 +887,12 @@ def _worker_process( worker_id,
     except:
         ctrl_msg_queue.put((EnumProcessMsgType.Worker_Error, worker_id, traceback.format_exc()))
 
+
 class TestWorker(object):
     '''多进程执行用例时，执行测试的子进程
     '''
-    def __init__(self, worker_id, ctrl_msg_queue, result_factory, resmgr ):
+
+    def __init__(self, worker_id, ctrl_msg_queue, result_factory, resmgr):
         '''构造函数
         
         :param worker_id: 工作者ID，全局唯一
@@ -936,7 +956,7 @@ class TestWorker(object):
         self._reset()
         self.start()
 
-    def run_testcase(self, testcase ):
+    def run_testcase(self, testcase):
         '''分配一个测试用例
         
         :param testcase: 要执行的测试用例
@@ -952,7 +972,7 @@ class TestWorker(object):
         '''
         return self._testcase
 
-    def send_message(self, msg ):
+    def send_message(self, msg):
         '''发送消息到工作者
         
         :param msg: 消息
@@ -960,7 +980,7 @@ class TestWorker(object):
         '''
         self._msg_queue.put(msg)
 
-    def recv_message(self, timeout=None ):
+    def recv_message(self, timeout=None):
         '''接收工作者的答复消息
         '''
         if timeout is None:
@@ -989,6 +1009,7 @@ class MultiProcessTestRunner(BaseTestRunner):
     的信息
            
     '''
+
     def __init__(self, report, process_cnt=0, retries=0, resmgr_backend=None):
         '''构造函数
         
@@ -999,17 +1020,19 @@ class MultiProcessTestRunner(BaseTestRunner):
         :param retries: 失败重跑次数上限
         :type retries: int
         '''
-        self.concurrency= int(process_cnt) or multiprocessing.cpu_count()
+        self.concurrency = int(process_cnt) or multiprocessing.cpu_count()
         self._retries = retries
         self._workers_dict = {}
-        super(MultiProcessTestRunner,self).__init__(report,resmgr_backend)
+        super(MultiProcessTestRunner, self).__init__(report, resmgr_backend)
 
-    def run_all_tests(self, tests ):
+    def run_all_tests(self, tests):
         '''执行全部的测试用例
         
         :param test: 测试用例对象列表
         :type tests: list
         '''
+        if len(tests) == 0:
+            return
         if len(tests) < self.concurrency:
             self.concurrency = len(tests)
 
@@ -1118,6 +1141,7 @@ def __init_runner_types():
             except:
                 stack = traceback.format_exc()
                 logger.warn("load TestRunner type for %s failed:\n%s" % (ep.name, stack))
+
 
 __init_runner_types()
 del __init_runner_types

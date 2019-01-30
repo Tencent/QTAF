@@ -254,11 +254,11 @@ class TestReportBase(ITestReport):
         self._cases_passed[testcase.test_name] = testresult.passed
 
     def is_passed(self):
-        '''报告中是否所有用例都通过，兼容已有EmptyTestReport
+        '''报告中是否所有用例都通过，兼容已有EmptyTestReport，若用例数为0，也认为不通过
         
         :return: boolean
         '''
-        return all(self._cases_passed.values())
+        return all(self._cases_passed.values()) and len(self._cases_passed) > 0
 
 
 class ITestResultFactory(object):
