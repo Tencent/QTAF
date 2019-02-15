@@ -79,7 +79,7 @@ class RuntestTest(unittest.TestCase):
 
     def test_failed_returncode(self):
         working_dir = "test_online_report_%s" % get_time_str()
-        cmdline = '--report-type html test.sampletest.hellotest.FailedCase'
+        cmdline = '--report-type html tests.sampletest.hellotest.FailedCase'
         cmdline += " -w " + working_dir
         self.addCleanup(shutil.rmtree, working_dir, ignore_errors=True)
         args = RunTest.parser.parse_args(cmdline.split())
@@ -90,7 +90,7 @@ class RuntestTest(unittest.TestCase):
 
     def test_success_returncode(self):
         working_dir = "test_online_report_%s" % get_time_str()
-        cmdline = '--report-type html test.sampletest.hellotest.PassedCase'
+        cmdline = '--report-type html tests.sampletest.hellotest.PassedCase'
         cmdline += " -w " + working_dir
         self.addCleanup(shutil.rmtree, working_dir, ignore_errors=True)
         args = RunTest.parser.parse_args(cmdline.split())
@@ -107,8 +107,8 @@ class DiscoverTest(unittest.TestCase):
     def test_discover(self):
         file_name = "discovertest_%s.txt" % get_time_str()
         cmdline = "--excluded-tag test --priority High --status Ready --owner xxx "
-        cmdline += "--output-file %s test.sampletest.hellotest " % file_name
-        cmdline += "test.sampletest.tagtest test.sampletest.loaderr"
+        cmdline += "--output-file %s tests.sampletest.hellotest " % file_name
+        cmdline += "tests.sampletest.tagtest tests.sampletest.loaderr"
 
         args = DiscoverTests.parser.parse_args(cmdline.split())
         self.assertEqual(args.priorities, [TestCase.EnumPriority.High])
@@ -124,14 +124,14 @@ class DiscoverTest(unittest.TestCase):
         with open(file_name, "r") as fd:
             content = fd.read()
 
-        self.assertTrue(content.find("test.sampletest.tagtest.TagTest2, reason") >= 0)
-        self.assertTrue(content.find("test.sampletest.hellotest.PassedCase") >= 0)
-        self.assertTrue(content.find("cannot load test \"test.sampletest.loaderr\"") >= 0)
+        self.assertTrue(content.find("tests.sampletest.tagtest.TagTest2, reason") >= 0)
+        self.assertTrue(content.find("tests.sampletest.hellotest.PassedCase") >= 0)
+        self.assertTrue(content.find("cannot load test \"tests.sampletest.loaderr\"") >= 0)
 
     def test_discover_show(self):
         file_name = "discovertest_%s.txt" % get_time_str()
         cmdline = "--excluded-tag test --owner xxx --output-file %s --show error " % file_name
-        cmdline += "test.sampletest.hellotest test.sampletest.tagtest test.sampletest.loaderr"
+        cmdline += "tests.sampletest.hellotest tests.sampletest.tagtest tests.sampletest.loaderr"
         args = DiscoverTests.parser.parse_args(cmdline.split())
         DiscoverTests().execute(args)
         self.assertTrue(os.path.exists(file_name))
@@ -141,7 +141,7 @@ class DiscoverTest(unittest.TestCase):
         self.assertTrue(content.find("filtered test") == -1)
         self.assertTrue(content.find("normal test") == -1)
         self.assertTrue(content.find("error test") >= 0)
-        self.assertTrue(content.find("cannot load test \"test.sampletest.loaderr\"") >= 0)
+        self.assertTrue(content.find("cannot load test \"tests.sampletest.loaderr\"") >= 0)
 
 
 if __name__ == "__main__":
