@@ -205,7 +205,7 @@ def load_datadrive_tests(cls, name=None):
         casedata_name = item
         if has_bad_char(item):
             casedata_name = translate_bad_char(item)
-            warn_msg = "[WARNING]%r's drive data should use \"%s\" instread of \"%s\"" % (cls, casedata_name, item)
+            warn_msg = "[WARNING]%r's drive data key should use \"%s\" instead of \"%s\"" % (cls, casedata_name, item)
             logger.warn(warn_msg)
 
         if isinstance(testdata, dict) and "__attrs__" in testdata:

@@ -21,7 +21,8 @@ import shlex
 import shutil
 import unittest
 
-from testbase.management import RunTest
+from testbase.testcase import TestCase
+from testbase.management import RunTest, DiscoverTests
 from testbase.runner import runner_types
 from testbase.report import report_types
 from testbase.util import get_time_str
@@ -99,5 +100,49 @@ class RuntestTest(unittest.TestCase):
         self.assertEqual(proc.exitcode, 0)
 
 
+class DiscoverTest(unittest.TestCase):
+    """discover command test
+    """
+
+    def test_discover(self):
+        file_name = "discovertest_%s.txt" % get_time_str()
+        cmdline = "--excluded-tag test --priority High --status Ready --owner xxx "
+        cmdline += "--output-file %s test.sampletest.hellotest " % file_name
+        cmdline += "test.sampletest.tagtest test.sampletest.loaderr"
+
+        args = DiscoverTests.parser.parse_args(cmdline.split())
+        self.assertEqual(args.priorities, [TestCase.EnumPriority.High])
+        self.assertEqual(args.status, [TestCase.EnumStatus.Ready])
+        self.assertEqual(args.excluded_tags, ["test"])
+        self.assertEqual(args.owners, ["xxx"])
+        self.assertEqual(args.output_type, "stream")
+        self.assertEqual(args.output_file, file_name)
+
+        DiscoverTests().execute(args)
+        self.assertTrue(os.path.exists(file_name))
+        self.addCleanup(os.remove, file_name)
+        with open(file_name, "r") as fd:
+            content = fd.read()
+
+        self.assertTrue(content.find("test.sampletest.tagtest.TagTest2, reason") >= 0)
+        self.assertTrue(content.find("test.sampletest.hellotest.PassedCase") >= 0)
+        self.assertTrue(content.find("cannot load test \"test.sampletest.loaderr\"") >= 0)
+
+    def test_discover_show(self):
+        file_name = "discovertest_%s.txt" % get_time_str()
+        cmdline = "--excluded-tag test --owner xxx --output-file %s --show error " % file_name
+        cmdline += "test.sampletest.hellotest test.sampletest.tagtest test.sampletest.loaderr"
+        args = DiscoverTests.parser.parse_args(cmdline.split())
+        DiscoverTests().execute(args)
+        self.assertTrue(os.path.exists(file_name))
+        self.addCleanup(os.remove, file_name)
+        with open(file_name, "r") as fd:
+            content = fd.read()
+        self.assertTrue(content.find("filtered test") == -1)
+        self.assertTrue(content.find("normal test") == -1)
+        self.assertTrue(content.find("error test") >= 0)
+        self.assertTrue(content.find("cannot load test \"test.sampletest.loaderr\"") >= 0)
+
+
 if __name__ == "__main__":
-    unittest.main(defaultTest="RuntestTest.test_failed_returncode")
+    unittest.main()

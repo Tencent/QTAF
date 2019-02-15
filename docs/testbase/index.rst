@@ -24,6 +24,7 @@ Testbase是所有QTA测试项目的基础，主要提供测试用例管理和执
    testmgr
    datadrive
    testrun
+   testdiscover
    testplan
    settings
    resource
