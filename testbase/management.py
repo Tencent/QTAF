@@ -30,9 +30,10 @@ from testbase.conf import settings
 from testbase.version import version
 from testbase.exlib import ExLibManager
 from testbase.dist import DistGenerator, VirtuelEnv
-from testbase.testcase import TestCasePriority, TestCaseStatus
+from testbase.loader import TestLoader
+from testbase.testcase import TestCasePriority, TestCaseStatus, TestCase
 from testbase.runner import TestCaseSettings, runner_types
-from testbase.report import report_types
+from testbase.report import report_types, test_list_types
 from testbase.resource import resmgr_backend_types
 from testbase.util import codecs_open, path_exists
 
@@ -189,8 +190,6 @@ class RunTest(Command):
             logger.info("no test set specified")
             exit(1)
 
-        from testbase.testcase import TestCase
-
         if args.working_dir is None:
             args.working_dir = os.getcwd()
         prev_dir = os.getcwd()
@@ -266,6 +265,68 @@ class RunTest(Command):
                 logger.info("XML report generated: %s" % os.path.abspath("TestReport.xml"))
         if not report.is_passed():
             sys.exit(1)
+
+
+class DiscoverTests(Command):
+    """discover tests
+    """
+    name = "discover"
+    parser = argparse.ArgumentParser("Discover tests")
+    parser.add_argument("tests", metavar="TEST", nargs='*', help="testcase set to executive, eg: zoo.xxx.HelloTest")
+    parser.add_argument('--priority', help="test cases with specific priority, accept multiple options, default is High and Normal",
+                        dest="priorities", action="append",
+                        choices=[TestCasePriority.BVT, TestCasePriority.High, TestCasePriority.Normal, TestCasePriority.Low])
+    parser.add_argument('--status', help="test cases with specific status, accept multiple options, default is Ready",
+                        dest="status", action="append",
+                        choices=[TestCaseStatus.Design, TestCaseStatus.Implement, TestCaseStatus.Ready, TestCaseStatus.Review, TestCaseStatus.Suspend])
+    parser.add_argument("--excluded-name", help="exclude test cases with specific name prefix , accept multiple options",
+                        action="append", dest="excluded_names", metavar="EXCLUDED_NAME")
+    parser.add_argument("--owner", help="test cases with specific owner, accept multiple options",
+                        action="append", dest="owners", metavar="OWNER")
+    parser.add_argument("--tag", help="test cases with specific tag, accept multiple options",
+                        action="append", dest="tags", metavar="TAG")
+    parser.add_argument("--excluded-tag", help="exclude test cases with specific name tag, accept multiple options",
+                        action="append", dest="excluded_tags", metavar="EXCLUDED_TAG")
+    parser.add_argument("--show", help="explicitly specify test case types to show, default will show all kinds of test cases",
+                        choices=["filtered", "error", "normal"], dest="shows", action="append")
+    parser.add_argument("--output-file", help="output file name, default is stdout", default=None)
+    parser.add_argument("--output-type", help="output type, default is stream", default="stream", choices=test_list_types.keys())
+
+    def execute(self, args):
+        if not args.tests:
+            logger.info("no test set specified")
+            exit(1)
+        shows = args.shows or ["filtered", "error", "normal"]
+        priorities = args.priorities or [TestCase.EnumPriority.Normal, TestCase.EnumPriority.High]
+        status = args.status or [TestCase.EnumStatus.Ready]
+
+        test_conf = TestCaseSettings(names=args.tests,
+                                    excluded_names=args.excluded_names,
+                                    priorities=priorities,
+                                    status=status,
+                                    owners=args.owners,
+                                    tags=args.tags,
+                                    excluded_tags=args.excluded_tags)
+
+        loader = TestLoader(test_conf.filter)
+        tests = loader.load(test_conf.names)
+
+        test_list_output = test_list_types[args.output_type](args.output_file)
+
+        if "filtered" in shows:
+            filtered_tests = loader.get_filtered_tests_with_reason().items()
+            sorted_filtered_tests = sorted(filtered_tests, key=lambda x: x[0].test_name)
+            test_list_output.output_filtered_tests(sorted_filtered_tests)
+
+        if "normal" in shows:
+            sorted_tests = sorted(tests, key=lambda x: x.test_name)
+            test_list_output.output_normal_tests(sorted_tests)
+
+        if "error" in shows:
+            error_tests = loader.get_last_errors().items()
+            sorted_error_tests = sorted(error_tests, key=lambda x: x[0])
+            test_list_output.output_error_tests(sorted_error_tests)
+        test_list_output.end_output()
 
 
 class RunPlan(Command):

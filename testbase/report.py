@@ -958,6 +958,80 @@ class HtmlTestResultFactory(ITestResultFactory):
 
 
 
+class TestListOutputBase(object):
+    """base class of test case list output
+    """
+
+    def __init__(self, output_file):
+        raise NotImplementedError
+
+    def output_normal_tests(self, normal_tests):
+        raise NotImplementedError
+
+    def output_filtered_tests(self, filtered_tests):
+        raise NotImplementedError
+
+    def output_error_tests(self, error_tests):
+        raise NotImplementedError
+
+    def end_output(self):
+        pass
+
+
+class StreamTestListOutput(TestListOutputBase):
+    """stream output
+    """
+
+    def __init__(self, output_file):
+        if output_file is None:
+            self._fd = None
+            self._close_fd = False
+            self._output_func = logger.info
+        else:
+            self._fd = codecs_open(output_file, "w")
+            self._close_fd = True
+            self._output_func = lambda x: self._fd.write(x + "\n")
+
+    def output_normal_tests(self, normal_tests):
+        self._output_func("\n======================")
+        self._output_func("%s normal tests:" % len(normal_tests))
+        self._output_func("======================")
+        for test in normal_tests:
+            test_info = self.stream_format_test(test)
+            self._output_func(test_info)
+
+    def output_filtered_tests(self, filtered_tests):
+        self._output_func("\n======================")
+        self._output_func("%s filtered tests:" % len(filtered_tests))
+        self._output_func("======================")
+        for test, reason in filtered_tests:
+            test_info = self.stream_format_test(test) + ", reason:" + reason
+            self._output_func(test_info)
+
+    def output_error_tests(self, error_tests):
+        self._output_func("\n======================")
+        self._output_func("%s error tests:" % len(error_tests))
+        self._output_func("======================")
+        for test_name, error in error_tests:
+            test_info = "cannot load test \"%s\"" % test_name + ", error:\n" + error
+            self._output_func(test_info)
+
+    def stream_format_test(self, test):
+        desc = ("%s/%s" % (test.priority, test.status))
+        test_info = "%-12s " % desc
+        test_info += "timeout=%-3s " % test.timeout
+        test_info += "%-10s " % test.owner
+        test_info += "%s" % test.test_name
+        return test_info
+
+    def end_output(self):
+        if self._close_fd:
+            self._fd.close()
+
+
+test_list_types = {"stream" : StreamTestListOutput}
+
+
 def __init_report_types():
     global report_types
     if report_types:
@@ -970,7 +1044,7 @@ def __init_report_types():
         "html"   : HtmlTestReport,
     })
 
-    # Register other `ITestReport` implementiations from entry points
+    # Register other `ITestReport` implementations from entry points
     for ep in pkg_resources.iter_entry_points(REPORT_ENTRY_POINT):
         if ep.name not in report_types:
             try:

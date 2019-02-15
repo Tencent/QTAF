@@ -165,7 +165,7 @@ class TestCaseSettings(object):
         if self.owners and testcase.owner not in self.owners:
             return "testcase with owner '%s' is excluded" % testcase.owner
         if self.tags and self.tags.isdisjoint(testcase.tags):
-            return "testcase is not tag with %s" % ("/".join(self.tags))
+            return "testcase is not tagged with %s" % ("/".join(self.tags))
         if self.excluded_tags and not self.excluded_tags.isdisjoint(testcase.tags):
             return "testcase is tag with %s" % ("/".join(self.excluded_tags))
         return False
