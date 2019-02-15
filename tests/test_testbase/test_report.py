@@ -47,7 +47,7 @@ class TestReportTest(unittest.TestCase):
         for test_name, reason in test_pairs:
             test_report = report.report_types["stream"](output_testresult=True)
             test_runner = runner.runner_types["basic"](test_report)
-            test_name = "test.sampletest.hellotest.%s" % test_name
+            test_name = "tests.sampletest.hellotest.%s" % test_name
             print("#### stream report test for test: " + test_name + "###")
             test_runner.run(test_name)
             test_result = test_report._failed_testresults[0]
@@ -64,7 +64,7 @@ class TestReportTest(unittest.TestCase):
             try:
                 test_report = report.report_types["xml"]()
                 test_runner = runner.runner_types["basic"](test_report)
-                test_name = "test.sampletest.hellotest.%s" % test_name
+                test_name = "tests.sampletest.hellotest.%s" % test_name
                 working_dir = test_name + "_" + get_time_str()
                 os.makedirs(working_dir)
                 os.chdir(working_dir)
@@ -106,7 +106,7 @@ class TestReportTest(unittest.TestCase):
                 with codecs_open(test_report_name, "w", encoding="utf-8") as fd:
                     test_report = report.report_types["json"](fd=fd)
                     test_runner = runner.runner_types["basic"](test_report)
-                    test_name = "test.sampletest.hellotest.%s" % test_name
+                    test_name = "tests.sampletest.hellotest.%s" % test_name
                     print("json report test for test: " + test_name)
                     test_runner.run(test_name)
                 with codecs_open(test_report_name, "r", encoding="utf-8") as fd:
@@ -127,7 +127,7 @@ class TestReportTest(unittest.TestCase):
             os.chdir(old_cwd)
 
         try:
-            test_name = "test.sampletest.hellotest.HelloTest test.sampletest.hellotest.TimeoutTest"
+            test_name = "tests.sampletest.hellotest.HelloTest tests.sampletest.hellotest.TimeoutTest"
             time_str = get_time_str()
             working_dir = test_name + "_" + time_str
             os.makedirs(working_dir)
@@ -169,7 +169,7 @@ class TestReportTest(unittest.TestCase):
 
                 test_report = report.report_types["html"](title="test html report")
                 test_runner = runner.runner_types["basic"](test_report)
-                test_name = "test.sampletest.hellotest.%s" % test_name
+                test_name = "tests.sampletest.hellotest.%s" % test_name
                 print("html report test for test: " + test_name)
                 test_runner.run(test_name)
                 html_report_file = os.path.join(os.getcwd(), "qta-report.js")
@@ -204,7 +204,7 @@ class TestReportTest(unittest.TestCase):
 
             test_report = report.report_types["html"](title="test html report")
             test_runner = runner.runner_types["basic"](test_report)
-            test_name = "test.sampletest.hellotest." + test_name
+            test_name = "tests.sampletest.hellotest." + test_name
             test_runner.run(test_name)
 
             with codecs_open("qta-report.js", encoding="utf-8") as fd:
@@ -232,7 +232,7 @@ class TestReportTest(unittest.TestCase):
 
     def test_runtest_return_code(self):
         from testbase.management import RunTest
-        test_cases = list(map(lambda x: "test.sampletest.hellotest." + x, ["PassedCase",
+        test_cases = list(map(lambda x: "tests.sampletest.hellotest." + x, ["PassedCase",
                                                                       "FailedCase",
                                                                       "PassedCase", ]))
         report_pairs = [

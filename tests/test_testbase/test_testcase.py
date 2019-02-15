@@ -19,30 +19,32 @@ from testbase.loader import TestLoader
 from testbase.testcase import TestCase
 import unittest
 
-TestLoader.__test__ = False # for nauseated Nose
+TestLoader.__test__ = False  # for nauseated Nose
+
 
 class TestCaseTest(unittest.TestCase):
 
     def test_property(self):
-        test = TestLoader().load("test.sampletest.hellotest.HelloTest")[0]
-        self.assertEqual(test.test_class_name, "test.sampletest.hellotest.HelloTest")
-        self.assertEqual(test.test_name, "test.sampletest.hellotest.HelloTest")
+        test = TestLoader().load("tests.sampletest.hellotest.HelloTest")[0]
+        self.assertEqual(test.test_class_name, "tests.sampletest.hellotest.HelloTest")
+        self.assertEqual(test.test_name, "tests.sampletest.hellotest.HelloTest")
         self.assertEqual(test.casedata, None)
         self.assertRegexpMatches(test.test_doc, '测试示例')
 
-
-
     def test_extra_info(self):
-        test = TestLoader().load("test.sampletest.hellotest.ExtraInfoTest")[0]
+        test = TestLoader().load("tests.sampletest.hellotest.ExtraInfoTest")[0]
         self.assertIn("dev_owner", test.test_extra_info)
 
     def test_forbidden_overload_init(self):
         with self.assertRaises(RuntimeError):
+
             class Error(TestCase):
+
                 def __init__(self):
                     pass
 
     def test_tags(self):
+
         class Hello(TestCase):
             """tag test"""
             owner = "xxx"
@@ -50,11 +52,14 @@ class TestCaseTest(unittest.TestCase):
             priority = TestCase.EnumPriority.BVT
             status = TestCase.EnumStatus.Design
             tags = "test", "ok"
+
             def run_test(self):
                 pass
+
         self.assertEqual(Hello.tags, set(("test", "ok")))
 
     def test_tags_str(self):
+
         class Hello(TestCase):
             """tag test"""
             owner = "xxx"
@@ -62,12 +67,14 @@ class TestCaseTest(unittest.TestCase):
             priority = TestCase.EnumPriority.BVT
             status = TestCase.EnumStatus.Design
             tags = "test"
+
             def run_test(self):
                 pass
+
         self.assertEqual(Hello.tags, set(("test",)))
 
-
     def test_tags_inhert(self):
+
         class Base(TestCase):
             tags = "base"
 
@@ -78,43 +85,57 @@ class TestCaseTest(unittest.TestCase):
             priority = TestCase.EnumPriority.BVT
             status = TestCase.EnumStatus.Design
             tags = "test"
+
             def run_test(self):
                 pass
+
         self.assertEqual(Hello.tags, set(("test", "base")))
 
     def test_tags_inhert_from_module(self):
-        test = TestLoader().load("test.sampletest.tagtest.TagTest")[0]
-        self.assertEqual(test.tags, set(("test","mod")))
+        test = TestLoader().load("tests.sampletest.tagtest.TagTest")[0]
+        self.assertEqual(test.tags, set(("test", "mod")))
 
     def test_run(self):
+
         class Hello(TestCase):
             """tag test"""
             owner = "xxx"
             timeout = 1
             priority = TestCase.EnumPriority.BVT
             status = TestCase.EnumStatus.Design
+
             def init_test(self, testresult):
                 self.steps = ["init_test"]
+
             def pre_test(self):
                 self.steps.append("pre_test")
+
             def run_test(self):
                 self.steps.append("run_test")
+
             def post_test(self):
                 self.steps.append("post_test")
+
             def clean_test(self):
                 self.steps.append("clean_test")
+
         hello = Hello()
         hello.debug_run()
         self.assertEqual(hello.steps, ["init_test", "pre_test", "run_test", "post_test", "clean_test"])
 
     def test_run_inhert(self):
+
         class Base(TestCase):
+
             def init_test(self, testresult):
                 self.steps = ["init_test"]
+
             def pre_test(self):
                 self.steps.append("pre_test")
+
             def post_test(self):
                 self.steps.append("post_test")
+
             def clean_test(self):
                 self.steps.append("clean_test")
 
@@ -124,20 +145,27 @@ class TestCaseTest(unittest.TestCase):
             timeout = 1
             priority = TestCase.EnumPriority.BVT
             status = TestCase.EnumStatus.Design
+
             def run_test(self):
                 self.steps.append("run_test")
+
         hello = Hello()
         hello.debug_run()
         self.assertEqual(hello.steps, ["init_test", "pre_test", "run_test", "post_test", "clean_test"])
 
     def test_run_style_priority(self):
+
         class Base(TestCase):
+
             def init_test(self, testresult):
                 self.steps = ["init_test"]
+
             def pre_test(self):
                 self.steps.append("pre_test")
+
             def post_test(self):
                 self.steps.append("post_test")
+
             def clean_test(self):
                 self.steps.append("clean_test")
 
@@ -147,23 +175,30 @@ class TestCaseTest(unittest.TestCase):
             timeout = 1
             priority = TestCase.EnumPriority.BVT
             status = TestCase.EnumStatus.Design
+
             def runTest(self):
                 self.steps.append("runTest")
+
             def run_test(self):
                 self.steps.append("run_test")
+
         hello = Hello()
         report = hello.debug_run()
         self.assertEqual(report.is_passed(), False)
 
-
     def test_run_style_priority_old(self):
+
         class Base(TestCase):
+
             def init_test(self, testresult):
                 self.steps = ["init_test"]
+
             def pre_test(self):
                 self.steps.append("pre_test")
+
             def post_test(self):
                 self.steps.append("post_test")
+
             def clean_test(self):
                 self.steps.append("clean_test")
 
@@ -173,37 +208,44 @@ class TestCaseTest(unittest.TestCase):
             timeout = 1
             priority = TestCase.EnumPriority.BVT
             status = TestCase.EnumStatus.Design
+
             def runTest(self):
                 self.steps.append("runTest")
+
         hello = Hello()
         hello.debug_run()
         self.assertEqual(hello.steps, ["init_test", "pre_test", "runTest", "post_test", "clean_test"])
 
     def test_wait_for(self):
+
         class WaitForEqualTest(TestCase):
             """wait for equal test ok"""
             owner = "xxx"
             timeout = 1
             priority = TestCase.EnumPriority.BVT
             status = TestCase.EnumStatus.Design
+
             def run_test(self):
                 self.wait_for_equal("xxxx", self, "timeout", 1, 1, 0.2)
 
         class WaitForEqualFailureTest(WaitForEqualTest):
             """wait for equal test failure
             """
+
             def run_test(self):
                 self.wait_for_equal("xxxx", self, "timeout", 2, 1, 0.2)
 
         class WaitForMatchTest(WaitForEqualTest):
             """wait for match ok
             """
+
             def run_test(self):
                 self.wait_for_match("xxxx", self, "owner", "x*", 1, 0.2)
 
         class WaitForMatchFailureTest(WaitForEqualTest):
             """wait for match failure
             """
+
             def run_test(self):
                 self.wait_for_match("xxxx", self, "owner", "xxxxx*", 1, 0.2)
 
@@ -222,18 +264,20 @@ class TestCaseTest(unittest.TestCase):
         case = WaitForMatchFailureTest()
         case.debug_run()
         self.assertEqual(case.test_result.passed, False, "等待成功，但是用例失败")
+
     def test_debug_run(self):
-        from test.sampletest.hellotest import HelloTest
+        from tests.sampletest.hellotest import HelloTest
         from testbase.report import EmptyTestReport, StreamTestReport
-        from test.sampletest.datatest import DataTest
+        from tests.sampletest.datatest import DataTest
         report = HelloTest().debug_run()
         self.assertEqual(type(report), EmptyTestReport)
         report = DataTest().debug_run()
         self.assertEqual(type(report), StreamTestReport)
         report = DataTest(testdataname=0).debug_run()
         self.assertEqual(type(report), EmptyTestReport)
+
     def test_debug_run_one(self):
-        from test.sampletest.datatest import DataTest, ArrayDataTest
+        from tests.sampletest.datatest import DataTest, ArrayDataTest
         from testbase.report import EmptyTestReport
         report = ArrayDataTest().debug_run_one()
         self.assertEqual(type(report), EmptyTestReport)
@@ -245,5 +289,7 @@ class TestCaseTest(unittest.TestCase):
         report = DataTest().debug_run_one("TEST1")
         self.assertEqual(type(report), EmptyTestReport)
         self.assertRaises(ValueError, DataTest().debug_run_one, "XXXX")
+
+
 if __name__ == "__main__":
     unittest.main()

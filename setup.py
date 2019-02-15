@@ -19,6 +19,7 @@ from setuptools import setup, find_packages
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
+
 def generate_version():
     version = "1.0.0"
     if os.path.isfile(os.path.join(BASE_DIR, "version.txt")):
@@ -30,6 +31,7 @@ def generate_version():
         fd.write('version = "%s"\n' % version)
     return str(version)
 
+
 def parse_requirements():
     reqs = []
     if os.path.isfile(os.path.join(BASE_DIR, "requirements.txt")):
@@ -40,6 +42,7 @@ def parse_requirements():
                     reqs.append(line)
         return reqs
 
+
 def get_description():
     with codecs.open(os.path.join(BASE_DIR, "README.md"), "r", encoding="utf-8") as fh:
         return fh.read()
@@ -49,11 +52,11 @@ if __name__ == "__main__":
     setup(
       version=generate_version(),
       name="qtaf",
-      packages=find_packages(exclude=("test", "test.*",)),
+      packages=find_packages(exclude=("tests", "tests.*",)),
       py_modules=["qtaf_settings", "__main__", "qta-manage"],
       include_package_data=True,
       package_data={'':['*.txt', '*.TXT'], },
-      description = "Basic test automation framework for QTA",
+      description="Basic test automation framework for QTA",
       long_description=get_description(),
       long_description_content_type="text/markdown",
       author="Tencent",

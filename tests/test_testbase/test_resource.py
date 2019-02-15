@@ -27,34 +27,40 @@ from testbase.test import modify_environ
 from testbase.util import smart_text, codecs_open
 
 suffix = "%s%s" % (sys.version_info[0], sys.version_info[1])
-root_dir = os.path.join(settings.PROJECT_ROOT,'resources')
+root_dir = os.path.join(settings.PROJECT_ROOT, 'resources')
 test_dir_name = 'test_dir_%s' % suffix
 test_file_name = "a_%s.txt" % suffix
+
 
 def _create_local_testfile():
     test_dir = os.path.join(root_dir, test_dir_name)
     if not os.path.exists(test_dir):
         os.makedirs(test_dir)
-    local_file = os.path.join(root_dir,'a_%s.txt' % suffix)
+    local_file = os.path.join(root_dir, 'a_%s.txt' % suffix)
     with codecs_open(local_file, 'w', encoding="utf-8") as f:
         f.write('abc')
 
     return local_file, root_dir
 
 
+
+
 dup_test_dir = "base_test_%s" % sys.version_info[0]
+
 
 def _copy_testfile(src):
     base_dir = os.path.join(settings.PROJECT_ROOT, dup_test_dir)
     if not os.path.isdir(base_dir):
         os.mkdir(base_dir)
-    res_dir = os.path.join(base_dir,'resources')
+    res_dir = os.path.join(base_dir, 'resources')
     if os.path.isdir(res_dir):
         shutil.rmtree(res_dir)
     shutil.copytree(src, res_dir)
     return base_dir
 
+
 class TestResManager(unittest.TestCase):
+
     @classmethod
     def setUpClass(cls):
         if six.PY2:
@@ -72,22 +78,22 @@ class TestResManager(unittest.TestCase):
         self.assertEqual(self.local_file, fm.get_file(test_file_name))
         self.assertEqual(self.local_file, resource.get_file(test_file_name))
 
-        paths =[]
+        paths = []
         for it in os.listdir(self.local_dir):
-            paths.append(smart_text(os.path.join(self.local_dir,it)))
-        self.assertEqual(paths,fm.list_dir(''))
-        self.assertEqual(paths,resource.list_dir(''))
+            paths.append(smart_text(os.path.join(self.local_dir, it)))
+        self.assertEqual(paths, fm.list_dir(''))
+        self.assertEqual(paths, resource.list_dir(''))
 
 
     def test_nofile_raise(self):
         fm = resource.TestResourceManager(resource.LocalResourceManagerBackend()).create_session()
-        self.assertRaisesRegex(Exception, "文件不存在", fm.get_file,'a_xxx.txt')
-        self.assertRaisesRegex(Exception, "文件不存在", resource.get_file,'a_xxx.txt')
+        self.assertRaisesRegex(Exception, "文件不存在", fm.get_file, 'a_xxx.txt')
+        self.assertRaisesRegex(Exception, "文件不存在", resource.get_file, 'a_xxx.txt')
         self.assertRaisesRegex(Exception, "目录不存在", fm.list_dir, 'xxx_xxx')
-        self.assertRaisesRegex(Exception, "目录不存在", resource.list_dir,'xxx_xxx')
+        self.assertRaisesRegex(Exception, "目录不存在", resource.list_dir, 'xxx_xxx')
 
     def test_duplicated_raise(self):
-        _, local_dir=_create_local_testfile()
+        _, local_dir = _create_local_testfile()
         dup_dir = _copy_testfile(local_dir)
         self.addCleanup(shutil.rmtree, dup_dir, True)
         fm = resource.TestResourceManager(resource.LocalResourceManagerBackend()).create_session()
@@ -118,7 +124,7 @@ class TestResManager(unittest.TestCase):
         self.assertTrue(test_file_name in file_names_set)
 
     def test_testcase_resources(self):
-        from test.sampletest.hellotest import ResmgrTest
+        from tests.sampletest.hellotest import ResmgrTest
         result = ResmgrTest().debug_run()
         self.assertTrue(result.is_passed())
 

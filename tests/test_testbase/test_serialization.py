@@ -30,7 +30,7 @@ class FooTest(TestCase):
 class SerializationTest(unittest.TestCase):
 
     def test_normal_serialization(self):
-        from test.sampletest.hellotest import HelloTest
+        from tests.sampletest.hellotest import HelloTest
         hello = HelloTest()
         data = serialization.dumps(hello)
         deserialized_case = serialization.loads(data)
@@ -51,7 +51,7 @@ class SerializationTest(unittest.TestCase):
         self.assertEqual(deserialized_test.test_doc, "demo")
 
     def test_serialize_testsuite(self):
-        from test.sampletest.hellotest import HelloTest, TimeoutTest
+        from tests.sampletest.hellotest import HelloTest, TimeoutTest
         foo_test = datadrive.load_datadrive_tests(FooTest, 1)[0]
         testsuite = SeqTestSuite([HelloTest(), TimeoutTest(), foo_test])
         data = serialization.dumps(testsuite)
