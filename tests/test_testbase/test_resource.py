@@ -36,6 +36,8 @@ def _create_local_testfile():
     test_dir = os.path.join(root_dir, test_dir_name)
     if not os.path.exists(test_dir):
         os.makedirs(test_dir)
+    with codecs_open(os.path.join(test_dir, "foo.txt"), mode="w") as fd:
+        fd.write("foo")
     local_file = os.path.join(root_dir, 'a_%s.txt' % suffix)
     with codecs_open(local_file, 'w', encoding="utf-8") as f:
         f.write('abc')
@@ -79,10 +81,12 @@ class TestResManager(unittest.TestCase):
         self.assertEqual(self.local_file, resource.get_file(test_file_name))
 
         paths = []
-        for it in os.listdir(self.local_dir):
-            paths.append(smart_text(os.path.join(self.local_dir, it)))
-        self.assertEqual(paths, fm.list_dir(''))
-        self.assertEqual(paths, resource.list_dir(''))
+        for it in os.listdir(os.path.join(self.local_dir, test_dir_name)):
+            paths.append(smart_text(os.path.join(self.local_dir, test_dir_name, it)))
+        list_result = fm.list_dir(test_dir_name)
+        self.assertEqual(paths, list_result)
+        list_result = resource.list_dir(test_dir_name)
+        self.assertEqual(paths, list_result)
 
 
     def test_nofile_raise(self):
@@ -130,4 +134,4 @@ class TestResManager(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    unittest.main(defaultTest="TestResManager.test_testcase_resources")
+    unittest.main(defaultTest="TestResManager.test_get_local_file")
