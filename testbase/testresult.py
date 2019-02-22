@@ -647,11 +647,6 @@ class JSONResult(TestResultBase):
         self._steps = []
         self._data = {
             "testcase": testcase.test_name,
-            "description": testcase.test_doc,
-            "owner": testcase.owner,
-            "priority": testcase.priority,
-            "status": testcase.status,
-            "timeout": testcase.timeout,
             "steps": self._steps,
             "failed_info": "",
         }

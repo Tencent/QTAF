@@ -729,11 +729,11 @@ class JSONTestReportBase(TestReportBase):
         :type title: str
         '''
         super(JSONTestReportBase, self).__init__()
-        self._results = {}
         self._logs = []
         self._filtered_tests = []
         self._load_errors = []
-        self._testcases = []
+        self._passed_tests = {}
+        self._failed_tests = {}
         self._data = {
             "version": "1.0",
             "summary": {
@@ -741,16 +741,14 @@ class JSONTestReportBase(TestReportBase):
                 "title": title,
                 "environment" : {}
             },
-            "results": self._results,
             "logs": self._logs,
             "filtered_tests": self._filtered_tests,
             "load_errors": self._load_errors,
-            "loaded_testcases": self._testcases,
+            "passed_tests" : self._passed_tests,
+            "failed_tests" : self._failed_tests
         }
         self._testcase_names = set()
         self._testcase_total_run = 0
-        self._testcase_passed = 0
-        self._testcase_total_count = 0
 
     def begin_report(self):
         '''开始测试执行
@@ -771,10 +769,23 @@ class JSONTestReportBase(TestReportBase):
         :type passed: boolean
         '''
         self._data["summary"]["testcase_total_run"] = self._testcase_total_run
-        self._data["summary"]["testcase_total_count"] = self._testcase_total_count
-        self._data["summary"]["testcase_passed"] = self._testcase_passed
-        self._data["summary"]["succeed"] = self._testcase_passed == self._testcase_total_count
+        self._data["summary"]["testcase_total_count"] = len(self._cases_passed)
+        self._data["summary"]["testcase_passed"] = len(self._passed_tests)
+        self._data["summary"]["succeed"] = self.is_passed()
         self._data["summary"]["end_time"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    def get_default_test_info(self, test_case, test_result):
+        test_result_data = test_result.get_data()
+        test_info = {"description": test_case.test_doc,
+                     "owner": test_case.owner,
+                     "priority": test_case.priority,
+                     "status": test_case.status,
+                     "timeout": test_case.timeout,
+                     "failed_info": "",
+                     "start_time" : test_result_data["start_time"],
+                     "end_time" : test_result_data["end_time"],
+                     "records" : []}
+        return test_info
 
     def log_test_result(self, testcase, testresult):
         '''记录一个测试结果
@@ -785,16 +796,19 @@ class JSONTestReportBase(TestReportBase):
         '''
         super(JSONTestReportBase, self).log_test_result(testcase, testresult)
         self._testcase_total_run += 1
-        if testcase.test_name not in self._testcase_names:
-            self._testcase_names.add(testcase.test_name)
-            self._testcase_total_count += 1
+
+        test_name = testcase.test_name
+        if test_name in self._failed_tests:
+            test_info = self._failed_tests.pop(test_name)
+        else:
+            test_info = self.get_default_test_info(testcase, testresult)
+        test_info["records"].append(testresult.get_file())
 
         if testresult.passed:
-            self._testcase_passed += 1
-        if testcase.test_name not in self._results:
-            self._results[testcase.test_name] = [testresult.get_file()]
+            self._passed_tests[test_name] = test_info
         else:
-            self._results[testcase.test_name].append(testresult.get_file())
+            test_info["failed_info"] = testresult.get_data()["failed_info"]
+            self._failed_tests[test_name] = test_info
 
     def log_record(self, level, tag, msg, record):
         '''增加一个记录
@@ -813,19 +827,6 @@ class JSONTestReportBase(TestReportBase):
             "message": msg,
             "record": record
         })
-
-    def log_loaded_tests(self, loader, testcases):
-        '''记录加载成功的用例
-
-        :param loader: 用例加载器
-        :type loader: TestLoader
-        :param testcases: 测试用例列表
-        :type testcases: list
-        '''
-        self._testcases += [
-            {"name": testcase.test_name}
-            for testcase in testcases
-        ]
 
     def log_filtered_test(self, loader, testcase, reason):
         '''记录一个被过滤的测试用例
@@ -911,6 +912,10 @@ class HtmlTestReport(JSONTestReportBase):
     """html test report
     """
 
+    def __init__(self, title="调试测试", displays=["failed", "error"]):
+        super(HtmlTestReport, self).__init__(title=title)
+        self._data["displays"] = displays
+
     def get_testresult_factory(self):
         '''获取对应的TestResult工厂
         :returns ITestResultFactory
@@ -936,6 +941,8 @@ class HtmlTestReport(JSONTestReportBase):
         '''
         parser = argparse.ArgumentParser(usage=report_usage)
         parser.add_argument("--title", help="report title", default="Debug test report")
+        parser.add_argument("--display", action="append", choices=["all", "failed", "passed", "filtered", "error"], dest="displays",
+                            default=[], help="default test result types to display when opening the report, multiple options accepted")
         return parser
 
     @classmethod
@@ -946,7 +953,8 @@ class HtmlTestReport(JSONTestReportBase):
         :rtype: cls
         '''
         args = cls.get_parser().parse_args(args_string)
-        return cls(title=args.title)
+        displays = args.displays or ["failed", "error"]
+        return cls(title=args.title, displays=displays)
 
 
 class HtmlTestResultFactory(ITestResultFactory):
