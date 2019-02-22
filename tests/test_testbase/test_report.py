@@ -33,11 +33,18 @@ from testbase.util import smart_text, codecs_open, get_time_str
 suffix = "%s%s" % (sys.version_info[0], sys.version_info[1])
 
 
-class TestReportTest(unittest.TestCase):
+class TestReportBase(unittest.TestCase):
+    """base class of report test
+    """
 
     def setUp(self):
         if six.PY3:
             self.assertRegexpMatches = self.assertRegex
+
+
+class StreamReportTest(TestReportBase):
+    """test stream report
+    """
 
     def test_stream_report(self):
         test_pairs = [("HelloTest", "ASSERT"),
@@ -52,6 +59,11 @@ class TestReportTest(unittest.TestCase):
             test_runner.run(test_name)
             test_result = test_report._failed_testresults[0]
             self.assertEqual(test_result.failed_reason, reason)
+
+
+class XmlReportTest(TestReportBase):
+    """xml report test
+    """
 
     def test_xml_report(self):
         test_pairs = [("HelloTest", "断言失败"),
@@ -69,7 +81,7 @@ class TestReportTest(unittest.TestCase):
                 os.makedirs(working_dir)
                 os.chdir(working_dir)
                 self.addCleanup(shutil.rmtree, working_dir, True)
-                print("xml report test for test: %s, wokring dir=%s" % (test_name, working_dir))
+                print("xml report test for test: %s" % test_name)
                 test_runner.run(test_name)
                 report_path = os.path.join(os.getcwd(), "TestReport.xml")
                 xml_report = minidom.parse(report_path)
@@ -87,15 +99,20 @@ class TestReportTest(unittest.TestCase):
             finally:
                 os.chdir(old_cwd)
 
-    def test_json_report(self):
+
+class JsonReportTest(TestReportBase):
+    """json report test
+    """
+
+    def test_json_report_content(self):
         test_pairs = [("HelloTest", "断言失败"),
                     ("TimeoutTest", "用例执行超时"),
                     ("CrashTest", "App Crash"),
                     ("QT4iTest", "run_test执行失败")]
 
         old_cwd = os.getcwd()
-        try:
-            for test_name, reason in test_pairs:
+        for test_name, reason in test_pairs:
+            try:
                 time_str = get_time_str()
                 working_dir = test_name + "_" + time_str
                 os.makedirs(working_dir)
@@ -112,10 +129,11 @@ class TestReportTest(unittest.TestCase):
                 with codecs_open(test_report_name, "r", encoding="utf-8") as fd:
                     content = fd.read()
                     report_json = json.loads(content)
-                    self.assertEqual(report_json["loaded_testcases"][0]["name"], test_name)
-                    test_results = report_json["results"]
-                    self.assertEqual(len(test_results), 1)
-                    with codecs_open(test_results[test_name][0], "r", encoding="utf-8") as fd2:
+                    failed_test_names = list(report_json["failed_tests"].keys())
+                    self.assertEqual(failed_test_names[0], test_name)
+                    failed_tests = report_json["failed_tests"]
+                    self.assertEqual(len(failed_tests), 1)
+                    with codecs_open(failed_tests[test_name]["records"][0], "r", encoding="utf-8") as fd2:
                         content = fd2.read()
                         result_json = json.loads(content)
                         self.assertEqual(result_json["succeed"], False)
@@ -123,9 +141,11 @@ class TestReportTest(unittest.TestCase):
                         self.assertEqual(failed_step["succeed"], False)
                         actual_reson = smart_text(failed_step["logs"][0]["message"])
                         self.assertRegexpMatches(actual_reson, reason)
-        finally:
-            os.chdir(old_cwd)
+            finally:
+                os.chdir(old_cwd)
 
+    def test_json_report_retry(self):
+        old_cwd = os.getcwd()
         try:
             test_name = "tests.sampletest.hellotest.HelloTest tests.sampletest.hellotest.TimeoutTest"
             time_str = get_time_str()
@@ -153,7 +173,12 @@ class TestReportTest(unittest.TestCase):
         finally:
             os.chdir(old_cwd)
 
-    def test_html_report(self):
+
+class HtmlReportTest(TestReportBase):
+    """html report test
+    """
+
+    def test_html_report_content(self):
         test_pairs = [("HelloTest", "断言失败"),
                     ("TimeoutTest", "用例执行超时"),
                     ("CrashTest", "App Crash"),
@@ -178,10 +203,11 @@ class TestReportTest(unittest.TestCase):
                     index = content.find("{")
                     qta_report_data = content[index:]
                     qta_report = json.loads(qta_report_data)
-                    self.assertEqual(qta_report["loaded_testcases"][0]["name"], test_name)
-                    test_results = qta_report["results"]
-                    self.assertEqual(len(test_results), 1)
-                    with codecs_open(test_results[test_name][0], "r", encoding="utf-8") as fd2:
+                    failed_test_names = list(qta_report["failed_tests"].keys())
+                    self.assertEqual(failed_test_names[0], test_name)
+                    failed_tests = qta_report["failed_tests"]
+                    self.assertEqual(len(failed_tests), 1)
+                    with codecs_open(failed_tests[test_name]["records"][0], "r", encoding="utf-8") as fd2:
                         content = fd2.read()
                         index = content.find("{")
                         result_json_data = content[index:]
@@ -195,6 +221,8 @@ class TestReportTest(unittest.TestCase):
             finally:
                 os.chdir(old_cwd)
 
+    def test_html_report_datadrive(self):
+        old_cwd = os.getcwd()
         try:
             test_name = "DataDriveCase"
             working_dir = test_name + "_" + get_time_str()
@@ -212,15 +240,15 @@ class TestReportTest(unittest.TestCase):
                 index = content.find("{")
                 qta_report_data = content[index:]
                 qta_report = json.loads(qta_report_data)
-                self.assertEqual(len(qta_report["loaded_testcases"]), 2)
+                self.assertEqual(qta_report["summary"]["testcase_total_run"], 2)
+                passed_tests = qta_report["passed_tests"]
                 for item in ["中国", "xxx"]:
-                    is_ok = map(lambda x: item in smart_text(x["name"]), qta_report["loaded_testcases"])
-                    self.assertTrue(any(is_ok))
-                test_results = qta_report["results"]
-                self.assertEqual(len(test_results), 2)
+                    is_ok = any((lambda x: item in x, passed_tests.keys()))
+                    self.assertTrue(is_ok)
+                self.assertEqual(len(passed_tests), 2)
 
-                for test_name in map(lambda x: x["name"], qta_report["loaded_testcases"]):
-                    with codecs_open(test_results[test_name][0], "r", encoding="utf-8") as fd2:
+                for test_name in passed_tests:
+                    with codecs_open(passed_tests[test_name]["records"][0], "r", encoding="utf-8") as fd2:
                         content = fd2.read()
                         index = content.find("{")
                         result_json_data = content[index:]
@@ -229,6 +257,11 @@ class TestReportTest(unittest.TestCase):
         finally:
             os.chdir(old_cwd)
 
+
+
+class RuntestReportTest(TestReportBase):
+    """runtest report test
+    """
 
     def test_runtest_return_code(self):
         from testbase.management import RunTest
@@ -279,4 +312,4 @@ class TestReportTest(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    TestReportTest("test_runtest_return_code").debug()
+    unittest.main()
