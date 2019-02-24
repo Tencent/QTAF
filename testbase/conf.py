@@ -45,6 +45,7 @@ print(settings.CONFIG_OPTION)
 import imp
 import os
 import sys
+import traceback
 
 import qtaf_settings
 
@@ -66,18 +67,22 @@ class _Settings(object):
         :returns: Settings - 设置读取接口
         '''
         # get PROJECT_MODE from user settings
+        default_mode = getattr(qtaf_settings, 'PROJECT_MODE', None)
         try:
             pre_settings = self._load_proj_settings_module("testbase.conf.pre_settings")
+            mode = getattr(pre_settings, "PROJECT_MODE", default_mode)
         except ImportError as e:
-            logger.warn("[WARNING]settings module not found: %s" % str(e))
             pre_settings = None
+            if os.path.isfile(__file__):
+                mode = "standard"
+            else:
+                mode = "standalone"
         
-        mode = getattr(pre_settings, "PROJECT_MODE", getattr(qtaf_settings, 'PROJECT_MODE', None))
-        
-        if mode == "standard": # library mode
-            installed_apps = getattr(pre_settings, "INSTALLED_APPS",  getattr(qtaf_settings, 'INSTALLED_APPS', []))
+        if mode == "standard":  # library mode
+            proj_root = getattr(pre_settings, "PROJECT_ROOT", os.getcwd())
+            installed_apps = getattr(pre_settings, "INSTALLED_APPS", getattr(qtaf_settings, 'INSTALLED_APPS', []))
             
-        else: # egg mode
+        else:  # egg mode
             proj_root = self._get_standalone_project_root(pre_settings)
             installed_apps = ExLibManager(proj_root).list_names()
             
@@ -97,22 +102,20 @@ class _Settings(object):
         # load settings from user settings
         try:
             proj_settings = self._load_proj_settings_module("testbase.conf.settings")
-        except ImportError:
-            pass
+        except ImportError as e:
+            if e.args[0] != "No module named settings":
+                # project settings found and there was an error
+                stack = traceback.format_exc()
+                logger.warn("[WARN]load project settings failed:\n%s" % stack)
         else:
             self._load_setting_from_module(proj_settings)
         
         # trying to set project root automatically
-        if mode != "standard":
-            self.PROJECT_ROOT = proj_root
-            self.INSTALLED_APPS = ExLibManager(proj_root).list_names()
-        else:
-            proj_root = getattr(self, "PROJECT_ROOT", None)
-            if pre_settings is not None and not proj_root:
-                proj_root = os.path.dirname(pre_settings.__file__)
-                setattr(self, "PROJECT_ROOT", proj_root)
+        setattr(self, "PROJECT_ROOT", proj_root)
+        setattr(self, "INSTALLED_APPS", installed_apps)
         
-    def _load_proj_settings_module(self, import_name ):
+        
+    def _load_proj_settings_module(self, import_name):
         '''加载项目配置文件
         '''
         user_settings = os.environ.get("QTAF_SETTINGS_MODULE", None)
@@ -130,7 +133,7 @@ class _Settings(object):
             fd, dir_path, desc = imp.find_module(_DEFAULT_SETTINSG_MODULE)
         return imp.load_module(import_name, fd, dir_path, desc)
     
-    def _load_setting_from_module(self, module ):
+    def _load_setting_from_module(self, module):
         '''从模块中加载设置
         '''
         for name in dir(module):
@@ -139,7 +142,7 @@ class _Settings(object):
             if name.islower():
                 continue
             self.__keys.add(name)
-            setattr(self, name, getattr(module,name))
+            setattr(self, name, getattr(module, name))
 
     def _get_standalone_project_root(self, pre_settings):
         '''获取独立模式下的项目的根目录
@@ -147,35 +150,35 @@ class _Settings(object):
         proj_root = getattr(pre_settings, "PROJECT_ROOT", None)
         if proj_root:
             return proj_root
-        if os.path.isfile(__file__): #没使用qtaf.egg包
+        if os.path.isfile(__file__):  # 没使用qtaf.egg包
             cwd = os.getcwd()
-            #使用外链或拷贝文件的方式
+            # 使用外链或拷贝文件的方式
             dst_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
             if cwd.find(dst_path) >= 0:
                 return os.path.abspath(dst_path)
             
-            #eclipse调试使用工程引用的方式
+            # eclipse调试使用工程引用的方式
             if 'PYTHONPATH' not in os.environ:
                 return cwd
-            py_paths=os.environ['PYTHONPATH']
-            paths=py_paths.split(";")
-            if len(paths)>2:
+            py_paths = os.environ['PYTHONPATH']
+            paths = py_paths.split(";")
+            if len(paths) > 2:
                 dst_path = paths[1]
             if cwd.find(dst_path) >= 0:
                 return dst_path
             
-            #非预期的情况，返回当前工作目录
+            # 非预期的情况，返回当前工作目录
             return cwd
-        else: #使用的egg包，qtaf.egg包在exlib目录中
+        else:  # 使用的egg包，qtaf.egg包在exlib目录中
             exlib_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..')
-            proj_root =  os.path.abspath(os.path.join(exlib_dir, '..'))
+            proj_root = os.path.abspath(os.path.join(exlib_dir, '..'))
             return proj_root
         
-    def get(self, name, *default_value ):
+    def get(self, name, *default_value):
         '''获取配置
         '''
         if len(default_value) > 1:
-            raise TypeError("get expected at most 3 arguments, got %s"%(len(default_value)+2))
+            raise TypeError("get expected at most 3 arguments, got %s" % (len(default_value) + 2))
         if default_value:
             return getattr(self, name, default_value[0])
         else:
@@ -187,18 +190,18 @@ class _Settings(object):
             self._load()
             self.__sealed = True
         
-    def __setattr__(self, name, value ):
+    def __setattr__(self, name, value):
         if not name.startswith('_Settings__') and self.__sealed:
-            raise RuntimeError("尝试动态修改配置项\"%s\""%name)
+            raise RuntimeError("尝试动态修改配置项\"%s\"" % name)
         else:
-            super(_Settings,self).__setattr__(name, value)
+            super(_Settings, self).__setattr__(name, value)
                 
     def __getattribute__(self, name):
         try:
-            return super(_Settings,self).__getattribute__(name)
+            return super(_Settings, self).__getattribute__(name)
         except AttributeError:
             self.__ensure_loaded()
-            return super(_Settings,self).__getattribute__(name)
+            return super(_Settings, self).__getattribute__(name)
            
     def __iter__(self):
         self.__ensure_loaded()
@@ -229,7 +232,7 @@ class _InnerSettings(object):
             for temp_cls in cls.__bases__:
                 if hasattr(temp_cls, "Settings") and issubclass(temp_cls, SettingsMixin):
                     if getattr(cls, "Settings") == getattr(temp_cls, "Settings"):
-                        need_load = False # class Settings derived from parent 
+                        need_load = False  # class Settings derived from parent 
                     classes.append(temp_cls)
                     self.__allowed_prefix.add(temp_cls.__name__.upper())
             if need_load: 
@@ -257,7 +260,7 @@ class _InnerSettings(object):
                     else:
                         value = getattr(inner_settings_cls, key)
                     self.__tailer_names[tailor_name] = key
-                setattr(self, key,  value)    
+                setattr(self, key, value)    
                 
             elif not key.startswith("_"):
                 for item in self.__allowed_prefix:
