@@ -23,8 +23,7 @@ import unittest
 
 from testbase.testcase import TestCase
 from testbase.management import RunTest, DiscoverTests
-from testbase.runner import runner_types
-from testbase.report import report_types
+from testbase.types import runner_types, report_types
 from testbase.util import get_time_str
 
 

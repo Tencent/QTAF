@@ -25,9 +25,8 @@ import traceback
 import unittest
 
 from xml.dom import minidom
-from testbase import runner
-from testbase import report
 from testbase.test import modify_attributes
+from testbase.types import runner_types, report_types
 from testbase.util import smart_text, codecs_open, get_time_str
 
 suffix = "%s%s" % (sys.version_info[0], sys.version_info[1])
@@ -52,8 +51,8 @@ class StreamReportTest(TestReportBase):
                       ("CrashTest", "APPCRASH"),
                       ("QT4iTest", "CRITICAL"), ]
         for test_name, reason in test_pairs:
-            test_report = report.report_types["stream"](output_testresult=True)
-            test_runner = runner.runner_types["basic"](test_report)
+            test_report = report_types["stream"](output_testresult=True)
+            test_runner = runner_types["basic"](test_report)
             test_name = "tests.sampletest.hellotest.%s" % test_name
             print("#### stream report test for test: " + test_name + "###")
             test_runner.run(test_name)
@@ -74,8 +73,8 @@ class XmlReportTest(TestReportBase):
         old_cwd = os.getcwd()
         for test_name, reason in test_pairs:
             try:
-                test_report = report.report_types["xml"]()
-                test_runner = runner.runner_types["basic"](test_report)
+                test_report = report_types["xml"]()
+                test_runner = runner_types["basic"](test_report)
                 test_name = "tests.sampletest.hellotest.%s" % test_name
                 working_dir = test_name + "_" + get_time_str()
                 os.makedirs(working_dir)
@@ -121,8 +120,8 @@ class JsonReportTest(TestReportBase):
 
                 test_report_name = "%s_%s.json" % (time_str, test_name)
                 with codecs_open(test_report_name, "w", encoding="utf-8") as fd:
-                    test_report = report.report_types["json"](fd=fd)
-                    test_runner = runner.runner_types["basic"](test_report)
+                    test_report = report_types["json"](fd=fd)
+                    test_runner = runner_types["basic"](test_report)
                     test_name = "tests.sampletest.hellotest.%s" % test_name
                     print("json report test for test: " + test_name)
                     test_runner.run(test_name)
@@ -157,8 +156,8 @@ class JsonReportTest(TestReportBase):
             test_report_name = "test_json_report_%s.json" % time_str
             retry_count = 2
             with codecs_open(test_report_name, "w", encoding="utf-8") as fd:
-                test_report = report.report_types["json"](fd=fd, title="test_json_report")
-                test_runner = runner.runner_types["multithread"](test_report, retries=retry_count)
+                test_report = report_types["json"](fd=fd, title="test_json_report")
+                test_runner = runner_types["multithread"](test_report, retries=retry_count)
                 test_runner.run(test_name)
             with codecs_open(test_report_name, "r", encoding="utf-8") as fd:
                 content = fd.read()
@@ -192,8 +191,8 @@ class HtmlReportTest(TestReportBase):
                 os.chdir(working_dir)
                 self.addCleanup(shutil.rmtree, working_dir, True)
 
-                test_report = report.report_types["html"](title="test html report")
-                test_runner = runner.runner_types["basic"](test_report)
+                test_report = report_types["html"](title="test html report")
+                test_runner = runner_types["basic"](test_report)
                 test_name = "tests.sampletest.hellotest.%s" % test_name
                 print("html report test for test: " + test_name)
                 test_runner.run(test_name)
@@ -230,8 +229,8 @@ class HtmlReportTest(TestReportBase):
             os.chdir(working_dir)
             self.addCleanup(shutil.rmtree, working_dir, True)
 
-            test_report = report.report_types["html"](title="test html report")
-            test_runner = runner.runner_types["basic"](test_report)
+            test_report = report_types["html"](title="test html report")
+            test_runner = runner_types["basic"](test_report)
             test_name = "tests.sampletest.hellotest." + test_name
             test_runner.run(test_name)
 

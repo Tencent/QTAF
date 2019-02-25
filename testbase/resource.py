@@ -22,7 +22,6 @@ import os
 import sys
 import locale
 import uuid
-import pkg_resources
 import csv
 
 from testbase import context
@@ -35,8 +34,6 @@ os_encoding = locale.getdefaultlocale()[1]
 if not os_encoding:
     os_encoding = 'utf8'
 
-RESMGR_BACKEND_ENTRY_POINT = "qtaf.resmgr_backend"
-resmgr_backend_types = {}
 
 class ResourceNotAvailable(Exception):
     """没有可用的资源
@@ -740,15 +737,3 @@ def iter_resource_paths():
                 resource_paths.append(os.path.join(dirpath, dirname))
     return resource_paths
 
-
-def __init_resmgr_backend_types():
-    global resmgr_backend_types
-    if resmgr_backend_types:
-        return
-    resmgr_backend_types["local"] = LocalResourceManagerBackend
-    for ep in pkg_resources.iter_entry_points(RESMGR_BACKEND_ENTRY_POINT):
-        if ep.name not in resmgr_backend_types:
-            resmgr_backend_types[ep.name] = ep.load()
-
-__init_resmgr_backend_types()
-del __init_resmgr_backend_types

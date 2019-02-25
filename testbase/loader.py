@@ -12,17 +12,18 @@
 # OF ANY KIND, either express or implied. See the License for the specific language
 # governing permissions and limitations under the License.
 #
-import six
 '''
 测试用例加载
 '''
+from __future__ import absolute_import
 
-import types
-import sys
+import imp
 import pkgutil
 import os
-import imp
+import six
+import sys
 import traceback
+import types
 
 from collections import OrderedDict
 from testbase import datadrive
