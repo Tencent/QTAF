@@ -9,6 +9,7 @@ __pycache__/
 # Distribution / packaging
 .Python
 build/
+_build/
 develop-eggs/
 dist/
 downloads/
@@ -89,6 +90,7 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+Pipfile.lock
 
 # Spyder project settings
 .spyderproject
@@ -110,3 +112,4 @@ venv.bak/
 # other
 .DS_Store
 version.txt
+*.prefs
