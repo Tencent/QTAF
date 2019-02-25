@@ -2,12 +2,12 @@
 #
 # Tencent is pleased to support the open source community by making QTA available.
 # Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
-# Licensed under the BSD 3-Clause License (the "License"); you may not use this 
+# Licensed under the BSD 3-Clause License (the "License"); you may not use this
 # file except in compliance with the License. You may obtain a copy of the License at
-# 
+#
 # https://opensource.org/licenses/BSD-3-Clause
-# 
-# Unless required by applicable law or agreed to in writing, software distributed 
+#
+# Unless required by applicable law or agreed to in writing, software distributed
 # under the License is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
 # OF ANY KIND, either express or implied. See the License for the specific language
 # governing permissions and limitations under the License.
@@ -63,14 +63,15 @@ else:
 
     def ast_Call(a, b, c):
         return ast.Call(a, b, c, None, None)
-    
+
 if hasattr(ast, "NameConstant"):
     _NameConstant = ast.NameConstant
 else:
 
     def _NameConstant(c):
         return ast.Name(str(c), ast.Load())
-    
+
+
 def set_location(node, lineno, col_offset):
     """Set node location information recursively."""
 
@@ -85,11 +86,12 @@ def set_location(node, lineno, col_offset):
     _fix(node, lineno, col_offset)
     return node
 
+
 def hook_function(func):
     code = func.__code__
     src_code = inspect.getsource(code)
     tree = ast.parse(src_code, "<string>", "exec")
-    print_func = ast.Name(id="print",ctx=ast.Load())
+    print_func = ast.Name(id="print", ctx=ast.Load())
     arg = ast.Str("hello world!")
     print_expr = ast.Expr(ast.Call(func=print_func, args=[arg], keywords=[]))
     test_func = tree.body[0]
@@ -102,11 +104,12 @@ def hook_function(func):
             break
     else:
         raise RuntimeError("no match name function for %s" % code.co_name)
-    
+
+
 class AssertionRewriter(ast.NodeVisitor):
     """assert rewriter
     """
-    
+
     def rewrite(self, item):
         try:
             self.rewrite_(item)
@@ -120,13 +123,13 @@ class AssertionRewriter(ast.NodeVisitor):
         func = item
         if func in _AssertHookedCache():
             return
-        
+
         mod, func_node = get_func_mod_and_node(func)
         if mod is None and func_node is None:
             _AssertHookedCache().add(func)
             return
-        
-        #compatibility with py 2 and 3
+
+        # compatibility with py 2 and 3
         if sys.version_info[0] == 3:
             builtins_mod = "builtins"
         else:
@@ -137,12 +140,12 @@ class AssertionRewriter(ast.NodeVisitor):
         ]
         pos = 0
         lineno = func_node.lineno
-        col_offset = func_node.col_offset 
-        
+        col_offset = func_node.col_offset
+
         imports = [
             ast.Import([alias], lineno=lineno, col_offset=col_offset) for alias in aliases
         ]
-        imports.append(ast.ImportFrom(module="testbase.testresult", names=[ast.alias('EnumLogLevel',None)], level=0, lineno=lineno, col_offset=col_offset))
+        imports.append(ast.ImportFrom(module="testbase.testresult", names=[ast.alias('EnumLogLevel', None)], level=0, lineno=lineno, col_offset=col_offset))
         func_node.body[pos:pos] = imports
         nodes = [func_node]
         self.rewrite_code = False
@@ -164,7 +167,7 @@ class AssertionRewriter(ast.NodeVisitor):
             new_code = compile(mod, source_file, "exec")
             set_func_code(func, new_code)
         _AssertHookedCache().add(func)
-    
+
     def visit_Expr(self, expr):
         value = expr.value
         if isinstance(value, ast.Call):
@@ -174,9 +177,9 @@ class AssertionRewriter(ast.NodeVisitor):
             elif isinstance(value.func, ast.Name):
                 if value.func.id == "assert_":
                     return self.rewrite_assert_(value)
-            
+
         return [expr]
-            
+
     def rewrite_assert_(self, elem):
         """rewrite the assert_ expression
         """
@@ -187,7 +190,7 @@ class AssertionRewriter(ast.NodeVisitor):
         self.stack = []
         self.on_failure = []
         self.push_format_context()
-        
+
         # Rewrite assert into a bunch of statements.
         if isinstance(elem, ast.Expr):
             top_condition, explanation = self.visit(elem.value.args[1])
@@ -208,8 +211,8 @@ class AssertionRewriter(ast.NodeVisitor):
         msg = self.pop_format_context(template)
         fmt = self.helper("format_explanation", msg)
         log_record = ast.Attribute(
-                                value=ast.Name(id=caller_id, ctx=ast.Load()), 
-                                attr='_log_assert_failed', 
+                                value=ast.Name(id=caller_id, ctx=ast.Load()),
+                                attr='_log_assert_failed',
                                 ctx=ast.Load())
         args = [fmt]
         exc = ast_Call(log_record, args, [])
@@ -224,7 +227,7 @@ class AssertionRewriter(ast.NodeVisitor):
         for stmt in self.statements:
             set_location(stmt, elem.lineno, elem.col_offset)
         return self.statements
-        
+
     def variable(self):
         """Get a new variable."""
         # Use a character invalid in python identifiers to avoid clashing.
@@ -483,6 +486,7 @@ class AssertionRewriter(ast.NodeVisitor):
             res = load_names[0]
         return res, self.explanation_param(self.pop_format_context(expl_call))
 
+
 def _call_reprcompare(ops, results, expls, each_obj):
     for _, res, expl in zip(range(len(ops)), results, expls):
         try:
@@ -492,6 +496,7 @@ def _call_reprcompare(ops, results, expls, each_obj):
         if done:
             break
     return expl
+
 
 def _saferepr(obj):
     """Get a safe repr of an object for assertion error messages.
@@ -515,8 +520,10 @@ def _saferepr(obj):
         obj_repr = pprint.saferepr(obj)
     return obj_repr
 
+
 def _should_repr_global_name(obj):
     return not hasattr(obj, "__name__") and not callable(obj)
+
 
 def _format_assertmsg(obj):
     """Format the custom assertion message given.
@@ -542,6 +549,7 @@ def _format_assertmsg(obj):
     if is_repr:
         s = s.replace(t("\\n"), t("\n~"))
     return s + "\n"
+
 
 def _format_explanation(explanation):
     """This formats an explanation
@@ -576,17 +584,18 @@ def _format_explanation(explanation):
             stack.append(len(result))
             stackcnt[-1] += 1
             stackcnt.append(0)
-            result.append(' +' + '  '*(len(stack)-1) + s + line[1:])
+            result.append(' +' + '  ' * (len(stack) - 1) + s + line[1:])
         elif line.startswith('}'):
             stack.pop()
             stackcnt.pop()
             result[stack[-1]] += line[1:]
         else:
             assert line.startswith('~')
-            result.append('  '*len(stack) + line[1:])
+            result.append('  ' * len(stack) + line[1:])
     assert len(stack) == 1
     result[0] = " [%s] assert " % msg + result[0]
     return '\n'.join(result)
+
 
 def get_func_name(func):
     if isinstance(func, types.MethodType):
@@ -597,6 +606,7 @@ def get_func_name(func):
     else:
         return func.__name__
 
+
 def get_func_source_code(func):
     if isinstance(func, types.MethodType):
         if sys.version_info[0] == 3:
@@ -606,13 +616,16 @@ def get_func_source_code(func):
             src_code = inspect.getsource(im_class)
     else:
         src_code = inspect.getsource(func)
+
     indent = inspect.indentsize(src_code)
     if indent > 0:
         lines = src_code.split("\n")
         src_code = ""
         for line in lines:
             src_code += line[indent:] + "\n"
-    return src_code 
+    src_code = "# -*- coding: utf-8 -*-\n\n" + src_code  # coding specification
+    return src_code
+
 
 def get_func_mod_and_node(func):
     func_name = get_func_name(func)
@@ -633,6 +646,7 @@ def get_func_mod_and_node(func):
     ast.increment_lineno(func_node, func.__code__.co_firstlineno - func_node.lineno)
     return mod, func_node
 
+
 def get_func_compiled_code(func, new_code):
     func_name = get_func_name(func)
     if isinstance(func, types.MethodType):
@@ -647,7 +661,8 @@ def get_func_compiled_code(func, new_code):
                 return item
     else:
         raise RuntimeError("%s not supported yet" % repr(func))
-    
+
+
 def set_func_code(func, new_code):
     new_func_code = get_func_compiled_code(func, new_code)
     if isinstance(func, types.MethodType):
@@ -657,29 +672,31 @@ def set_func_code(func, new_code):
             func.__func__.__code__ = new_func_code
     else:
         func.__code__ = new_func_code
-    
+
+
 class _AssertHookedCache(six.with_metaclass(Singleton, object)):
-    
+
     def __init__(self):
         self._lock = threading.Lock()
         self.__cache = set()
-        
+
     def add(self, func):
         with self._lock:
             self.__cache.add(self._hash_func(func))
-            
+
     def __contains__(self, func):
-        item =self._hash_func(func)
+        item = self._hash_func(func)
         return item in self.__cache
-    
+
     def __iter__(self):
         return self.__cache.__iter__()
-    
+
     def _hash_func(self, func):
         if isinstance(func, (types.FunctionType, types.MethodType)):
             return func
         else:
             raise ValueError("func must be a callable type or object")
-        
+
+
 if __name__ == "__main__":
     pass
