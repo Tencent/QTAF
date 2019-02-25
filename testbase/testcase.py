@@ -15,6 +15,7 @@
 '''
 测试用例基类模块
 '''
+from __future__ import absolute_import
 
 import os
 import sys
@@ -22,7 +23,6 @@ import re
 import threading
 import traceback
 import collections
-import random
 import types
 import six
 

@@ -32,9 +32,9 @@ from testbase.exlib import ExLibManager
 from testbase.dist import DistGenerator, VirtuelEnv
 from testbase.loader import TestLoader
 from testbase.testcase import TestCasePriority, TestCaseStatus, TestCase
-from testbase.runner import TestCaseSettings, runner_types
-from testbase.report import report_types, test_list_types
-from testbase.resource import resmgr_backend_types
+from testbase.runner import TestCaseSettings
+from testbase.report import test_list_types
+from testbase.types import runner_types, report_types, resmgr_backend_types
 from testbase.util import codecs_open, path_exists
 
 

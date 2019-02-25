@@ -62,7 +62,11 @@ def load_case(case_path):
 def load_cases(tests):
     test_suite = unittest.TestSuite()
     for test in tests:
-        test_suite.addTests(load_case(test))
+        try:
+            test_suite.addTests(load_case(test))
+        except:
+            print("cannot import test \"%s\":\n%s" % (test, traceback.format_exc()))
+            raise
     return test_suite
 
 

@@ -23,10 +23,8 @@ import json
 import getpass
 import locale
 import argparse
-import pkg_resources
 import xml.dom.minidom as dom
 import xml.sax.saxutils as saxutils
-import traceback
 
 from datetime import datetime
 
@@ -37,8 +35,6 @@ from testbase.util import smart_text, smart_binary, to_pretty_xml, ensure_binary
     codecs_open, get_os_version, get_inner_resource
 from testbase.version import version
 
-REPORT_ENTRY_POINT = "qtaf.report"
-report_types = {}
 os_encoding = locale.getdefaultlocale()[1]
 report_usage = 'runtest <test ...> --report-type <report-type> [--report-args "<report-args>"]'
 
@@ -1039,28 +1035,3 @@ class StreamTestListOutput(TestListOutputBase):
 
 test_list_types = {"stream" : StreamTestListOutput}
 
-
-def __init_report_types():
-    global report_types
-    if report_types:
-        return
-    report_types.update({
-        "empty"  : EmptyTestReport,
-        "stream" : StreamTestReport,
-        "xml"    : XMLTestReport,
-        "json"   : JSONTestReport,
-        "html"   : HtmlTestReport,
-    })
-
-    # Register other `ITestReport` implementations from entry points
-    for ep in pkg_resources.iter_entry_points(REPORT_ENTRY_POINT):
-        if ep.name not in report_types:
-            try:
-                report_types[ep.name] = ep.load()
-            except:
-                stack = traceback.format_exc()
-                logger.warn("load ITestReport entry point for %s failed:\n%s" % (ep.name, stack))
-
-
-__init_report_types()
-del __init_report_types

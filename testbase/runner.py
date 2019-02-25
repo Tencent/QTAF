@@ -27,6 +27,7 @@ TestRunner负责多个测试用例，目前提供三种方式:
         report.end_test(test, result)
 
 '''
+from __future__ import absolute_import
 
 import threading
 import multiprocessing
@@ -36,7 +37,6 @@ import random
 import types
 import sys
 import argparse
-import pkg_resources
 import socket
 import uuid
 import itertools
@@ -44,7 +44,6 @@ import six
 
 from six.moves import queue
 
-from testbase import logger
 from testbase.loader import TestLoader
 from testbase import serialization
 from testbase.testcase import TestCase, TestCaseRunner
@@ -53,9 +52,7 @@ from testbase.testresult import TestResultCollection
 from testbase.resource import TestResourceManager, LocalResourceManagerBackend
 from testbase.plan import TestPlan
 
-RUNNER_ENTRY_POINT = "qtaf.runner"
 runner_usage = 'runtest <test ...> --runner-type <runner-type> [--runner-args "<runner-args>"]'
-runner_types = {}
 
 
 class TestCaseSettings(object):
@@ -1125,23 +1122,3 @@ class MultiProcessTestRunner(BaseTestRunner):
         '''
         args = cls.get_parser().parse_args(args_string)
         return cls(report, args.concurrency, args.retries, resmgr_backend)
-
-
-def __init_runner_types():
-    global runner_types
-    if runner_types:
-        return
-    runner_types["basic"] = TestRunner
-    runner_types["multithread"] = ThreadingTestRunner
-    runner_types["multiprocess"] = MultiProcessTestRunner
-    for ep in pkg_resources.iter_entry_points(RUNNER_ENTRY_POINT):
-        if ep.name not in runner_types:
-            try:
-                runner_types[ep.name] = ep.load()
-            except:
-                stack = traceback.format_exc()
-                logger.warn("load TestRunner type for %s failed:\n%s" % (ep.name, stack))
-
-
-__init_runner_types()
-del __init_runner_types
