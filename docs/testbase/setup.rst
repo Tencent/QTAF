@@ -5,10 +5,7 @@
 Python版本依赖
 =================
 
-目前QTAF在Python 2.7版本上测试，推荐使用Python2.7版本，如果是Windows系统，推荐使用ActivePython打包的版本。
-
-最新的Mac OSX内置的Python已经为2.7版本，一般无需配置。
-
+QTAF兼容python2.7以上和python3.6以上版本，windows下推荐使用ActivePython版本。Mac系统通常内置了python2.7。
 
 =================
 通过pip工具安装
