@@ -2,12 +2,12 @@
 #
 # Tencent is pleased to support the open source community by making QTA available.
 # Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
-# Licensed under the BSD 3-Clause License (the "License"); you may not use this 
+# Licensed under the BSD 3-Clause License (the "License"); you may not use this
 # file except in compliance with the License. You may obtain a copy of the License at
-# 
+#
 # https://opensource.org/licenses/BSD-3-Clause
-# 
-# Unless required by applicable law or agreed to in writing, software distributed 
+#
+# Unless required by applicable law or agreed to in writing, software distributed
 # under the License is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
 # OF ANY KIND, either express or implied. See the License for the specific language
 # governing permissions and limitations under the License.
@@ -53,15 +53,17 @@ from testbase import logger
 from testbase.exlib import ExLibManager
 
 _DEFAULT_SETTINSG_MODULE = "settings"
-    
+
+
 class _Settings(object):
     '''配置读取接口
     '''
+
     def __init__(self):
         self.__keys = set()
         self.__sealed = False
         self.__loaded = False
-        
+
     def _load(self):
         '''加载配置
         :returns: Settings - 设置读取接口
@@ -77,18 +79,18 @@ class _Settings(object):
                 mode = "standard"
             else:
                 mode = "standalone"
-        
+
         if mode == "standard":  # library mode
             proj_root = getattr(pre_settings, "PROJECT_ROOT", os.getcwd())
             installed_apps = getattr(pre_settings, "INSTALLED_APPS", getattr(qtaf_settings, 'INSTALLED_APPS', []))
-            
+
         else:  # egg mode
             proj_root = self._get_standalone_project_root(pre_settings)
             installed_apps = ExLibManager(proj_root).list_names()
-            
+
         # load settings from qtaf
         self._load_setting_from_module(qtaf_settings)
-        
+
         # load settings from installed apps
         for appname in installed_apps:
             modname = "%s.settings" % appname
@@ -98,23 +100,22 @@ class _Settings(object):
                 logger.warn("[WARN]load library settings module \"%s\" failed: %s" % (modname, str(e)))
             else:
                 self._load_setting_from_module(sys.modules[modname])
-                
+
         # load settings from user settings
         try:
             proj_settings = self._load_proj_settings_module("testbase.conf.settings")
         except ImportError as e:
-            if e.args[0] != "No module named settings":
+            if e.args[0] not in ["No module named settings", "No module named 'settings'"]:
                 # project settings found and there was an error
                 stack = traceback.format_exc()
                 logger.warn("[WARN]load project settings failed:\n%s" % stack)
         else:
             self._load_setting_from_module(proj_settings)
-        
+
         # trying to set project root automatically
         setattr(self, "PROJECT_ROOT", proj_root)
         setattr(self, "INSTALLED_APPS", installed_apps)
-        
-        
+
     def _load_proj_settings_module(self, import_name):
         '''加载项目配置文件
         '''
@@ -132,7 +133,7 @@ class _Settings(object):
         else:
             fd, dir_path, desc = imp.find_module(_DEFAULT_SETTINSG_MODULE)
         return imp.load_module(import_name, fd, dir_path, desc)
-    
+
     def _load_setting_from_module(self, module):
         '''从模块中加载设置
         '''
@@ -156,7 +157,7 @@ class _Settings(object):
             dst_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
             if cwd.find(dst_path) >= 0:
                 return os.path.abspath(dst_path)
-            
+
             # eclipse调试使用工程引用的方式
             if 'PYTHONPATH' not in os.environ:
                 return cwd
@@ -166,14 +167,14 @@ class _Settings(object):
                 dst_path = paths[1]
             if cwd.find(dst_path) >= 0:
                 return dst_path
-            
+
             # 非预期的情况，返回当前工作目录
             return cwd
         else:  # 使用的egg包，qtaf.egg包在exlib目录中
             exlib_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..')
             proj_root = os.path.abspath(os.path.join(exlib_dir, '..'))
             return proj_root
-        
+
     def get(self, name, *default_value):
         '''获取配置
         '''
@@ -183,46 +184,49 @@ class _Settings(object):
             return getattr(self, name, default_value[0])
         else:
             return getattr(self, name)
-        
+
     def __ensure_loaded(self):
         if not self.__loaded:
             self.__loaded = True
             self._load()
             self.__sealed = True
-        
+
     def __setattr__(self, name, value):
         if not name.startswith('_Settings__') and self.__sealed:
             raise RuntimeError("尝试动态修改配置项\"%s\"" % name)
         else:
             super(_Settings, self).__setattr__(name, value)
-                
+
     def __getattribute__(self, name):
         try:
             return super(_Settings, self).__getattribute__(name)
         except AttributeError:
             self.__ensure_loaded()
             return super(_Settings, self).__getattribute__(name)
-           
+
     def __iter__(self):
         self.__ensure_loaded()
         return self.__keys.__iter__()
-                
+
     def __contain__(self, key):
         self.__ensure_loaded()
         return key in self.__keys
-                
+
+
 settings = _Settings()
+
 
 class _InnerSettings(object):
     """inner settings for a SettingsMixin class
     """
+
     def __init__(self, defined_class):
         self.__tailer_names = {}
         self.__allowed_prefix = set()
         self.__sealed = False
         self.__load_settings(defined_class)
         self.__sealed = True
-        
+
     def __load_settings(self, defined_class):
         self.__allowed_prefix.add(defined_class.__name__.upper())
         classes = [ defined_class ]
@@ -232,12 +236,12 @@ class _InnerSettings(object):
             for temp_cls in cls.__bases__:
                 if hasattr(temp_cls, "Settings") and issubclass(temp_cls, SettingsMixin):
                     if getattr(cls, "Settings") == getattr(temp_cls, "Settings"):
-                        need_load = False  # class Settings derived from parent 
+                        need_load = False  # class Settings derived from parent
                     classes.append(temp_cls)
                     self.__allowed_prefix.add(temp_cls.__name__.upper())
-            if need_load: 
+            if need_load:
                 self.__load_class_settings(cls)
-            
+
     def __load_class_settings(self, cls):
         prefix = cls.__name__.upper() + "_"
         class_path = cls.__module__ + "." + cls.__name__
@@ -260,8 +264,8 @@ class _InnerSettings(object):
                     else:
                         value = getattr(inner_settings_cls, key)
                     self.__tailer_names[tailor_name] = key
-                setattr(self, key, value)    
-                
+                setattr(self, key, value)
+
             elif not key.startswith("_"):
                 for item in self.__allowed_prefix:
                     if key.startswith(item):
@@ -271,12 +275,12 @@ class _InnerSettings(object):
                     tailor_name = key.upper()
                 err_msg = "%s's Settings item `%s` must start with %s like %s%s" % (class_path, key, prefix, prefix, tailor_name)
                 raise RuntimeError(err_msg)
-        
+
     def __setattr__(self, name, value):
         if not name.startswith('_InnerSettings__') and self.__sealed:
             raise RuntimeError("dynamicly modifying value is not allowed.")
         super(_InnerSettings, self).__setattr__(name, value)
-        
+
     def __getattribute__(self, name):
         try:
             return super(_InnerSettings, self).__getattribute__(name)
@@ -285,10 +289,12 @@ class _InnerSettings(object):
                 return settings.get(name)
             else:
                 raise
-        
+
+
 class SettingsMixin(object):
     """a mixin class coordinate with qtaf settings
     """
+
     @property
     def settings(self):
         cls = type(self)
