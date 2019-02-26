@@ -236,6 +236,7 @@ class RunTest(Command):
 
                 def begin_report(self):
                     super(VerboseOnlineTestReport, self).begin_report()
+                    print("****report url: %s****" % self.url)
                     with codecs_open(os.path.join(os.getcwd(), "report_url.txt"), "w", encoding="utf-8") as fd:
                         fd.write(self.url)
 
