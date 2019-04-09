@@ -62,8 +62,7 @@ class _Settings(object):
     def __init__(self):
         self.__keys = set()
         self.__sealed = False
-        self._load()
-        self.__sealed = True
+        self.__loaded = False
 
     def _load(self):
         '''加载配置
@@ -97,8 +96,9 @@ class _Settings(object):
             modname = "%s.settings" % appname
             try:
                 __import__(modname)
-            except ImportError as e:
-                logger.warn("[WARN]load library settings module \"%s\" failed: %s" % (modname, str(e)))
+            except:
+                stack = traceback.format_exc()
+                logger.warn("[WARN]load library settings module \"%s\" failed:\n%s" % (modname, stack))
             else:
                 self._load_setting_from_module(sys.modules[modname])
 
@@ -186,16 +186,31 @@ class _Settings(object):
         else:
             return getattr(self, name)
 
+    def __ensure_loaded(self):
+        if not self.__loaded:
+            self.__loaded = True
+            self._load()
+            self.__sealed = True
+
     def __setattr__(self, name, value):
         if not name.startswith('_Settings__') and self.__sealed:
             raise RuntimeError("尝试动态修改配置项\"%s\"" % name)
         else:
             super(_Settings, self).__setattr__(name, value)
 
+    def __getattribute__(self, name):
+        try:
+            return super(_Settings, self).__getattribute__(name)
+        except AttributeError:
+            self.__ensure_loaded()
+            return super(_Settings, self).__getattribute__(name)
+
     def __iter__(self):
+        self.__ensure_loaded()
         return self.__keys.__iter__()
 
     def __contain__(self, key):
+        self.__ensure_loaded()
         return key in self.__keys
 
 
