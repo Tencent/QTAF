@@ -29,8 +29,8 @@
 
 使用--excluded-name选项，可以排除用例集合，接受多个排除用例集合，例如::
 
-   $ python manage.py runtest zoo --excluded zoo.test # 执行zoo模块下所有用例，但是排除zoo.test
-   $ python manage.py runtest zoo --excluded zoo.xxxx --excluded zoo.oooo #排除zoo.xxxx和zoo.oooo
+   $ python manage.py runtest zoo --excluded-name zoo.test # 执行zoo模块下所有用例，但是排除zoo.test
+   $ python manage.py runtest zoo --excluded-name zoo.xxxx --excluded-name zoo.oooo #排除zoo.xxxx和zoo.oooo
 
 ====================
 指定工作目录
@@ -206,12 +206,12 @@ windows下会自动通过IE打开。无命令行参数。
 
 查看当前支持的所有报告类型，可以通过下面代码打印::
 
-   from testbase.report import report_types
+   from testbase.types import report_types
    print(report_types.keys())
 
 根据支持的类型，先获取到对应报告类型的class，然后实例化一个报告对象传递给TestRunner，用于存储执行结果::
 
-   from testbase.report import report_types
+   from testbase.types import report_types
    report_type = report_types['xml']
    report = report_type() # 根据实际类型，可以在构造时传入对应的参数
    
@@ -227,12 +227,12 @@ windows下会自动通过IE打开。无命令行参数。
 
 查看当前支持的所有资源管理后端类型，可以通过下面代码打印::
 
-   from testbase.resource import resmgr_backend_types
+   from testbase.types import resmgr_backend_types
    print(resmgr_backend_types.keys())
    
 根据支持的类型，先获取到对应资源管理后端类型的class，然后实例化一个对象传递给TestRunner，用于管理资源::
 
-   from testbase.resource import resmgr_backend_types
+   from testbase.types import resmgr_backend_types
    resmgr_backend_type = resmgr_backend_types["local"]
    resmgr_backend = resmgr_backend_type() # 根据实际类型，可以在构造时传入对应的参数
   
@@ -246,16 +246,14 @@ windows下会自动通过IE打开。无命令行参数。
 
 查看当前支持的所有资源管理后端类型，可以通过下面代码打印::
 
-   from testbase.runner import runner_types
+   from testbase.types import runner_types
    print(runner_types.keys())
    
 根据支持的类型，先获取到对应TestRunner类型的class，然后实例化一个对象用于执行测试用例。
 
 结合上面的测试报告类型和资源管理后端类型的选择，我们可以如下实现一个输出xml报告的执行逻辑::
 
-   from testbase.resource import resmgr_backend_types
-   from testbase.report import report_types
-   from testbase.runner import runner_types
+   from testbase.types import report_types, runner_types, resmgr_backend_types
    
    resmgr_backend = resmgr_backend_types["local"]()
    report = report_types["xml"]()

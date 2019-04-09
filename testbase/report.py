@@ -634,8 +634,8 @@ class XMLTestReport(TestReportBase):
                 logfile = '%s.log' % testname
                 xmltpl = """<Module name="%s" log="%s"/>""" % (testname, logfile)
                 mdfailsnode.appendChild(dom.parseString(xmltpl).childNodes[0])
-                with codecs_open(logfile, 'w', encoding="utf-8") as fd:
-                    fd.write(record['error'])
+                with codecs_open(logfile, 'wb') as fd:
+                    fd.write(smart_binary(record['error']))
 
     def log_filtered_test(self, loader, testcase, reason):
         '''记录一个被过滤的测试用例
@@ -673,8 +673,8 @@ class XMLTestReport(TestReportBase):
         doc2 = dom.parseString(nodestr)
         errNode = doc2.childNodes[0]
         self._runrstnode.appendChild(errNode)
-        with codecs_open(log_file, 'w', encoding="utf-8") as fd:
-            fd.write(error)
+        with codecs_open(log_file, 'wb') as fd:
+            fd.write(smart_binary(error))
 
     def get_testresult_factory(self):
         '''获取对应的TestResult工厂

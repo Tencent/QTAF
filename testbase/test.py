@@ -33,7 +33,6 @@ class modify_settings(object):
         self.old_conf = {}
 
     def __enter__(self):
-        settings._Settings__ensure_loaded()  # ensure loaded
         settings._Settings__sealed = False
         for key in self.new_conf:
             self.old_conf[key] = getattr(settings, key, _NotExistedItem())

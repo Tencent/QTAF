@@ -112,7 +112,7 @@ class DataDrive(object):
         :type testcase_class: TestCase
         '''
         if not issubclass(testcase_class, TestCase):
-            raise TypeError('数据驱动使用错误，只能对testcase类使用')
+            raise TypeError('data driver decorator cannot be applied to non-TestCase type')
         testcase_class.__qtaf_datadrive__ = self
         return testcase_class
 
@@ -173,7 +173,7 @@ def _get_translated_in_datadrive(name, dd):
         if translated_name == translate_bad_char(item_string):
             return dd[item]
     else:
-        raise ValueError("找不到对应名字'%s'的数据驱动用例" % name)
+        raise ValueError("data drive name '%s' not found" % name)
 
 
 def load_datadrive_tests(cls, name=None):
