@@ -657,11 +657,7 @@ class ManagementTools(object):
             if issubclass(obj, Command):
                 cmds.append(obj)
 
-        if six.PY3:
-            cmp_func = lambda x, y: x > y
-        else:
-            cmp_func = cmp
-        cmds.sort(lambda x, y:cmp_func(x.name, y.name))
+        cmds.sort(key=lambda x: x.name)
         return cmds
 
     def _load_app_cmds(self):
