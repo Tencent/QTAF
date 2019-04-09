@@ -1,4 +1,4 @@
-sphinx
+sphinx==1.8.1
 recommonmark
 sphinx_rtd_theme
 ply
