@@ -12,7 +12,7 @@
 # OF ANY KIND, either express or implied. See the License for the specific language
 # governing permissions and limitations under the License.
 #
-'''runner test
+'''resource test
 '''
 
 import os
@@ -24,7 +24,7 @@ import unittest
 from testbase import resource
 from testbase.conf import settings
 from testbase.test import modify_environ
-from testbase.util import smart_text, codecs_open
+from testbase.util import codecs_open
 
 suffix = "%s%s" % (sys.version_info[0], sys.version_info[1])
 root_dir = os.path.join(settings.PROJECT_ROOT, 'resources')
@@ -39,8 +39,11 @@ def _create_local_testfile():
     with codecs_open(os.path.join(test_dir, "foo.txt"), mode="w") as fd:
         fd.write("foo")
     local_file = os.path.join(root_dir, 'a_%s.txt' % suffix)
-    with codecs_open(local_file, 'w', encoding="utf-8") as f:
-        f.write('abc')
+    with codecs_open(local_file, 'w', encoding="utf-8") as fd:
+        fd.write('abc')
+
+    with codecs_open(os.path.join(test_dir, "bar.md.link"), mode="w") as fd:
+        fd.write("bar.md")
 
     return local_file, root_dir
 
@@ -80,9 +83,10 @@ class TestResManager(unittest.TestCase):
         self.assertEqual(self.local_file, fm.get_file(test_file_name))
         self.assertEqual(self.local_file, resource.get_file(test_file_name))
 
-        paths = []
-        for it in os.listdir(os.path.join(self.local_dir, test_dir_name)):
-            paths.append(smart_text(os.path.join(self.local_dir, test_dir_name, it)))
+        paths = os.listdir(os.path.join(self.local_dir, test_dir_name))
+        for i, path in enumerate(paths):
+            if path.endswith(".link"):
+                paths[i] = path[:-5]
         list_result = fm.list_dir(test_dir_name)
         self.assertEqual(paths, list_result)
         list_result = resource.list_dir(test_dir_name)
@@ -91,20 +95,20 @@ class TestResManager(unittest.TestCase):
 
     def test_nofile_raise(self):
         fm = resource.TestResourceManager(resource.LocalResourceManagerBackend()).create_session()
-        self.assertRaisesRegex(Exception, "文件不存在", fm.get_file, 'a_xxx.txt')
-        self.assertRaisesRegex(Exception, "文件不存在", resource.get_file, 'a_xxx.txt')
-        self.assertRaisesRegex(Exception, "目录不存在", fm.list_dir, 'xxx_xxx')
-        self.assertRaisesRegex(Exception, "目录不存在", resource.list_dir, 'xxx_xxx')
+        self.assertRaisesRegex(Exception, "not found", fm.get_file, 'a_xxx.txt')
+        self.assertRaisesRegex(Exception, "not found", resource.get_file, 'a_xxx.txt')
+        self.assertRaisesRegex(Exception, "not found", fm.list_dir, 'xxx_xxx')
+        self.assertRaisesRegex(Exception, "not found", resource.list_dir, 'xxx_xxx')
 
     def test_duplicated_raise(self):
         _, local_dir = _create_local_testfile()
         dup_dir = _copy_testfile(local_dir)
         self.addCleanup(shutil.rmtree, dup_dir, True)
         fm = resource.TestResourceManager(resource.LocalResourceManagerBackend()).create_session()
-        self.assertRaisesRegex(Exception, "存在多个", fm.get_file, test_file_name)
-        self.assertRaisesRegex(Exception, "存在多个", fm.list_dir, test_dir_name)
-        self.assertRaisesRegex(Exception, "存在多个", resource.get_file, test_file_name)
-        self.assertRaisesRegex(Exception, "存在多个", resource.list_dir, test_dir_name)
+        self.assertRaisesRegex(Exception, "multiple results", fm.get_file, test_file_name)
+        self.assertRaisesRegex(Exception, "multiple results", fm.list_dir, test_dir_name)
+        self.assertRaisesRegex(Exception, "multiple results", resource.get_file, test_file_name)
+        self.assertRaisesRegex(Exception, "multiple results", resource.list_dir, test_dir_name)
 
     def test_unregisted_restype(self):
         rm = resource.TestResourceManager(resource.LocalResourceManagerBackend()).create_session()
@@ -118,12 +122,13 @@ class TestResManager(unittest.TestCase):
         dir_names_set = set()
         file_names_set = set()
         for dir_path, dir_names, file_names in resource.walk("/"):
-            dir_path_set.add(os.path.basename(dir_path))
+            dir_path_set.add(dir_path)
             for dir_name in dir_names:
                 dir_names_set.add(dir_name)
             for file_name in file_names:
                 file_names_set.add(file_name)
-        self.assertTrue(test_dir_name in dir_path_set)
+        sub_test_dir = "resources" + os.path.sep + test_dir_name
+        self.assertTrue(sub_test_dir in dir_path_set)
         self.assertTrue(test_dir_name in dir_names_set)
         self.assertTrue(test_file_name in file_names_set)
 
@@ -134,4 +139,4 @@ class TestResManager(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    unittest.main(defaultTest="TestResManager.test_get_local_file")
+    unittest.main()

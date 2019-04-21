@@ -165,7 +165,7 @@ UI树查找的根节点很容易理解，来看看UI元素的定位器。QTA框�
    * XPath：主要用于Web UI元素的定位，XPath有W3C定义（https://www.w3.org/TR/xpath/）
    * str：各个平台下意义不同，一般是QPath或XPath的一种简便形式
    
-由于XPath W3C是标准定义的语言，这里就不再熬述。
+由于XPath W3C是标准定义的语言，这里就不再赘述。
 而QPath是QTA框架定义的一种简单的UI定位语言，以上面的QPath的例子::
 
    QPath("/name='menu' /name='about_btn' && MaxDepth=4 ")
