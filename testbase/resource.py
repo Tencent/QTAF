@@ -2,12 +2,12 @@
 #
 # Tencent is pleased to support the open source community by making QTA available.
 # Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
-# Licensed under the BSD 3-Clause License (the "License"); you may not use this 
+# Licensed under the BSD 3-Clause License (the "License"); you may not use this
 # file except in compliance with the License. You may obtain a copy of the License at
-# 
+#
 # https://opensource.org/licenses/BSD-3-Clause
-# 
-# Unless required by applicable law or agreed to in writing, software distributed 
+#
+# Unless required by applicable law or agreed to in writing, software distributed
 # under the License is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
 # OF ANY KIND, either express or implied. See the License for the specific language
 # governing permissions and limitations under the License.
@@ -40,16 +40,18 @@ class ResourceNotAvailable(Exception):
     """
     pass
 
+
 class DownloadFileError(Exception):
     """download file failed
     """
+
     def __init__(self, url, status_code, msg, headers, data):
         self.url = url
         self.status_code = status_code
         self.msg = msg
         self.headers = headers
         self.data = data
-        
+
     def __str__(self):
         return "downloading file failed for: %s %s %s\nheaders=%s\nbody=%s" % (self.url,
                                                              self.status_code,
@@ -59,15 +61,17 @@ class DownloadFileError(Exception):
 
 
 
+
 class Session(object):
     """会话
     """
+
     def __init__(self, backend, session_id):
         """构造函数
         """
         self._backend = backend
         self._id = session_id
-        
+
     def acquire_resource(self, res_type, res_group=None, condition=None):
         """申请资源
 
@@ -108,7 +112,7 @@ class Session(object):
         :type resource_id: str
         """
         return self._backend.release_resource(self._id, res_type, resource_id)
-        
+
     def destroy(self):
         """销毁该会话（全部占用的资源会释放）
         """
@@ -117,7 +121,7 @@ class Session(object):
         res = self._backend.destroy_session(self._id)
         self._id = None
         return res
-        
+
     def get_file(self, path):
         """获取测试文件资源
 
@@ -126,8 +130,8 @@ class Session(object):
         :rtypes: str
         """
         return self._backend.get_file(path)
-    
-    def list_dir(self,path):
+
+    def list_dir(self, path):
         """获取目录下文件列表
 
         :param path: 目录引用路径（相对路径）
@@ -135,8 +139,8 @@ class Session(object):
         :rtypes: list[str]
         """
         return self._backend.list_dir(path)
-    
-    def walk(self,path):
+
+    def walk(self, path):
         """获取目录下文件列表
 
         :param path: 相对于resources目录的路径，用于遍历文件夹
@@ -146,10 +150,11 @@ class Session(object):
         """
         return self._backend.walk(path)
 
-    
+
 class IResourceManagerBackend(object):
     """测试资源管理后端接口定义
     """
+
     def create_session(self, testcase=None):
         """创建会话
 
@@ -159,7 +164,7 @@ class IResourceManagerBackend(object):
         :rtypes: str
         """
         raise NotImplementedError()
-        
+
     def destroy_session(self, session_id):
         """销毁会话
 
@@ -167,8 +172,8 @@ class IResourceManagerBackend(object):
         :type session_id: str
         """
         raise NotImplementedError()
-    
-    def acquire_resource(self, session_id, res_type, res_group, condition ):
+
+    def acquire_resource(self, session_id, res_type, res_group, condition):
         """申请资源
 
         :param session_id: 会话ID
@@ -183,7 +188,7 @@ class IResourceManagerBackend(object):
         :rtypes: dict
         """
         raise NotImplementedError()
-        
+
     def release_resource(self, session_id, res_type, resource_id):
         """释放资源
 
@@ -195,7 +200,7 @@ class IResourceManagerBackend(object):
         :type resource_id: str
         """
         raise NotImplementedError()
-    
+
     def get_file(self, path):
         """获取一个文件资源
 
@@ -205,7 +210,7 @@ class IResourceManagerBackend(object):
         :rtypes: str
         """
         raise NotImplementedError()
-    
+
     def list_dir(self, path):
         """获取一个文件资源
 
@@ -215,7 +220,7 @@ class IResourceManagerBackend(object):
         :rtypes: str
         """
         raise NotImplementedError()
-    
+
     def walk(self, path):
         """遍历一个文件路径
 
@@ -225,7 +230,7 @@ class IResourceManagerBackend(object):
         :rtypes: iterator
         """
         raise NotImplementedError()
-    
+
     def iter_managed_resource(self):
         """查询全部托管的资源（支持初始化&反初始化）
 
@@ -233,13 +238,14 @@ class IResourceManagerBackend(object):
         :rtypes: iterator(res_type, resource)
         """
         raise NotImplementedError()
-    
-    
+
+
 class TestResourceManager(object):
     """测试资源管理"""
+
     def __init__(self, backend):
         self._backend = backend
-        
+
     def create_session(self, testcase=None):
         """创建资源使用会话
 
@@ -259,7 +265,7 @@ class TestResourceManager(object):
         """
         return self._backend.iter_managed_resource()
 
-    
+
 class LocalResourceLock(object):
     """本地资源锁
     """
@@ -273,7 +279,7 @@ class LocalResourceLock(object):
             lock_dir = os.path.join(os.environ["AppData"], "QTAF", "lock", res_type)
             self._os_try_acquire = self._win_try_acquire
             self._os_release = self._win_release
-        else: #linux/mac
+        else:  # linux/mac
             lock_dir = os.path.join(os.environ["HOME"], ".qtaf", "lock", res_type)
             self._os_try_acquire = self._unix_try_acquire
             self._os_release = self._unix_release
@@ -346,10 +352,12 @@ class LocalResourceLock(object):
         os.close(self._fd)
         self._fd = None
 
+
 class LocalResourceHandler(object):
     """本地资源处理句柄
     """
-    def __init__(self, resource_lock_type=LocalResourceLock ):
+
+    def __init__(self, resource_lock_type=LocalResourceLock):
         """构造函数
 
         :param resource_lock_type: 资源锁类型
@@ -357,7 +365,7 @@ class LocalResourceHandler(object):
         """
         self._lock_type = LocalResourceLock
         self._res_locks = {}
-        
+
     def acquire_resource(self, session_id, res_type, res_group, condition):
         """申请资源
     
@@ -451,10 +459,12 @@ class LocalResourceHandler(object):
         """
         return self.iter_resource(res_type)
 
+
 class LocalCSVResourceHandler(LocalResourceHandler):
     """基于本地CSV文件管理资源
     """
-    def __init__(self, csv_path, resource_lock_type=LocalResourceLock ):
+
+    def __init__(self, csv_path, resource_lock_type=LocalResourceLock):
         """构造函数
 
         :param csv_path: CSV文件
@@ -464,7 +474,7 @@ class LocalCSVResourceHandler(LocalResourceHandler):
         """
         self._csv_path = csv_path
         super(LocalCSVResourceHandler, self).__init__(resource_lock_type)
-    
+
     def iter_resource(self, res_type, res_group=None, condition=None):
         """遍历全部资源（可以按照优先级顺序返回来影响申请资源的优先级）
 
@@ -483,11 +493,12 @@ class LocalCSVResourceHandler(LocalResourceHandler):
                     row["id"] = rowid
                     yield row
 
+
 class LocalResourceManagerBackend(IResourceManagerBackend):
     """基本本地文件的方式的资源管理
     """
     _res_type_map = {}
-        
+
     @classmethod
     def register_resource_type(cls, res_type, handler):
         """注册一个资源类型
@@ -497,15 +508,15 @@ class LocalResourceManagerBackend(IResourceManagerBackend):
     def __init__(self):
         self._resources_dirs = iter_resource_paths()
         self._session_path = os.path.join(settings.PROJECT_ROOT, 'sessions')
-    
-    def _adjust_path(self,path):
+
+    def _adjust_path(self, path):
         """根据操作系统转换文件分隔符
         """
         if os.sep == '/':
-            return path.replace('\\',os.sep)
+            return path.replace('\\', os.sep)
         else:
-            return path.replace('/',os.sep)
-    
+            return path.replace('/', os.sep)
+
     def _download_file(self, url, target_path):
         from six.moves.urllib import request, error
         try:
@@ -515,7 +526,7 @@ class LocalResourceManagerBackend(IResourceManagerBackend):
             raise DownloadFileError(url, e.code, e.msg, e.headers, e.read())
         with codecs_open(target_path, "wb") as fd:
             fd.write(rspbuf)
-    
+
     def _resolve_link_file(self, remote_path, prefer_local_path):
         """获取链接的真正的文件
         """
@@ -527,62 +538,63 @@ class LocalResourceManagerBackend(IResourceManagerBackend):
         else:
             raise ValueError("Invalid link file path: %s" % remote_path)
 
-    def get_file(self,relative_path):
-        """查找某个文件
-
-        :type relative_path:string
+    def abs_path(self, relative_path):
+        """get resource absolute path
+:        type relative_path:string
         :param relative_path: ，资源文件相对描述符，相对于setting下的资源目录的路径,支持多级目录
         :return:返回资源文件的绝对路径
         """
-        result = []
         relative_path = self._adjust_path(relative_path)
         if relative_path.startswith(os.sep):
             relative_path = relative_path[1:]
+
+        found_paths = []
         for it in self._resources_dirs:
-            file_path = self._adjust_path(os.path.join(it,relative_path))
+            file_path = self._adjust_path(os.path.join(it, relative_path))
             file_path = smart_text(file_path)
-            file_link = smart_text(file_path+'.link')
-            if os.path.isfile(file_path):
-                result.append(file_path)
-            elif os.path.isfile(file_link):
+            file_link = smart_text(file_path + '.link')
+            if os.path.exists(file_path):
+                found_paths.append(file_path)
+            elif os.path.exists(file_link):
                 with codecs_open(file_link, encoding="utf-8") as f:
                     remote_path = f.read()
-                    file_path = self._resolve_link_file(remote_path,file_path)
-                    result.append(file_path)
-        if len(result) > 1:
-            raise Exception("存在多个%s文件" %relative_path)
-        elif len(result) < 1:
-            raise Exception("%s文件不存在" %relative_path)
-        return result[0]
-    
-    def list_dir(self,relative_path):
+                    file_path = self._resolve_link_file(remote_path, file_path)
+                    found_paths.append(file_path)
+        if len(found_paths) == 0:
+            raise Exception("relative_path=%s not found" % relative_path)
+        if len(found_paths) > 1:
+            raise Exception("relative_path=%s got multiple results:\n%s" % (relative_path, "\n".join(found_paths)))
+        return os.path.abspath(file_path)
+
+    def get_file(self, relative_path):
+        """查找某个文件
+
+        :type relative_path:string
+        :param relative_path: 资源文件相对描述符，相对于setting下的资源目录的路径,支持多级目录
+        :return:返回资源文件的绝对路径
+        """
+        abs_path = self.abs_path(relative_path)
+        if os.path.isfile(abs_path):
+            return abs_path
+        else:
+            raise ValueError("relative path=%s is a directory" % relative_path)
+
+    def list_dir(self, relative_path):
         """列出某个目录下的文件
 
         :type relative_path:string
         :param relative_path: ，资源文件目录相对路径，相对于setting下的资源目录的路径,支持多级目录
-        :return:返回一个包含资源目录下所有文件或者文件下的绝对路径列表
+        :return:返回一个包含资源目录下所有文件或者文件下的相对路径列表
         """
-        result = []
-        relative_path = self._adjust_path(relative_path)
-        if relative_path.startswith(os.sep):
-            relative_path = relative_path[1:]
-        for it in self._resources_dirs:
-            dir_path = self._adjust_path(os.path.join(it,relative_path))
-            dir_path = smart_text(dir_path)
-            if os.path.isdir(dir_path):
-                result.append(dir_path)
-        if len(result) > 1:
-            logger.error("找到多个目录:")
-            for item in result:
-                logger.error("%s" %item)
-            raise Exception("存在多个%s目录" %relative_path)
-        if len(result) < 1:
-            raise Exception("%s目录不存在" %relative_path)
-        paths=[]
-        for path in os.listdir(result[0]):
-            paths.append(os.path.join(result[0],path))
-        return paths
-    
+        abs_path = self.abs_path(relative_path)
+        sub_items = os.listdir(abs_path)
+        items = []
+        for sub_item in sub_items:
+            if sub_item[-5:] == ".link":
+                sub_item = sub_item[:-5]
+            items.append(sub_item)
+        return items
+
     def walk(self, path):
         """获取目录下文件列表
 
@@ -591,40 +603,31 @@ class LocalResourceManagerBackend(IResourceManagerBackend):
         :return iterators: iterator of (dir_path, dirnames, filenames) tuples
         :type   iterators: iterator
         """
-        sub_dirs = [path]
-        while sub_dirs:
-            sub_dir = sub_dirs.pop()
-            items = self.list_dir(sub_dir)
-            dir_names = []
-            file_names = []
-            for item in items:
-                base_item = os.path.basename(item)
-                if base_item.endswith(".link"):
-                    base_item = base_item[:-5]
-                if os.path.isdir(item):
-                    dir_names.append(base_item)
-                    sub_dirs.append(base_item)
-                else:
-                    file_names.append(base_item)
-            yield sub_dir, dir_names, file_names
-        
+        abs_path = self.abs_path(path)
+        base_len = len(os.path.dirname(abs_path)) + 1
+        for dir_path, dir_names, file_names in os.walk(abs_path):
+            for index, file_name in enumerate(file_names):
+                if file_name.endswith(".link"):
+                    file_names[index] = file_name[-5:]
+            yield dir_path[base_len:], dir_names, file_names
+
     def _clean_cache(self):
         """清理缓存文件
         """
         for it in self._resources_dirs:
             self._rm_cachefile_recursively(it)
-    
-    def _rm_cachefile_recursively(self,path):
+
+    def _rm_cachefile_recursively(self, path):
         """递归删除目录下的缓存文件
         """
         for root, _, files in os.walk(path):
             for it in files:
                 if it.endswith('.link'):
                     try:
-                        os.remove(os.path.join(root,it)[0:-5])
+                        os.remove(os.path.join(root, it)[0:-5])
                     except OSError:
                         pass
-                    
+
     def create_session(self, testcase=None):
         """创建会话
         """
@@ -640,15 +643,15 @@ class LocalResourceManagerBackend(IResourceManagerBackend):
         self._clean_cache()
         for handler in self._res_type_map.values():
             handler.session_destroyed(sessionid)
-    
-    def acquire_resource(self, session_id, res_type, res_group, condition ):
+
+    def acquire_resource(self, session_id, res_type, res_group, condition):
         """申请资源
         """
         handler = self._res_type_map.get(res_type)
         if handler is None:
             raise ValueError("resource type '%s' it not registered")
         return handler.acquire_resource(session_id, res_type, res_group, condition)
-        
+
     def release_resource(self, session_id, res_type, resource_id):
         """释放资源
         """
@@ -674,7 +677,7 @@ def _current_resmgr_session():
         return TestResourceManager(LocalResourceManagerBackend()).create_session()
     return tc.test_resources
 
-        
+
 def get_file(path):
     """查找某个文件
     :param path: 相对于resources目录的路径，用于查找文件
@@ -683,6 +686,7 @@ def get_file(path):
     """
     return _current_resmgr_session().get_file(path)
 
+
 def list_dir(path):
     """列出某个目录下的文件
     :param path: 相对于resources目录的路径，用于查找文件夹
@@ -690,6 +694,7 @@ def list_dir(path):
     :returns :返回一个包含资源目录下所有文件或者文件下的绝对路径的list
     """
     return _current_resmgr_session().list_dir(path)
+
 
 def walk(path):
     """遍历某个路径
@@ -700,6 +705,7 @@ def walk(path):
     :type   iterators: iterator
     """
     return _current_resmgr_session().walk(path)
+
 
 def acquire_resource(res_type, res_group=None, condition=None):
     """申请资源
@@ -715,6 +721,7 @@ def acquire_resource(res_type, res_group=None, condition=None):
     """
     return _current_resmgr_session().acquire_resource(res_type, res_group, condition)
 
+
 def release_resource(res_type, resource_id):
     """释放资源
 
@@ -724,6 +731,7 @@ def release_resource(res_type, resource_id):
     :type resource_id: str
     """
     return _current_resmgr_session().release_resource(res_type, resource_id)
+
 
 def iter_resource_paths():
     """返回测试项目的全部resources目录
