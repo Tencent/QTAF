@@ -564,7 +564,7 @@ class LocalResourceManagerBackend(IResourceManagerBackend):
             raise Exception("relative_path=%s not found" % relative_path)
         if len(found_paths) > 1:
             raise Exception("relative_path=%s got multiple results:\n%s" % (relative_path, "\n".join(found_paths)))
-        return os.path.abspath(file_path)
+        return os.path.abspath(found_paths[0])
 
     def get_file(self, relative_path):
         """查找某个文件
