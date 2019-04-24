@@ -192,7 +192,7 @@ class DistGenerator(object):
 
         if 'qtaf' not in reqs_dict:
             reqs_dict["qtaf"] = "qtaf"
-        return reqs_dict.values()
+        return list(reqs_dict.values())
 
     def _generate_sdist(self, exclude_resources):
         """Call setuptools to generate source dist"""
