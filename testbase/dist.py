@@ -23,6 +23,7 @@ import shutil
 import zipfile
 import pkg_resources
 import subprocess
+import six
 
 from testbase import resource
 from testbase.conf import settings
@@ -274,7 +275,8 @@ class VirtuelEnv(object):
             created = False
         _, _, _, bin_dir = virtualenv.path_locations(venv_path)
         activation_script = os.path.join(bin_dir, 'activate_this.py')
-        execfile(activation_script, dict(__file__=activation_script))
+        with open(activation_script, "r") as fd:
+            exec(fd.read(), dict(__file__=activation_script))
         if created:
             subprocess.call(["pip", "install", self._dist_pkg_path], close_fds=True)
 
