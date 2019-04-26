@@ -2,12 +2,12 @@
 #
 # Tencent is pleased to support the open source community by making QTA available.
 # Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
-# Licensed under the BSD 3-Clause License (the "License"); you may not use this 
+# Licensed under the BSD 3-Clause License (the "License"); you may not use this
 # file except in compliance with the License. You may obtain a copy of the License at
-# 
+#
 # https://opensource.org/licenses/BSD-3-Clause
-# 
-# Unless required by applicable law or agreed to in writing, software distributed 
+#
+# Unless required by applicable law or agreed to in writing, software distributed
 # under the License is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
 # OF ANY KIND, either express or implied. See the License for the specific language
 # governing permissions and limitations under the License.
@@ -23,7 +23,6 @@ import shutil
 import zipfile
 import pkg_resources
 import subprocess
-import six
 
 from testbase import resource
 from testbase.conf import settings
@@ -43,12 +42,12 @@ setup(
 )
 """
 
-
 SETUP_PY_TEMPLATE_INCLUDE_RESOURCE = """
 import os
 import re
+import sys
 from setuptools import setup, find_packages, Command
-    
+
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 def find_all_file_patterns( resource_dir ):
@@ -66,7 +65,7 @@ def find_resource_packages_data():
     '''Collect files in 'resources' directory in package as package data
     '''
     packages_data = {}
-    
+
     for dirpath, dirnames, _ in os.walk(BASE_DIR):
         for dirname in list(dirnames):
             if dirname == 'resources':
@@ -90,7 +89,11 @@ def find_resource_data_files():
         install_prefix = os.path.join(site.getsitepackages()[0], "resources")
     else:
         # Work around for virtuelenv bug: https://github.com/pypa/virtualenv/issues/355
-        install_prefix = os.path.join(".", "lib", "site-packages", "resources")
+        if sys.platform != "win32":
+            python_string = "python%(python_main_ver)s.%(python_vice_ver)s"
+            install_prefix = os.path.join(".", "lib", python_string, "site-packages", "resources")
+        else:
+            install_prefix = os.path.join(".", "lib", "site-packages", "resources")
     data_files = []
     resource_dir = os.path.join(BASE_DIR, "resources")
     for dirpath, dirnames, filenames in os.walk(resource_dir):
@@ -109,10 +112,10 @@ class sdist_qta(Command):
     user_options = []
     boolean_options = []
     sub_commands = (("sdist_qta_resource", None),)
-          
+
     def initialize_options (self):
         pass
-    
+
     def finalize_options(self):
         pass
 
@@ -120,14 +123,14 @@ class sdist_qta(Command):
         sdist = self.reinitialize_command("sdist")
         sdist.sub_commands = self.sub_commands
         self.run_command("sdist")
-        
+
 class sdist_qta_resource(Command):
     user_options = []
     boolean_options = []
-        
+
     def initialize_options (self):
         pass
-    
+
     def finalize_options(self):
         pass
 
@@ -193,7 +196,7 @@ class DistGenerator(object):
 
         if 'qtaf' not in reqs_dict:
             reqs_dict["qtaf"] = "qtaf"
-        return list(reqs_dict.values())
+        return reqs_dict.values()
 
     def _generate_sdist(self, exclude_resources):
         """Call setuptools to generate source dist"""
@@ -211,6 +214,8 @@ class DistGenerator(object):
                 version=self._version,
                 name=settings.PROJECT_NAME,
                 requirements=repr(reqs),
+                python_main_ver=sys.version_info[0],
+                python_vice_ver=sys.version_info[1]
             ))
 
         subprocess.call(["python", "setup.py", cmd], cwd=settings.PROJECT_ROOT)
@@ -225,6 +230,7 @@ class DistGenerator(object):
                     for filename in filenames:
                         src = os.path.join(dirpath, filename)
                         zf.write(src, os.path.relpath(src, res_path))
+
 
 class VirtuelEnv(object):
     """virtual env for QTA test project
@@ -248,8 +254,8 @@ class VirtuelEnv(object):
                 (1) Call from 'qta-manage-venv'
                 (2) OS environ 'QTAF_VENV' detected, ignore virtualenv creation code
         """
-        
-        if self.VENV_ENV_NAME in os.environ: # already in our venv
+
+        if self.VENV_ENV_NAME in os.environ:  # already in our venv
             return
 
         try:
@@ -275,8 +281,7 @@ class VirtuelEnv(object):
             created = False
         _, _, _, bin_dir = virtualenv.path_locations(venv_path)
         activation_script = os.path.join(bin_dir, 'activate_this.py')
-        with open(activation_script, "r") as fd:
-            exec(fd.read(), dict(__file__=activation_script))
+        execfile(activation_script, dict(__file__=activation_script))
         if created:
             subprocess.call(["pip", "install", self._dist_pkg_path], close_fds=True)
 
