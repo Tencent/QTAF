@@ -232,16 +232,10 @@ class _InnerSettings(object):
         self.__allowed_prefix.add(defined_class.__name__.upper())
         classes = [ defined_class ]
         while classes:
-            cls = classes.pop()
-            need_load = True
-            for temp_cls in cls.__bases__:
-                if hasattr(temp_cls, "Settings") and issubclass(temp_cls, SettingsMixin):
-                    if getattr(cls, "Settings") == getattr(temp_cls, "Settings"):
-                        need_load = False  # class Settings derived from parent
-                    classes.append(temp_cls)
-                    self.__allowed_prefix.add(temp_cls.__name__.upper())
-            if need_load:
-                self.__load_class_settings(cls)
+            temp_cls = classes.pop(0)
+            classes = list(temp_cls.__bases__) + classes
+            if hasattr(temp_cls, "Settings"):
+                self.__load_class_settings(temp_cls)
 
     def __load_class_settings(self, cls):
         prefix = cls.__name__.upper() + "_"
@@ -253,10 +247,8 @@ class _InnerSettings(object):
                 tailor_name = key[len(prefix):]
                 if tailor_name in self.__tailer_names:
                     if key in settings:
-                        # we don't think this is a good way to overwrite settings
-                        err_msg = "overwriting settings in project using {} instead of {}."
-                        err_msg = err_msg.format(self.__tailer_names[tailor_name], key)
-                        raise RuntimeError(err_msg)
+                        # child already defined this, skip it
+                        continue
                     else:
                         value = getattr(self, self.__tailer_names[tailor_name])
                 else:
