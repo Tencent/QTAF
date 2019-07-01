@@ -967,7 +967,14 @@ class TestListOutputBase(object):
     """
 
     def __init__(self, output_file):
-        raise NotImplementedError
+        if output_file is None:
+            self._fd = None
+            self._close_fd = False
+            self._output_func = logger.info
+        else:
+            self._fd = codecs_open(output_file, "w")
+            self._close_fd = True
+            self._output_func = lambda x: self._fd.write(x + "\n")
 
     def output_normal_tests(self, normal_tests):
         raise NotImplementedError
@@ -979,22 +986,13 @@ class TestListOutputBase(object):
         raise NotImplementedError
 
     def end_output(self):
-        pass
+        if self._close_fd:
+            self._fd.close()
 
 
 class StreamTestListOutput(TestListOutputBase):
     """stream output
     """
-
-    def __init__(self, output_file):
-        if output_file is None:
-            self._fd = None
-            self._close_fd = False
-            self._output_func = logger.info
-        else:
-            self._fd = codecs_open(output_file, "w")
-            self._close_fd = True
-            self._output_func = lambda x: self._fd.write(x + "\n")
 
     def output_normal_tests(self, normal_tests):
         self._output_func("\n======================")
@@ -1028,10 +1026,28 @@ class StreamTestListOutput(TestListOutputBase):
         test_info += "%s" % test.test_name
         return test_info
 
-    def end_output(self):
-        if self._close_fd:
-            self._fd.close()
+
+class LineTestListOutput(TestListOutputBase):
+    """output test list as single line
+    """
+
+    def output_normal_tests(self, normal_tests):
+        self._output_func("normal test set:\n")
+        content = " ".join(map(lambda x: x.test_name, normal_tests))
+        self._output_func(content)
+
+    def output_filtered_tests(self, filtered_tests):
+        self._output_func("filtered test set:\n")
+        content = " ".join(map(lambda x: x[0].test_name, filtered_tests))
+        self._output_func(content)
+
+    def output_error_tests(self, error_tests):
+        self._output_func("error test set:\n")
+        for test_name, error in error_tests:
+            test_info = "\"%s\"" % test_name + ", error:\n" + error
+            self._output_func(test_info)
 
 
-test_list_types = {"stream" : StreamTestListOutput}
+test_list_types = {"stream" : StreamTestListOutput,
+                   "line" : LineTestListOutput}
 
