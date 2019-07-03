@@ -69,9 +69,13 @@
    测试用例最终结果: 通过
    ============================================================
     
-如果没有使用IDE，可以通过manage.py执行单个用例::
+如果没有使用IDE，可以通过manage.py runtest，加载指定用例集进行::
 
-   $ python manage.py runscript footest/hello.py
+    $ python manage.py runtest footest.hello
+
+也可以通过manage.py runscript方式执行，直接执行指定脚本::
+
+    $ python manage.py runscript footest/hello.py
 
    
 在命令行窗口可以看到一样的执行输出::  
@@ -138,7 +142,7 @@
 
 需要注意的是，测试用例标签经过框架处理后，会变成set类型，比如上面的用例::
 
-    assert HelloTest.tags == set("Demo", "Help")
+    assert HelloTest.tags == set(["Demo", "Help"])
 
 
 ======================

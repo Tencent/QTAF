@@ -9,11 +9,11 @@
 
 在安装好QTAF后，可以在终端中执行一下命令::
 
-    $ qta-manage createproject footestproj
+    $ qta-manage createproject foo
 
 如果执行qta-manage提示找不到对应命令，则也可以通过以下方式执行::
 
-    $ python -m qta-manage createproject footestproj
+    $ python -m qta-manage createproject foo
 
 执行成功后，可以看到当前目录下生成一下结构的文件::
 
@@ -28,13 +28,14 @@
                /.pydevproject
                /settings.py
                /manage.py
+               /requirements.txt
 
 
 ======================
 导入测试项目到Eclipse
 ======================
 
-如果在Windows/Mac上，可以使用QTA IDE（eclispe）导入以上项目:
+如果在Windows/Mac上，可以使用eclispe导入以上项目:
 
  * File -> Import... 打开Import对话框
  * 选择源类型：General/Existing Projects into Workspace
@@ -49,7 +50,7 @@
 
  * 测试用例，比如foo项目中的footest包，这里存储所有的测试用例的脚本。
 
- * 测试业务库，比如foo项目中的foolib包，这里存放所有测试业务Lib层的代码。
+ * 测试业务库，比如foo项目中的foolib包，这里存放所有测试业务lib层的代码。
 
  * 项目配置文件，即settings.py
 

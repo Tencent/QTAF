@@ -15,7 +15,7 @@ QTAF兼容python2.7以上和python3.6以上版本，windows下推荐使用Active
    
     pip install qtaf
     
-.. warning:: 如果是mac os的用户，在使用pip安装的时候最好指定--user选项，否则安装的script脚本可能无法使用。
+.. warning:: 如果是mac os的用户，在使用pip安装的时候最好指定--user选项，否则安装可能失败或者script脚本无法使用。
 
 ===================
 通过Git拉取最新代码
