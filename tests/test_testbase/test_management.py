@@ -22,7 +22,7 @@ import shutil
 import unittest
 
 from testbase.testcase import TestCase
-from testbase.management import RunTest, DiscoverTests
+from testbase.management import RunTest, DiscoverTests, RunScript
 from testbase.types import runner_types, report_types
 from testbase.util import get_time_str
 
@@ -141,6 +141,25 @@ class DiscoverTest(unittest.TestCase):
         self.assertTrue(content.find("normal test") == -1)
         self.assertTrue(content.find("error test") >= 0)
         self.assertTrue(content.find("cannot load test \"tests.sampletest.loaderr\"") >= 0)
+
+
+class RunScriptTest(unittest.TestCase):
+
+    def test_invalid_script(self):
+        cmdline = "tests/test_tuia"
+        args = RunScript.parser.parse_args(cmdline.split())
+        try:
+            RunScript().execute(args)
+        except SystemExit as e:
+            self.assertEqual(e.code, 1)
+
+        cur_dir = os.path.dirname(os.path.abspath(__file__))
+        cmdline = os.path.join(cur_dir, "__init__.py")
+        args = RunScript.parser.parse_args(cmdline.split())
+        try:
+            RunScript().execute(args)
+        except SystemExit as e:
+            self.assertEqual(e.code, 1)
 
 
 if __name__ == "__main__":

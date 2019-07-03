@@ -142,6 +142,9 @@ class RunScript(Command):
         """执行过程
         """
         import runpy
+        if not os.path.isfile(args.script_path):
+            print("invalid file path: %s" % args.script_path)
+            exit(1)
         runpy.run_path(args.script_path, run_name='__main__')
 
 
