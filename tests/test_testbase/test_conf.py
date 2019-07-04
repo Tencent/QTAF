@@ -65,10 +65,14 @@ class Dummy3(SettingsMixin):
         Dummy3_A = 4
 
 
-class DummyChild(Dummy):
+class DummyChild0(Dummy):
+    pass
+
+
+class DummyChild1(Dummy):
 
     class Settings(object):
-        DUMMYCHILD_A = 2
+        DUMMYCHILD1_A = 2
 
 
 class DummyChild2(Dummy):
@@ -109,25 +113,29 @@ class SettingsMixinTest(unittest.TestCase):
         self.assertRaises(RuntimeError, getattr, Dummy3(), "settings")
 
     def test_deriving(self):
-        self.reset_class_settings(DummyChild)
-        child = DummyChild()
+        self.reset_class_settings(DummyChild0)
+        child = DummyChild0()
+        self.assertEqual(child.settings.DUMMY_A, 0)
+
+        self.reset_class_settings(DummyChild1)
+        child = DummyChild1()
         self.assertEqual(child.settings.DUMMY_A, 2)
-        self.assertEqual(child.settings.DUMMYCHILD_A, 2)
+        self.assertEqual(child.settings.DUMMYCHILD1_A, 2)
 
         with modify_settings(DUMMY_A=3):
             self.reset_class_settings(Dummy)
             dummy = Dummy()
             self.assertEqual(dummy.settings.DUMMY_A, 3)
 
-            self.reset_class_settings(DummyChild)
-            child = DummyChild()
-            self.assertEqual(child.settings.DUMMY_A, 3)
+            self.reset_class_settings(DummyChild1)
+            child = DummyChild1()
+            self.assertEqual(child.settings.DUMMY_A, 2)
 
-        with modify_settings(DUMMYCHILD_A=4):
-            self.reset_class_settings(DummyChild)
-            child = DummyChild()
+        with modify_settings(DUMMYCHILD1_A=4):
+            self.reset_class_settings(DummyChild1)
+            child = DummyChild1()
             self.assertEqual(child.settings.DUMMY_A, 4)
-            self.assertEqual(child.settings.DUMMYCHILD_A, 4)
+            self.assertEqual(child.settings.DUMMYCHILD1_A, 4)
 
         self.assertRaises(RuntimeError, DummyChild2)
 

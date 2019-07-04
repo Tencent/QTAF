@@ -223,41 +223,56 @@ class _InnerSettings(object):
 
     def __init__(self, defined_class):
         self.__tailer_names = {}
+        self.__visited_settings_class = set()
         self.__allowed_prefix = set()
         self.__sealed = False
         self.__load_settings(defined_class)
         self.__sealed = True
 
     def __load_settings(self, defined_class):
-        self.__allowed_prefix.add(defined_class.__name__.upper())
-        classes = [ defined_class ]
+        classes = [defined_class]
+        base_classes = [defined_class.__bases__]
+        visited_classes = set()
         while classes:
-            temp_cls = classes.pop(0)
-            classes = list(temp_cls.__bases__) + classes
-            if hasattr(temp_cls, "Settings"):
-                self.__load_class_settings(temp_cls)
+            temp_cls = classes[0]
+            if not base_classes:
+                if hasattr(temp_cls, "Settings"):
+                    self.__allowed_prefix.add(temp_cls.__name__.upper())
+                    self.__load_class_settings(temp_cls)
+                visited_classes.add(temp_cls)
+                classes.pop(0)
+            else:
+                if temp_cls in visited_classes:
+                    base_classes = []
+                else:
+                    classes = list(temp_cls.__bases__) + classes
+                    base_classes = list(classes[0].__bases__)
 
     def __load_class_settings(self, cls):
         prefix = cls.__name__.upper() + "_"
         class_path = cls.__module__ + "." + cls.__name__
         inner_settings_cls = getattr(cls, "Settings")
+        if inner_settings_cls in self.__visited_settings_class:
+            return
+
+        self.__visited_settings_class.add(inner_settings_cls)
         for key in dir(inner_settings_cls):
             if key.startswith(prefix) and key.isupper():
+                if key in settings:
+                    value = settings.get(key)
+                else:
+                    value = getattr(inner_settings_cls, key)
+                setattr(self, key, value)
+
                 # handle legacy
                 tailor_name = key[len(prefix):]
                 if tailor_name in self.__tailer_names:
-                    if key in settings:
-                        # child already defined this, skip it
-                        continue
-                    else:
-                        value = getattr(self, self.__tailer_names[tailor_name])
+                    for base_prefix in self.__tailer_names[tailor_name][:]:
+                        base_name = base_prefix + tailor_name
+                        setattr(self, base_name, value)
+                        self.__tailer_names[tailor_name].append(prefix)
                 else:
-                    if key in settings:
-                        value = settings.get(key)
-                    else:
-                        value = getattr(inner_settings_cls, key)
-                    self.__tailer_names[tailor_name] = key
-                setattr(self, key, value)
+                    self.__tailer_names[tailor_name] = [prefix]
 
             elif not key.startswith("_"):
                 for item in self.__allowed_prefix:
