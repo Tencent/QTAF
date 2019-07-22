@@ -68,4 +68,4 @@ class TestPlan(object):
         from testbase.report import StreamTestReport
         if report is None:
             report = StreamTestReport()
-        TestRunner(report, resmgr_backend).run(self)
+        return TestRunner(report, resmgr_backend=resmgr_backend).run(self)
