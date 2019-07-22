@@ -6,6 +6,10 @@ matrix:
     sudo: false
     python: '2.7'
     env: BUILD_SDIST=true
+  - os: linux
+    dist: trusty
+    sudo: false
+    python: '3.6'
 # command to install dependencies
 install:
   - pip install -r requirements.txt
