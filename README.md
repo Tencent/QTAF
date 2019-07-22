@@ -1,7 +1,7 @@
-# QTAF 
+# QTAF
 
-[![Build Status](https://travis-ci.org/Tencent/QTAF.svg?branch=master)](https://travis-ci.org/Tencent/QTAF) 
-[![PyPi version](https://img.shields.io/pypi/v/qtaf.svg)](https://pypi.python.org/pypi/qtaf/) 
+[![Build Status](https://travis-ci.org/Tencent/QTAF.svg?branch=master)](https://travis-ci.org/Tencent/QTAF)
+[![PyPi version](https://img.shields.io/pypi/v/qtaf.svg)](https://pypi.python.org/pypi/qtaf/)
 [![GitHub tag](https://img.shields.io/github/tag/Tencent/QTAF.svg)](https://GitHub.com/Tencent/QTAF/tags/)
 
 QTA is a cross-platform test automation tool for servers and native, hybrid and applications.
@@ -10,7 +10,7 @@ QTA is a cross-platform test automation tool for servers and native, hybrid and 
 
 * iOS (powered by [QT4i](https://github.com/tencent/QT4i) driver)
 * Android (powered by [QT4A](https://github.com/tencent/QT4A) driver)
-* Web (powered by [QT4W](https://github.com/qtacore/QT4W) driver)
+* Web (powered by [QT4W](https://github.com/tencent/QT4W) driver)
 * Windows (powered by QT4C driver)
 * macOS (powered by QT4Mac driver))
 * Server (powered by QT4S driver)
@@ -42,7 +42,7 @@ QTA是一个跨平台的测试自动化工具，适用于后台、原生或混�
 
 * iOS (由[QT4i](https://github.com/tencent/QT4i) driver提供)
 * Android (由[QT4A](https://github.com/tencent/QT4A) driver提供)
-* Web (由[QT4W](https://github.com/qtacore/QT4W) driver提供)
+* Web (由[QT4W](https://github.com/tencent/QT4W) driver提供)
 * Windows (由QT4C driver提供)
 * macOS (由QT4Mac driver提供)
 * Server (由QT4S driver提供)
@@ -69,5 +69,3 @@ TUIA (Tencent UI Automation)是UI自动化基础库，为QTA各个平台下的�
 ------------------------------
 
 欢迎加入QQ群（432699528）交流使用和反馈
-
-![image](https://github.com/Tencent/QTAF/blob/master/docs/misc/qq_group.png)
