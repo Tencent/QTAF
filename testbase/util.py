@@ -617,7 +617,7 @@ else:
     import string
     maketrans_func = string.maketrans
 
-BAD_FILE_CHARS = r'\/*?:<>"|~'
+BAD_FILE_CHARS = r'\/*?:<>"|~#'
 BAD_VAR_CHAR = BAD_FILE_CHARS + '()[]+-=& '
 TRANS = maketrans_func(BAD_VAR_CHAR, '_' * len(BAD_VAR_CHAR))
 BAD_VAR_CHAR_SET = set(BAD_VAR_CHAR)
