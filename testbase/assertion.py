@@ -173,10 +173,10 @@ class AssertionRewriter(ast.NodeVisitor):
         value = expr.value
         if isinstance(value, ast.Call):
             if isinstance(value.func, ast.Attribute):
-                if value.func.attr == "assert_" and settings.get("QTAF_ASSERT_CONTINUE", True):
+                if value.func.attr == "assert_":
                     return self.rewrite_assert_(expr)
             elif isinstance(value.func, ast.Name):
-                if value.func.id == "assert_" and settings.get("QTAF_ASSERT_CONTINUE", True):
+                if value.func.id == "assert_":
                     return self.rewrite_assert_(value)
 
         return [expr]

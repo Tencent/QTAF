@@ -106,7 +106,6 @@ class AssertionTest(unittest.TestCase):
     def test_disable_assert_failed_continue(self):
         with modify_settings(QTAF_ASSERT_CONTINUE=False):
             case = AssertionFailureTest()
-            old_run_test_code = case.run_test.__func__.__code__
             case.debug_run()
             self.assertEqual(case.test_result.passed, False, "断言失败退出执行，用例没有失败")
             self.assertEqual(len(case.test_result._step_results), 1, u"设置了断言失败退出执行，但是用例仍继续执行")

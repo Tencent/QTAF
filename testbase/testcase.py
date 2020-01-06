@@ -397,6 +397,8 @@ class TestCase(object):
         stack = get_last_frame_stack(back_count)
         msg = "检查点不通过\n%s%s\n" % (smart_text(stack), smart_text(message))
         self.__testresult.log_record(EnumLogLevel.ASSERT, msg)
+        if not settings.get("QTAF_ASSERT_CONTINUE", True):
+            raise RuntimeError("testcase assert failed:%s" % message)
 
     def assert_(self, message, value):
         """测试断言，如果value的值不为真，则用例失败，输出对应信息
@@ -408,8 +410,6 @@ class TestCase(object):
         """
         if not value:
             self._log_assert_failed(message, 3)
-            if not settings.get("QTAF_ASSERT_CONTINUE", True):
-                raise RuntimeError("testcase assert failed:%s" % message)
 
     def assert_equal(self, message, actual, expect=True):
         '''检查实际值和期望值是否相等，不能则测试用例失败
