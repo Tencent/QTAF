@@ -29,6 +29,7 @@ import traceback
 import types
 
 from testbase.util import Singleton, get_method_defined_class, smart_text
+from testbase.conf import settings
 
 unary_map = {ast.Not: "not %s", ast.Invert: "~%s", ast.USub: "-%s", ast.UAdd: "+%s"}
 

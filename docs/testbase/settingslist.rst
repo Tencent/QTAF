@@ -46,3 +46,7 @@ INSTALLED_APPS
 
 适用5.0.97或以上版本。
 
+==============
+QTAF_ASSERT_CONTINUE
+==============
+指定断言assert_函数的行为，默认为True。当QTAF_ASSERT_CONTINUE为True时，assert_断言失败用例会继续执行；当QTAF_ASSERT_CONTINUE为False时，用例会终止执行。
