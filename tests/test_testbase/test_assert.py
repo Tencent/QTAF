@@ -31,6 +31,9 @@ class AssertionFailureTest(TestCase):
     status = TestCase.EnumStatus.Ready
 
     def run_test(self):
+        self.start_step("step 1")
+        self.assert_("assert1", self.bar(1) in [1, 4])
+        self.start_step("step 2")
         self.assert_("assert", self.foo(self.bar(1)) in [2, 4])
 
     def foo(self, a):
@@ -69,7 +72,7 @@ class AssertionTest(unittest.TestCase):
         old_run_test_code = case.run_test.__func__.__code__
         case.debug_run()
         self.assertEqual(case.test_result.passed, False, "断言失败，用例没有失败")
-
+        self.assertEqual(len(case.test_result._step_results), 2, "设置了断言失败继续执行，但是用例没有继续执行")
         self.assertEqual(self.is_func_rewritten(case.run_test, old_run_test_code), True, "重写assert失败，code对象没有改变")
 
     def test_assert_inner_invoke(self):
@@ -99,6 +102,14 @@ class AssertionTest(unittest.TestCase):
             case.debug_run()
             self.assertEqual(case.test_result.passed, False, "禁用重写assert，用例没有失败")
             self.assertEqual(self.is_func_rewritten(case.run_test, old_run_test_code), False, "禁用重写assert，assert_被重写了")
+
+    def test_disable_assert_failed_continue(self):
+        with modify_settings(QTAF_ASSERT_CONTINUE=False):
+            case = AssertionFailureTest()
+            old_run_test_code = case.run_test.__func__.__code__
+            case.debug_run()
+            self.assertEqual(case.test_result.passed, False, "断言失败退出执行，用例没有失败")
+            self.assertEqual(len(case.test_result._step_results), 1, u"设置了断言失败退出执行，但是用例仍继续执行")
 
 
 if __name__ == "__main__":

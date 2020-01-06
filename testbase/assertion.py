@@ -29,6 +29,7 @@ import traceback
 import types
 
 from testbase.util import Singleton, get_method_defined_class, smart_text
+from testbase.conf import settings
 
 unary_map = {ast.Not: "not %s", ast.Invert: "~%s", ast.USub: "-%s", ast.UAdd: "+%s"}
 
@@ -172,10 +173,10 @@ class AssertionRewriter(ast.NodeVisitor):
         value = expr.value
         if isinstance(value, ast.Call):
             if isinstance(value.func, ast.Attribute):
-                if value.func.attr == "assert_":
+                if value.func.attr == "assert_" and settings.get("QTAF_ASSERT_CONTINUE", True):
                     return self.rewrite_assert_(expr)
             elif isinstance(value.func, ast.Name):
-                if value.func.id == "assert_":
+                if value.func.id == "assert_" and settings.get("QTAF_ASSERT_CONTINUE", True):
                     return self.rewrite_assert_(value)
 
         return [expr]

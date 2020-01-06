@@ -36,7 +36,7 @@ from testbase.retry import Retry
 # 后续需专门花时间去除TestCaseStatus和TestCasePriority这两个类
 class TestCaseStatus(object):
     '''测试用例状态
-    
+
     :attention: 此类将会被移除，请使用TestCase.EnumStatus
     '''
     Design, Implement, Review, Ready, Suspend = ('Design', 'Implement', 'Review', 'Ready', 'Suspend')
@@ -44,7 +44,7 @@ class TestCaseStatus(object):
 
 class TestCasePriority(object):
     '''测试用例优先级
-    
+
     :attention: 此类将会被移除，请使用TestCase.EnumPriority
     '''
     BVT, High, Normal, Low = ('BVT', 'High', 'Normal', 'Low')
@@ -85,14 +85,14 @@ env保存了用例运行时的一些测试环境变量。
 
     from testbase.testcase import Environ
     env = Environ()
-    env['YourEnvKey'] = "EnvValue" 
+    env['YourEnvKey'] = "EnvValue"
     print(env['YourEnvKey'])
 
     """
 
     def __init__(self):
         """构造函数。判断系统环境变量中是否存在由测试计划中传入的环境变量，有则加载。
-        
+
         """
         super(Environ, self).__init__()
         for key in os.environ.keys():
@@ -143,16 +143,16 @@ class TestCaseType(type):
 @six.add_metaclass(TestCaseType)
 class TestCase(object):
     '''测试用例基类
-    
+
             所有测试用例都最终从此基类继承。测试用例的测试脚本主要实现在"runTest()"中，
-            
+
            而当用例需要初始化和清理测试环境时则分别重写"preTest()"和"postTest()"函数。
     '''
     test_extra_info_def = []  # 自定义字段
 
     class EnumStatus(object):
         '''测试用例状态枚举类
-        
+
         :attention: 如果因为特殊原因需要暂时屏蔽某个用例的任务执行（比如有功能缺陷从而导致执行失败），
                                                      则可以先置为该字段为Suspend,等到可用的时候再将该字段置为Ready
 
@@ -179,8 +179,8 @@ class TestCase(object):
     ATTRIB_OVERWRITE_WHITELIST = ["priority", "status", "owner", "timeout", "tags", "__doc__"]
 
     def __init__(self, testdata=None, testdataname=None, attrs=None):
-        '''构造函数 
-        
+        '''构造函数
+
         :param testdata: 测试数据
         :type testdata: object
         :param testdataname: 测试数据标识
@@ -211,7 +211,7 @@ class TestCase(object):
     @property
     def casedata(self):
         '''测试数据
-        
+
         :rtype: list
         '''
         return self.__casedata
@@ -219,7 +219,7 @@ class TestCase(object):
     @property
     def casedataname(self):
         '''测试数据标识
-        
+
         :rtype: str
         '''
         return self.__testdataname
@@ -227,7 +227,7 @@ class TestCase(object):
     @property
     def environ(self):
         '''环境变量
-        
+
         :rtype: Environ
         '''
         return self.__environ
@@ -235,7 +235,7 @@ class TestCase(object):
     @property
     def test_result(self):
         '''对应的测试结果
-        
+
         :rtype: TestResult
         '''
         return self.__testresult
@@ -243,7 +243,7 @@ class TestCase(object):
     @property
     def test_dir(self):
         '''测试用例执行的临时目录
-        
+
         :rtype: str
         '''
         return os.path.abspath(os.getcwd())
@@ -251,7 +251,7 @@ class TestCase(object):
     @property
     def test_class_name(self):
         '''返回测试用例名字（不同测试用例的名字不同）
-        
+
         :rtype: str
         '''
         cls = type(self)
@@ -264,7 +264,7 @@ class TestCase(object):
     @property
     def test_name(self):
         '''返回测试用例实例的名字
-        
+
         :rtype: str
         '''
         if self.casedataname is not None:
@@ -276,7 +276,7 @@ class TestCase(object):
     @property
     def test_doc(self):
         '''测试用例说明
-        
+
         :rtype: str
         '''
         if self.__test_doc:
@@ -318,7 +318,7 @@ class TestCase(object):
 
     def init_test(self, testresult):
         '''初始化测试用例。慎用此函数，尽量将初始化放到preTest里。
-        
+
         :param testresult: 测试结果
         :type testresult: TestResult
         '''
@@ -346,7 +346,7 @@ class TestCase(object):
 
     def start_step(self, stepinfo):
         '''开始执行一个测试步骤
-        
+
         :param stepinfo: 步骤描述
         :type stepinfo: str
         '''
@@ -356,9 +356,9 @@ class TestCase(object):
 
     def log_info(self, info):
         '''Log一条信息
-        
+
         :type info: string
-        :param info: 要Log的信息  
+        :param info: 要Log的信息
         '''
         if not isinstance(info, six.text_type):
             info = str(info)
@@ -366,9 +366,9 @@ class TestCase(object):
 
     def fail(self, message):
         '''测试用例失败
-        
+
         :type message: string
-        :param message: 要Log的信息  
+        :param message: 要Log的信息
         '''
         if not isinstance(message, six.text_type):
             message = str(message)
@@ -376,7 +376,7 @@ class TestCase(object):
 
     def __record_assert_failed(self, message, actual, expect):
         '''记录Assert失败信息
-        
+
         :param message: 提示信息
         :type message: string
         :param actual: 实际值
@@ -400,7 +400,7 @@ class TestCase(object):
 
     def assert_(self, message, value):
         """测试断言，如果value的值不为真，则用例失败，输出对应信息
-        
+
         :param message:断言失败时的提示消息
         :type  message: str
         :param value:用于判断的值
@@ -408,10 +408,12 @@ class TestCase(object):
         """
         if not value:
             self._log_assert_failed(message, 3)
+            if not settings.get("QTAF_ASSERT_CONTINUE", True):
+                raise RuntimeError("testcase assert failed:%s" % message)
 
     def assert_equal(self, message, actual, expect=True):
         '''检查实际值和期望值是否相等，不能则测试用例失败
-        
+
        :param message: 检查信息
        :param actual: 实际值
        :param expect: 期望值(默认：True)
@@ -429,13 +431,13 @@ class TestCase(object):
 
     def assert_match(self, message, actual, expect):
         '''检查actual和expect是否模式匹配，不匹配则记录一个检查失败
-        
+
         :type message: string
         :param message: 失败时记录的消息
         :type actual: string
         :param actual: 需要匹配的字符串
         :type expect: string
-        :param expect: 要匹配的正则表达式 
+        :param expect: 要匹配的正则表达式
         :return: 匹配成果
         '''
         if isinstance(actual, six.string_types):
@@ -453,7 +455,7 @@ class TestCase(object):
 
         :param message: 失败时的输出信息
         :param obj: 需要检查的对象
-        :type prop_name: string 
+        :type prop_name: string
         :param prop_name: 需要检查的对象的属性名，支持多层属性
         :param expected: 期望的obj.prop_name值
         :param timeout: 超时秒数
@@ -473,7 +475,7 @@ class TestCase(object):
 
         :param message: 失败时的输出信息
         :param obj: 需要检查的对象
-        :type prop_name: string 
+        :type prop_name: string
         :param prop_name: 需要检查的对象的属性名, obj.prop_name返回字符串
         :param expected: 需要匹配的正则表达式
         :param timeout: 超时秒数
@@ -490,7 +492,7 @@ class TestCase(object):
 
     def get_extra_fail_record(self):
         '''当错误发生时，获取需要额外添加的日志记录和附件信息
-        
+
         :rtype: dict,dict - 日志记录，附件信息
         '''
         return {}, {}
@@ -519,7 +521,7 @@ class TestCase(object):
 
     def debug_run_one(self, name=None):
         '''本地调试测试用例，给数据驱动的用例使用，只执行一个用例
-        
+
         :param name: 测试数据名称，如果不指定，执行第一个数据的用例
         '''
         from testbase import datadrive
@@ -578,12 +580,12 @@ class ITestCaseRunner(object):
 
     def run(self, testcase, testresult_factory):
         '''执行一个测试用例
-        
+
         :param testcase: 执行的测试用例
         :type testcase: TestCase
         :param testresult_factory: 测试结果工厂
         :type testresult_factory: ITestResultFactory
-        
+
         :return TestResult/TestResultCollection - 测试结果
         '''
         raise NotImplementedError()
@@ -591,7 +593,7 @@ class ITestCaseRunner(object):
 
 class TestCaseRunner(ITestCaseRunner):
     '''负责执行一个测试用例
-    
+
     如果一个测试用例没有指定case_runner类变量，则默认都使用TestCaseRunner来执行这个用例。
     测试用例可以自定义和TestCaseRunner接口兼容的runner类，并设置case_runner类变量来实现
     自定义一个测试用例的执行逻辑，以下是TestCaseRunner的接口定义
@@ -655,7 +657,7 @@ class TestCaseRunner(ITestCaseRunner):
 
     def _check_testcase(self, testcase):
         '''检查测试用例
-        
+
         :param testcase: 测试用例
         :type testcase: TestCase
         :returns boolean, string - 检测是否通过，错误消息
@@ -731,7 +733,7 @@ class TestCaseRunner(ITestCaseRunner):
 
     def setup(self, testcase, testresult):
         '''测试执行初始化
-        
+
         :param testcase: 执行的测试用例
         :type testcase: TestCase
         :param testresult: 测试用例结果
@@ -741,7 +743,7 @@ class TestCaseRunner(ITestCaseRunner):
 
     def teardown(self, testcase, testresult):
         '''测试执行清理
-        
+
         :param testcase: 执行的测试用例
         :type testcase: TestCase
         :param testresult: 测试用例结果
@@ -751,7 +753,7 @@ class TestCaseRunner(ITestCaseRunner):
 
     def run(self, testcase, testresult_factory):
         '''执行一个测试用例
-        
+
         :param testcase: 执行的测试用例
         :type testcase: TestCase
         :param testresult_factory: 测试结果工厂
@@ -824,7 +826,7 @@ class TestCaseRunner(ITestCaseRunner):
 
     def _get_current_traceback(self, thread):
         '''获取用例线程的当前的堆栈
-        
+
         :param thread: 要获取堆栈的线程
         :type thread: Thread
         '''
@@ -843,13 +845,13 @@ class TestCaseRunner(ITestCaseRunner):
 
 class RepeatTestCaseRunner(ITestCaseRunner):
     '''重复执行的用例执行器
-    
+
     可以通过设置测试用例的类属性为此runner实例来实现指定测试用例
     执行多次。测试用例执行时可以访问成员变量iteration来判断当前是
     第几次执行。
-    
+
     使用示例如下::
-    
+
         class HelloRepeatTest(TestCase):
             '示例用例'
             case_runner = RepeatTestCaseRunner()
@@ -857,10 +859,10 @@ class RepeatTestCaseRunner(ITestCaseRunner):
             timeout = 1
             status = TestCase.EnumStatus.Ready
             priority = TestCase.EnumPriority.Normal
-            
+
             def run_test(self):
                 self.log_info("第%s次执行测试"%self.iteration)
-    
+
     '''
 
     def __init__(self, case_runner_class=None):
@@ -872,12 +874,12 @@ class RepeatTestCaseRunner(ITestCaseRunner):
 
     def run(self, testcase, testresult_factory):
         '''执行一个测试用例
-        
+
         :param testcase: 执行的测试用例
         :type testcase: TestCase
         :param testresult_factory: 测试结果工厂
         :type testresult_factory: ITestResultFactory
-        
+
         :returns : 测试结果
         :rtype TestResult/TestResultCollection - 测试结果
         '''
@@ -916,12 +918,12 @@ class SeqTestCaseRunner(ITestCaseRunner):
 
     def run(self, testsuite, testresult_factory):
         '''执行一个顺序执行的测试用例套
-        
+
         :param testsuite: 执行的测试用例套
         :type testsuite: SeqTestSuite
         :param testresult_factory: 测试结果工厂
         :type testresult_factory: ITestResultFactory
-        
+
         :return TestResult/TestResultCollection - 测试结果
         '''
         passed = True
@@ -969,7 +971,7 @@ class SeqTestSuite(TestSuite):
 
     def __init__(self, testcases):
         '''构造函数
-        
+
         :param testcases: 测试用例列表
         :type testcases: list
         :param name: 测试用例名
@@ -991,7 +993,7 @@ class SeqTestSuite(TestSuite):
     @property
     def test_class_name(self):
         '''返回测试用例名字（不同测试用例的名字不同）
-        
+
         :rtype: str
         '''
         cls = type(self._testcases[0])
@@ -1000,7 +1002,7 @@ class SeqTestSuite(TestSuite):
     @property
     def test_name(self):
         '''返回测试用例实例的名字
-        
+
         :rtype: str
         '''
         cls = type(self._testcases[0])
@@ -1009,7 +1011,7 @@ class SeqTestSuite(TestSuite):
     @property
     def test_doc(self):
         '''测试用例说明
-        
+
         :rtype: str
         '''
         cls = type(self._testcases[0])
