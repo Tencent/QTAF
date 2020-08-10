@@ -342,7 +342,8 @@ class TestCase(object):
     def clean_test(self):
         '''测试用例反初始化。慎用此函数，尽量将清理放到postTest里。
         '''
-        self.test_resources.destroy()
+        if self.__resmgr_session:
+            self.test_resources.destroy()
 
     def start_step(self, stepinfo):
         '''开始执行一个测试步骤
