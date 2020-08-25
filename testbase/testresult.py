@@ -494,6 +494,9 @@ class XmlResult(TestResultBase):
         super(XmlResult, self).__init__()
         self._xmldoc = dom.Document()
         translated_name = translate_bad_char(testcase.test_name)
+        max_name_len = 240
+        if len(translated_name) > max_name_len:
+            translated_name = translated_name[:max_name_len]
         self._file_path = '%s_%s.xml' % (translated_name, get_time_str())
 
     @property
