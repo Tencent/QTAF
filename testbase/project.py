@@ -59,6 +59,7 @@ TESTCASE_CONTENT = """# -*- coding: utf-8 -*-
 
 from %(ProjectName)slib.testcase import %(ProjectNameCapUp)sTestCase
 
+
 class HelloTest(%(ProjectNameCapUp)sTestCase):
     '''示例测试用例
     '''
@@ -73,7 +74,6 @@ class HelloTest(%(ProjectNameCapUp)sTestCase):
     
 if __name__ == '__main__':
     HelloTest().debug_run()
-
 """
 
 TESTLIB_CONTENT = """# -*- coding: utf-8 -*-
@@ -82,6 +82,7 @@ TESTLIB_CONTENT = """# -*- coding: utf-8 -*-
 #%(Date)s QTAF自动生成
 
 from testbase import testcase
+
 
 class %(ProjectNameCapUp)sTestCase(testcase.TestCase):
     '''%(ProjectName)s测试用例基类
@@ -98,14 +99,14 @@ MANAGE_CONTENT = """# -*- coding: utf-8 -*-
 import sys
 import os
 
-proj_root = os.path.dirname(os.path.abspath(__file__))
-if proj_root not in sys.path:
-    sys.path.insert(0, proj_root)
-exlib_dir = os.path.join(proj_root, 'exlib')
-if os.path.isdir(exlib_dir):
-    for filename in os.listdir(exlib_dir):
+PROJ_ROOT = os.path.dirname(os.path.abspath(__file__))
+if PROJ_ROOT not in sys.path:
+    sys.path.insert(0, PROJ_ROOT)
+EXLIB_DIR = os.path.join(PROJ_ROOT, 'exlib')
+if os.path.isdir(EXLIB_DIR):
+    for filename in os.listdir(EXLIB_DIR):
         if filename.endswith('.egg'):
-            lib_path = os.path.join(exlib_dir, filename)
+            lib_path = os.path.join(EXLIB_DIR, filename)
             if os.path.isfile(lib_path) and lib_path not in sys.path:
                 sys.path.insert(0, lib_path)
             
