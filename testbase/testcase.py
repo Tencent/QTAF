@@ -117,24 +117,23 @@ class TestCaseType(type):
                 raise RuntimeError("不允许%s重载函数: %s" % (cls.__name__, it))
 
         base_tags_set = set()
-        if "tags" in attrs:
-            tags = attrs.pop("tags")
-            if isinstance(tags, six.string_types):
-                tags = [tags]
-            tags_set = set(tags)
-            for b in bases:
-                if issubclass(b, TestCase) and hasattr(b, "tags"):
-                    base_tags_set |= b.tags
-            if "__module__" in attrs:
-                mod = sys.modules[attrs["__module__"]]
-                if hasattr(mod, "__qtaf_tags__"):
-                    mod_tags = mod.__qtaf_tags__
-                    if isinstance(mod_tags, six.string_types):
-                        mod_tags = [mod_tags]
-                    base_tags_set |= set(mod_tags)
-            tags_set |= base_tags_set
-        else:
-            tags_set = set()
+        tags = attrs.pop("tags") if "tags" in attrs else set()
+        if isinstance(tags, six.string_types):
+            tags = [tags]
+        tags_set = set(tags)
+        for b in bases:
+            print(b)
+            if issubclass(b, TestCase) and hasattr(b, "tags"):
+                base_tags_set |= b.tags
+        if "__module__" in attrs:
+            mod = sys.modules[attrs["__module__"]]
+            if hasattr(mod, "__qtaf_tags__"):
+                mod_tags = mod.__qtaf_tags__
+                if isinstance(mod_tags, six.string_types):
+                    mod_tags = [mod_tags]
+                base_tags_set |= set(mod_tags)
+        tags_set |= base_tags_set
+
         attrs["tags"] = tags_set
         attrs["base_tags"] = base_tags_set
         return super_new(cls, name, bases, attrs)
