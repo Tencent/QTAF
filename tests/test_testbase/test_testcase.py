@@ -56,7 +56,24 @@ class TestCaseTest(unittest.TestCase):
             def run_test(self):
                 pass
 
+        class Hello1(Hello):
+            """tag test"""
+            owner = "xxx"
+            timeout = 1
+            priority = TestCase.EnumPriority.BVT
+            status = TestCase.EnumStatus.Design
+
+        class Hello2(Hello1):
+            """tag test"""
+            owner = "xxx"
+            timeout = 1
+            priority = TestCase.EnumPriority.BVT
+            status = TestCase.EnumStatus.Design
+            tags = "test2", "ok2"
+
         self.assertEqual(Hello.tags, set(("test", "ok")))
+        self.assertEqual(Hello1.tags, set(("test", "ok")))
+        self.assertEqual(Hello2.tags, set(("test", "ok", "test2", "ok2")))
 
     def test_tags_str(self):
 
