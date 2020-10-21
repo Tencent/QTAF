@@ -57,7 +57,7 @@ class Timeout(object):
 
     def __init__(self, timeout=10, interval=0.5):
         '''Constructor
-        
+
         :param timeout: 超时秒数，默认是10
         :param interval: 重试时间间隔秒数，默认是0.5
         '''
@@ -71,23 +71,23 @@ class Timeout(object):
         resultmatcher=None,
         nothrow=False):
         """多次尝试调用函数，成功则并返回调用结果，超时则根据选项决定抛出TimeOutError异常。
-        
+
         :param func: 尝试调用的函数
         :type args: dict或tuple
         :param args: func函数的参数
         :type exceptions: tuple类型，tuple元素是异常类定义，如QPathError, 而不是异常实例，如QPathError()
         :param exceptions: 调用func时抛出这些异常，则重试。
                                                                         如果是空列表(),则不捕获异常。
-        :type resultmatcher: 函数指针类型 
+        :type resultmatcher: 函数指针类型
         :param resultmatcher: 函数指针，用于验证第1个参数func的返回值。
                                                                                 默认值为None，表示不验证func的返回值，直接返回。
-                                                                               其函数原型为: 
+                                                                               其函数原型为:
                                   def result_match(ret):  # 参数ret为func的返回值
-                                      pass                                                                                             
+                                      pass
                                                                                当result_match返回True时，直接返回，否则继续retry。
         :type  nothrow:bool
         :param nothrow:如果为True，则不抛出TimeOutError异常
-        
+
         :return: 返回成功调用func的结果
         :rtype : any
         """
@@ -122,10 +122,10 @@ class Timeout(object):
                     raise TimeoutError("在%d秒里尝试了%d次" % (self.timeout, try_count))
 
     def waitObjectProperty(self, obj, property_name, waited_value, regularMatch=False):
-        '''通过比较obj.property_name和waited_value，等待属性值出现。 
+        '''通过比较obj.property_name和waited_value，等待属性值出现。
                              如果属性值obj.property_name是字符类型则waited_value做为正则表达式进行比较。
                              比较成功则返回，超时则抛出TimeoutError异常。
-                             
+
         :param obj: 对象
         :param property_name: 要等待的obj对象的属性名
         :param waited_value: 要比较的的属性值，支持多层属性
@@ -159,10 +159,10 @@ class Timeout(object):
 
     def check(self, func, expect):
         '''多次检查func的返回值是否符合expect设定的期望值，如果设定时间内满足，则返回True，否则返回False
-        
+
         :param func: 尝试调用的函数
         :param expect: 设定的期望值
-        
+
         :returns bool - 检查是否符合预期
         '''
         start = time.time()
@@ -184,7 +184,7 @@ class Singleton(type):
           class MyClass(with_metaclass(Singleton, object)):
               def __init__(self, *args, **kwargs):
                   pass
-    
+
     """
     _instances = {}
 
@@ -200,9 +200,9 @@ class Singleton(type):
 
 class LazyInit(object):
     '''实现延迟初始化
-    
+
     使用方式示例::
-    
+
         class _Win32Window(object)
             def click(self):
                 #......
@@ -214,11 +214,11 @@ class LazyInit(object):
                 return _Win32Window(self._locator)
             def click(self):
                 return self._initobj.click()
-                
+
         ctrl = Control("/Name=xxx)
         ctrl.click()  # <-- call _init_window
         ctrl.click()
-    
+
     '''
 
     def __init__(self, obj, propname, init_func):
@@ -250,12 +250,12 @@ class LazyInit(object):
 
 class ThreadGroupLocal(object):
     '''使用线程组本地存储的元类
-    
+
     - 当配合ThreadGroupScope使用，类似threading.local()提供的TLS变种，一个线程和其子孙线程共享一个存储
     详细使用方式请参考ThreadGroupScope类
-    
+
     - 当不在ThreadGroupScope中使用时，行为和threading.local()一致
-    
+
     '''
 
     def __init__(self):
@@ -288,12 +288,12 @@ class ThreadGroupLocal(object):
 
 class ThreadGroupScope(object):
     '''指定线程组作用域，进入这个作用域的线程，以及在其作用域内创建的线程都同属于一个线程组
-    
+
     使用示例如下::
-    
+
         def _thread_proc():
             ThreadGroupLocal().counter +=1
-            
+
         with ThreadGroupScope("test_group"):
             ThreadGroupLocal().counter = 0
             t = threading.Thread(target=_thread_proc)
@@ -303,12 +303,12 @@ class ThreadGroupScope(object):
             t.start()
             t.join()
             assert ThreadGroupLocal().counter == 2
-        
+
     '''
 
     def __init__(self, name):
         '''构造函数
-        
+
         :param name: 线程组名称，全局唯一
         :type name: string
         '''
@@ -404,12 +404,18 @@ def smart_text(s, decoding=None):
 
 
 def  smart_binary(s, encoding="utf8", decoding=None):
-    '''convert any text or binary to binary of specified encoding 
+    '''convert any text or binary to binary of specified encoding
     '''
     if not isinstance(s, (six.string_types, six.binary_type)):
         raise RuntimeError("string or binary type didn't match with %r" % s)
     if isinstance(s, six.text_type):
-        return s.encode(encoding)
+        try:
+            return s.encode(encoding)
+        except UnicodeEncodeError:
+            if six.PY3:
+                return bytes(repr(s), encoding)
+            else:
+                return bytes(repr(s))
 
     assert type(s) == six.binary_type
     try:
@@ -448,7 +454,7 @@ def smart_from_hex(s):
 
 
 def smart_bytify(obj, encoding="utf-8", decoding=None):
-    """recursively convert objects from string types to binary  
+    """recursively convert objects from string types to binary
     """
     if isinstance(obj, dict):
         dic = {}
@@ -487,7 +493,7 @@ def smart_strfy(obj, decoding=None):
 
 def get_thread_traceback(thread):
     '''获取用例线程的当前的堆栈
-    
+
     :param thread: 要获取堆栈的线程
     :type thread: Thread
     '''
