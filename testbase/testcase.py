@@ -122,7 +122,6 @@ class TestCaseType(type):
             tags = [tags]
         tags_set = set(tags)
         for b in bases:
-            print(b)
             if issubclass(b, TestCase) and hasattr(b, "tags"):
                 base_tags_set |= b.tags
         if "__module__" in attrs:
