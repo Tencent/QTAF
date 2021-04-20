@@ -27,7 +27,7 @@
 其中result.info接口可以传record扩展信息，比如::
 
     result.error('', '异常发生', traceback=traceback.format_exc())
-        
+
 同logger一样，TestResult对象保证对所有的ITestResultHandler的调用都是线程安全的，可以通过实现
 ITestResultHandler来实现一个新的Handler，详细请参考ITestResultHandler接口
 
@@ -99,7 +99,7 @@ def smart_text_by_lines(s):
 
 class TestResultBase(object):
     '''测试结果基类
-    
+
     此类的职责如下：
     1、提供测试结果基本接口
     2、保证线程安全
@@ -130,7 +130,7 @@ class TestResultBase(object):
     @property
     def passed(self):
         '''测试是否通过
-        
+
         :returns: True or False
         '''
         return all(self.__steps_passed)
@@ -138,7 +138,7 @@ class TestResultBase(object):
     @property
     def failed_reason(self):
         '''用例测试不通过的错误原因
-        
+
         :returns: str
         '''
         if self.__error_level:
@@ -149,7 +149,7 @@ class TestResultBase(object):
     @property
     def failed_info(self):
         '''测试用例失败时的执行状况
-        
+
         :returns: str
         '''
         return self.__failed_info
@@ -157,7 +157,7 @@ class TestResultBase(object):
     @property
     def begin_time(self):
         '''测试用例开始时间
-        
+
         :returns: float
         '''
         return self.__begin_time
@@ -165,14 +165,14 @@ class TestResultBase(object):
     @property
     def end_time(self):
         '''测试用例结束时间
-        
+
         :returns: float
         '''
         return self.__end_time
 
     def begin_test(self, testcase):
         '''开始执行测试用例
-        
+
         :param testcase: 测试用例
         :type testcase: TestCase
         '''
@@ -197,7 +197,7 @@ class TestResultBase(object):
 
     def begin_step(self, msg):
         '''开始一个测试步骤
-        
+
         :param msg: 测试步骤名称
         :type msg: string
         '''
@@ -212,7 +212,7 @@ class TestResultBase(object):
 
     def log_record(self, level, msg, record=None, attachments=None):
         '''处理一个日志记录
-        
+
         :param level: 日志级别，参考EnumLogLevel
         :type level: string
         :param msg: 日志消息
@@ -325,7 +325,7 @@ class TestResultBase(object):
 
     def handle_test_begin(self, testcase):
         '''处理一个测试用例执行的开始
-        
+
         :param testcase: 测试用例
         :type testcase: TestCase
         '''
@@ -333,7 +333,7 @@ class TestResultBase(object):
 
     def handle_test_end(self, passed):
         '''处理一个测试用例执行的结束
-        
+
         :param passed: 测试用例是否通过
         :type passed: boolean
         '''
@@ -341,7 +341,7 @@ class TestResultBase(object):
 
     def handle_step_begin(self, msg):
         '''处理一个测试步骤的开始
-        
+
         :param msg: 测试步骤名称
         :type msg: string
         '''
@@ -349,7 +349,7 @@ class TestResultBase(object):
 
     def handle_step_end(self, passed):
         '''处理一个测试步骤的结束
-        
+
         :param passed: 测试步骤是否通过
         :type passed: boolean
         '''
@@ -357,7 +357,7 @@ class TestResultBase(object):
 
     def handle_log_record(self, level, msg, record, attachments):
         '''处理一个日志记录
-        
+
         :param level: 日志级别，参考EnumLogLevel
         :type level: string
         :param msg: 日志消息
@@ -385,7 +385,7 @@ class StreamResult(TestResultBase):
 
     def __init__(self, stream=sys.stdout):
         '''构造函数
-        
+
         :param stream: 流对象
         :type stream: file
         '''
@@ -396,7 +396,7 @@ class StreamResult(TestResultBase):
 
     def handle_test_begin(self, testcase):
         '''处理一个测试用例执行的开始
-        
+
         :param testcase: 测试用例
         :type testcase: TestCase
         '''
@@ -410,7 +410,7 @@ class StreamResult(TestResultBase):
 
     def handle_test_end(self, passed):
         '''处理一个测试用例执行的结束
-        
+
         :param passed: 测试用例是否通过
         :type passed: boolean
         '''
@@ -429,7 +429,7 @@ class StreamResult(TestResultBase):
 
     def handle_step_begin(self, msg):
         '''处理一个测试步骤的开始
-        
+
         :param msg: 测试步骤名称
         :type msg: string
         '''
@@ -441,7 +441,7 @@ class StreamResult(TestResultBase):
 
     def handle_step_end(self, passed):
         '''处理一个测试步骤的结束
-        
+
         :param passed: 测试步骤是否通过
         :type passed: boolean
         '''
@@ -449,7 +449,7 @@ class StreamResult(TestResultBase):
 
     def handle_log_record(self, level, msg, record, attachments):
         '''处理一个日志记录
-        
+
         :param level: 日志级别，参考EnumLogLevel
         :type level: string
         :param msg: 日志消息
@@ -487,14 +487,14 @@ class XmlResult(TestResultBase):
 
     def __init__(self, testcase):
         '''构造函数
-        
+
         :param file_path: XML文件路径
         :type file_path: string
         '''
         super(XmlResult, self).__init__()
         self._xmldoc = dom.Document()
         translated_name = translate_bad_char(testcase.test_name)
-        max_name_len = 240
+        max_name_len = 200
         if len(translated_name) > max_name_len:
             translated_name = translated_name[:max_name_len]
         self._file_path = '%s_%s.xml' % (translated_name, get_time_str())
@@ -502,14 +502,14 @@ class XmlResult(TestResultBase):
     @property
     def file_path(self):
         '''xml文件路径
-        
+
         :returns: str
         '''
         return self._file_path
 
     def handle_test_begin(self, testcase):
         '''处理一个测试用例执行的开始
-        
+
         :param testcase: 测试用例
         :type testcase: TestCase
         '''
@@ -529,7 +529,7 @@ class XmlResult(TestResultBase):
 
     def handle_test_end(self, passed):
         '''处理一个测试用例执行的结束
-        
+
         :param passed: 测试用例是否通过
         :type passed: boolean
         '''
@@ -542,7 +542,7 @@ class XmlResult(TestResultBase):
 
     def handle_step_begin(self, msg):
         '''处理一个测试步骤的开始
-        
+
         :param msg: 测试步骤名称
         :type msg: string
         '''
@@ -555,7 +555,7 @@ class XmlResult(TestResultBase):
 
     def handle_step_end(self, passed):
         '''处理一个测试步骤的结束
-        
+
         :param passed: 测试步骤是否通过
         :type passed: boolean
         '''
@@ -563,7 +563,7 @@ class XmlResult(TestResultBase):
 
     def handle_log_record(self, level, msg, record, attachments):
         '''处理一个日志记录
-        
+
         :param level: 日志级别，参考EnumLogLevel
         :type level: string
         :param msg: 日志消息
@@ -635,7 +635,7 @@ class XmlResult(TestResultBase):
 
     def toxml(self):
         '''返回xml文本
-        
+
         :returns string - xml文本
         '''
         return to_pretty_xml(self._xmldoc)
@@ -668,7 +668,7 @@ class JSONResult(TestResultBase):
 
     def handle_test_begin(self, testcase):
         '''处理一个测试用例执行的开始
-        
+
         :param testcase: 测试用例
         :type testcase: TestCase
         '''
@@ -676,7 +676,7 @@ class JSONResult(TestResultBase):
 
     def handle_test_end(self, passed):
         '''处理一个测试用例执行的结束
-        
+
         :param passed: 测试用例是否通过
         :type passed: boolean
         '''
@@ -687,7 +687,7 @@ class JSONResult(TestResultBase):
 
     def handle_step_begin(self, msg):
         '''处理一个测试步骤的开始
-        
+
         :param msg: 测试步骤名称
         :type msg: string
         '''
@@ -699,7 +699,7 @@ class JSONResult(TestResultBase):
 
     def handle_step_end(self, passed):
         '''处理一个测试步骤的结束
-        
+
         :param passed: 测试步骤是否通过
         :type passed: boolean
         '''
@@ -709,7 +709,7 @@ class JSONResult(TestResultBase):
 
     def handle_log_record(self, level, msg, record, attachments):
         '''处理一个日志记录
-        
+
         :param level: 日志级别，参考EnumLogLevel
         :type level: string
         :param msg: 日志消息
@@ -752,7 +752,7 @@ class TestResultCollection(list):
 
     def __init__(self, results, passed):
         '''构造函数
-        
+
         :param results: 测试结果列表
         :type results: list
         :param passed: 测试是否通过
@@ -764,7 +764,7 @@ class TestResultCollection(list):
     @property
     def passed(self):
         '''测试是否通过
-        
+
         :returns: boolean
         '''
         return self.__passed
