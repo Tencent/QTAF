@@ -28,7 +28,7 @@ import six
 
 from testbase.assertion import AssertionRewriter
 from testbase.util import Singleton, ThreadGroupLocal, ThreadGroupScope, smart_text, get_last_frame_stack
-from testbase.testresult import EnumLogLevel, TestResultCollection
+from testbase.testresult import EnumLogLevel, TestResultCollection, TestResultType
 from testbase.conf import settings
 from testbase.retry import Retry
 
@@ -700,7 +700,14 @@ class TestCaseRunner(ITestCaseRunner):
                         if it in ['init_test', 'initTest']:
                             getattr(self._testcase, it)(self._testresult)
                         else:
-                            getattr(self._testcase, it)()
+                            task_result = getattr(self._testcase, it)()
+                            if task_result:
+                                if not isinstance(task_result, six.string_types) and task_result in TestResultType.__dict__:
+                                    self._testresult.warning('指定的自定义状态不支持，用例将继续执行')
+                                else:
+                                    self._testresult.customize_result(task_result)
+                                    while self._subtasks[0] not in ['post_test', 'postTest']:
+                                        self._subtasks.popleft()
                     except:
                         self._testresult.exception('%s执行失败' % it)
                 else:
