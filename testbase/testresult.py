@@ -72,12 +72,22 @@ class EnumLogLevel(object):
     TESTTIMEOUT = 62  # 测试执行超时
     RESNOTREADY = 69  # 当前资源不能满足测试执行的要求
 
+class TestResultType(object):
+    '''扩展用例状态
+    '''
+    IGNORED = 'ignored'
+
 
 levelname = {}
 for name in EnumLogLevel.__dict__:
     value = EnumLogLevel.__dict__[name]
     if isinstance(value, int):
         levelname[value] = name
+
+RESULT_TYPES = (
+    (TestResultType.IGNORED, "被忽略"),
+)
+
 
 
 def _convert_timelength(sec):
@@ -119,6 +129,7 @@ class TestResultBase(object):
         self.__error_level = 0
         self.__failed_info = ""
         self.__failed_priority = 0
+        self._custom_result = None
 
     @property
     def testcase(self):
@@ -369,6 +380,8 @@ class TestResultBase(object):
         '''
         pass
 
+    def customize_result(self, result):
+        self._custom_result = result
 
 class EmptyResult(TestResultBase):
     '''不输出
@@ -420,11 +433,14 @@ class StreamResult(TestResultBase):
         self._write("测试用例执行时间: %02d:%02d:%02.2f\n" % _convert_timelength(self.end_time - self.begin_time))
 
         rsttxts = {True:'通过', False:'失败'}
+        test_result = rsttxts[passed]
+        if self._custom_result:
+            test_result = dict(RESULT_TYPES)[self._custom_result]
         steptxt = ''
         for i, ipassed in enumerate(self._step_results):
             steptxt += " %s:%s" % (i + 1, rsttxts[ipassed])
         self._write("测试用例步骤结果: %s\n" % steptxt)
-        self._write("测试用例最终结果: %s\n" % rsttxts[passed])
+        self._write("测试用例最终结果: %s\n" % test_result)
         self._write(self._seperator2)
 
     def handle_step_begin(self, msg):
@@ -533,7 +549,10 @@ class XmlResult(TestResultBase):
         :param passed: 测试用例是否通过
         :type passed: boolean
         '''
-        self._testnode.setAttribute('result', str(passed))
+        test_result = str(passed)
+        if self._custom_result:
+            test_result = str(self._custom_result)
+        self._testnode.setAttribute('result', test_result)
         self._testnode.setAttribute('endtime', time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(self.end_time)))
         self._testnode.setAttribute('duration', "%02d:%02d:%02.2f\n" % _convert_timelength(self.end_time - self.begin_time))
         if self._file_path:
@@ -680,6 +699,11 @@ class JSONResult(TestResultBase):
         :param passed: 测试用例是否通过
         :type passed: boolean
         '''
+        rsttxts = {True:'通过', False:'失败'}
+        test_result = rsttxts[passed]
+        if self._custom_result:
+            test_result = dict(RESULT_TYPES)[self._custom_result]
+        self._data["result_type"] = test_result
         self._data["succeed"] = passed
         self._data["start_time"] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(self.begin_time))
         self._data["end_time"] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(self.end_time))
