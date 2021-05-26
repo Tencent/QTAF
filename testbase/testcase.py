@@ -701,8 +701,14 @@ class TestCaseRunner(ITestCaseRunner):
                             getattr(self._testcase, it)(self._testresult)
                         else:
                             task_result = getattr(self._testcase, it)()
-                            if task_result:
-                                if not isinstance(task_result, six.string_types) and task_result in TestResultType.__dict__:
+                            if task_result and isinstance(task_result, six.string_types):
+                                valid_task_result = False
+                                for name in TestResultType.__dict__:
+                                    value = TestResultType.__dict__[name]
+                                    if task_result == value:
+                                        valid_task_result = True
+                                        break
+                                if not valid_task_result:
                                     self._testresult.warning('指定的自定义状态不支持，用例将继续执行')
                                 else:
                                     self._testresult.customize_result(task_result)
