@@ -154,7 +154,7 @@ class TestCaseTest(unittest.TestCase):
                 self.steps = ["init_test"]
 
             def pre_test(self):
-                return TestResultType.IGNORED
+                return TestResultType.FILTERED
                 self.steps.append("pre_test")
 
             def run_test(self):
@@ -184,7 +184,7 @@ class TestCaseTest(unittest.TestCase):
                 self.steps.append("pre_test")
 
             def run_test(self):
-                return TestResultType.IGNORED
+                return TestResultType.FILTERED
                 self.steps.append("run_test")
 
             def post_test(self):

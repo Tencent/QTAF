@@ -75,7 +75,7 @@ class EnumLogLevel(object):
 class TestResultType(object):
     '''扩展用例状态
     '''
-    IGNORED = 'ignored'
+    FILTERED = 'ignored'
 
 
 levelname = {}
@@ -85,7 +85,7 @@ for name in EnumLogLevel.__dict__:
         levelname[value] = name
 
 RESULT_TYPES = (
-    (TestResultType.IGNORED, "被忽略"),
+    (TestResultType.FILTERED, "被忽略"),
 )
 
 
