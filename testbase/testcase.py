@@ -716,6 +716,9 @@ class TestCaseRunner(ITestCaseRunner):
                                         self._subtasks.popleft()
                     except:
                         self._testresult.exception('%s执行失败' % it)
+                        if settings.get("QTAF_FAILED_SKIP_RUNTEST", False) and it in ['pre_test', 'preTest']:
+                            while self._subtasks[0] not in ['post_test', 'postTest']:
+                                self._subtasks.popleft()
                 else:
                     it()
 

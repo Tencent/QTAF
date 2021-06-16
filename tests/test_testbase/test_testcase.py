@@ -18,6 +18,7 @@
 from testbase.loader import TestLoader
 from testbase.testcase import TestCase
 from testbase.testresult import TestResultType
+from testbase.test import modify_settings
 import unittest
 
 TestLoader.__test__ = False  # for nauseated Nose
@@ -196,6 +197,36 @@ class TestCaseTest(unittest.TestCase):
         hello1 = Hello1()
         hello1.debug_run()
         self.assertEqual(hello1.steps, ["init_test", "pre_test", "post_test", "clean_test"])
+
+    def test_skip_runtest_while_failed(self):
+
+        class Hello(TestCase):
+            """tag test"""
+            owner = "xxx"
+            timeout = 1
+            priority = TestCase.EnumPriority.BVT
+            status = TestCase.EnumStatus.Design
+
+            def init_test(self, testresult):
+                self.steps = ["init_test"]
+
+            def pre_test(self):
+                self.steps.append("pre_test")
+                raise RuntimeError('runtime error')
+
+            def run_test(self):
+                self.steps.append("run_test")
+
+            def post_test(self):
+                self.steps.append("post_test")
+
+            def clean_test(self):
+                self.steps.append("clean_test")
+
+        with modify_settings(QTAF_FAILED_SKIP_RUNTEST=True):
+            hello = Hello()
+            hello.debug_run()
+            self.assertEqual(hello.steps, ["init_test", "pre_test", "post_test", "clean_test"])
 
     def test_run_inhert(self):
 
