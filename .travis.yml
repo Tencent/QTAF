@@ -2,7 +2,7 @@ language: python
 matrix:
   include:
   - os: linux
-    dist: trusty
+    dist: focal
     sudo: false
     python: '2.7'
     env: BUILD_SDIST=true
