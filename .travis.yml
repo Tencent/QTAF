@@ -4,7 +4,7 @@ matrix:
   - os: linux
     dist: focal
     sudo: false
-    python: '2.7'
+    python: '3.6'
     env: BUILD_SDIST=true
   - os: linux
     dist: trusty
