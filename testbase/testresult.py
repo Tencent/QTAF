@@ -764,7 +764,7 @@ class HtmlResult(JSONResult):
             var_name = os.path.splitext(file_name)[0].replace(".", "_")
             content = "var %s = %s" % (var_name, json.dumps(self._data))
             content = smart_binary(content)
-            with codecs_open(file_name, mode="wb") as fd:
+            with codecs_open(file_name, mode="wb", buffering=-1) as fd:
                 fd.write(content)
         return file_name
 
