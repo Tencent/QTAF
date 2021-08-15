@@ -632,6 +632,7 @@ BAD_VAR_CHAR_SET = set(BAD_VAR_CHAR)
 def translate_bad_char(input_string):
     if six.PY2:
         translated_string = smart_binary(input_string).translate(TRANS)
+        translated_string = re.sub(r'[^\x00-\x7f]', '', translated_string) # Replace non-ascii chars
     else:
         translated_string = smart_text(input_string).translate(TRANS)
     return translated_string
