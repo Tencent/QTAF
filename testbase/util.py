@@ -586,6 +586,8 @@ def ensure_binary_stream(stream, encoding="utf-8"):
 
             def _binary_write(s):
                 s = smart_text(s)
+                if not isinstance(s, bytes):
+                    s = s.encode(encoding)
                 orig_stream_write_func(s)
 
             stream.write = _binary_write
