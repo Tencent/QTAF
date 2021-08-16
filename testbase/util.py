@@ -586,6 +586,8 @@ def ensure_binary_stream(stream, encoding="utf-8"):
 
             def _binary_write(s):
                 s = smart_text(s)
+                if not isinstance(s, bytes):
+                    s = s.encode(encoding)
                 orig_stream_write_func(s)
 
             stream.write = _binary_write
@@ -632,6 +634,7 @@ BAD_VAR_CHAR_SET = set(BAD_VAR_CHAR)
 def translate_bad_char(input_string):
     if six.PY2:
         translated_string = smart_binary(input_string).translate(TRANS)
+        translated_string = re.sub(r'[^\x00-\x7f]', '', translated_string) # Replace non-ascii chars
     else:
         translated_string = smart_text(input_string).translate(TRANS)
     return translated_string
