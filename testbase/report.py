@@ -223,7 +223,7 @@ class ITestReport(object):
     @classmethod
     def parse_args(cls, args_string):
         '''通过命令行参数构造对象
-        
+
         :returns: 测试报告
         :rtype: cls
         '''
@@ -251,7 +251,7 @@ class TestReportBase(ITestReport):
 
     def is_passed(self):
         '''报告中是否所有用例都通过，兼容已有EmptyTestReport，若用例数为0，也认为不通过
-        
+
         :return: boolean
         '''
         return all(self._cases_passed.values()) and len(self._cases_passed) > 0
@@ -349,7 +349,7 @@ class EmptyTestReport(TestReportBase):
     @classmethod
     def parse_args(cls, args_string):
         '''通过命令行参数构造对象
-        
+
         :returns: 测试报告
         :rtype: cls
         '''
@@ -531,7 +531,7 @@ class StreamTestReport(TestReportBase):
     @classmethod
     def parse_args(cls, args_string):
         '''通过命令行参数构造对象
-        
+
         :returns: 测试报告
         :rtype: cls
         '''
@@ -694,7 +694,7 @@ class XMLTestReport(TestReportBase):
     @classmethod
     def parse_args(cls, args_string):
         '''通过命令行参数构造对象
-        
+
         :returns: 测试报告
         :rtype: cls
         '''
@@ -895,7 +895,7 @@ class JSONTestReport(JSONTestReportBase):
     @classmethod
     def parse_args(cls, args_string):
         '''通过命令行参数构造对象
-        
+
         :returns: 测试报告
         :rtype: cls
         '''
@@ -944,7 +944,7 @@ class HtmlTestReport(JSONTestReportBase):
     @classmethod
     def parse_args(cls, args_string):
         '''通过命令行参数构造对象
-        
+
         :returns: 测试报告
         :rtype: cls
         '''
@@ -972,7 +972,7 @@ class TestListOutputBase(object):
             self._close_fd = False
             self._output_func = logger.info
         else:
-            self._fd = codecs_open(output_file, "w")
+            self._fd = codecs_open(output_file, "w", "utf-8")
             self._close_fd = True
             self._output_func = lambda x: self._fd.write(x + "\n")
 
