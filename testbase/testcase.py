@@ -25,7 +25,7 @@ import traceback
 import collections
 import types
 import six
-
+from enum import Enum
 from testbase.assertion import AssertionRewriter
 from testbase.util import Singleton, ThreadGroupLocal, ThreadGroupScope, smart_text, get_last_frame_stack
 from testbase.testresult import EnumLogLevel, TestResultCollection, TestResultType
@@ -386,10 +386,12 @@ class TestCase(object):
         '''
         # 得到上一个函数调用帧所在的文件路径，行号，函数名
         stack = get_last_frame_stack(3)
-        msg = "检查点不通过\n%s%s\n期望值：%s%s\n实际值：%s%s" % (smart_text(stack), smart_text(message),
-                                                    expect.__class__, expect,
-                                                    actual.__class__, actual)
-        self.__testresult.log_record(EnumLogLevel.ASSERT, msg)
+        msg = "[%s]检查失败" % smart_text(message)
+        if isinstance(actual, Enum):
+            msg += ", 错误码[{}]".format(actual.name)
+        msg += "\n期望值：%s %s\n实际值：%s %s" % (expect.__class__, expect, actual.__class__, actual)
+        record = {"trace_stack": smart_text(stack)} #TODO 写入文件
+        self.__testresult.log_record(EnumLogLevel.ASSERT, msg, record= {"trace_stack": smart_text(stack)})
 
     def _log_assert_failed(self, message, back_count=2):
         """记录断言失败的信息
@@ -714,8 +716,12 @@ class TestCaseRunner(ITestCaseRunner):
                                     self._testresult.customize_result(task_result)
                                     while self._subtasks[0] not in ['post_test', 'postTest']:
                                         self._subtasks.popleft()
+                    except AssertionError as e:
+                        self._testresult.critical('[%s]断言失败，结束测试' % it)
+                        while self._subtasks[0] not in ['post_test', 'postTest']:
+                            self._subtasks.popleft()
                     except:
-                        self._testresult.exception('%s执行失败' % it)
+                        self._testresult.exception('[%s]执行失败' % it)
                         if settings.get("QTAF_FAILED_SKIP_RUNTEST", False) and it in ['pre_test', 'preTest']:
                             while self._subtasks[0] not in ['post_test', 'postTest']:
                                 self._subtasks.popleft()
