@@ -15,6 +15,7 @@
 """testcase for management
 """
 
+import codecs
 import multiprocessing
 import os
 import shlex
@@ -120,7 +121,7 @@ class DiscoverTest(unittest.TestCase):
         DiscoverTests().execute(args)
         self.assertTrue(os.path.exists(file_name))
         self.addCleanup(os.remove, file_name)
-        with open(file_name, "r") as fd:
+        with codecs.open(file_name, "r", encoding="utf-8") as fd:
             content = fd.read()
 
         self.assertTrue(content.find("tests.sampletest.tagtest.TagTest2, reason") >= 0)
@@ -135,7 +136,7 @@ class DiscoverTest(unittest.TestCase):
         DiscoverTests().execute(args)
         self.assertTrue(os.path.exists(file_name))
         self.addCleanup(os.remove, file_name)
-        with open(file_name, "r") as fd:
+        with codecs.open(file_name, "r", encoding="utf-8") as fd:
             content = fd.read()
         self.assertTrue(content.find("filtered test") == -1)
         self.assertTrue(content.find("normal test") == -1)
