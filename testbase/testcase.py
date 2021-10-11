@@ -31,6 +31,7 @@ from testbase.util import Singleton, ThreadGroupLocal, ThreadGroupScope, smart_t
 from testbase.testresult import EnumLogLevel, TestResultCollection, TestResultType
 from testbase.conf import settings
 from testbase.retry import Retry
+from testbase.logger import _logger
 
 
 # 后续需专门花时间去除TestCaseStatus和TestCasePriority这两个类
@@ -390,8 +391,9 @@ class TestCase(object):
         if isinstance(actual, Enum):
             msg += ", 错误码[{}]".format(actual.name)
         msg += "\n期望值：%s %s\n实际值：%s %s" % (expect.__class__, expect, actual.__class__, actual)
-        record = {"trace_stack": smart_text(stack)} #TODO 写入文件
-        self.__testresult.log_record(EnumLogLevel.ASSERT, msg, record= {"trace_stack": smart_text(stack)})
+        record = {"trace_stack": smart_text(stack)}
+        _logger.critical(msg)
+        self.__testresult.log_record(EnumLogLevel.ASSERT, msg, record={"trace_stack": smart_text(stack)})
 
     def _log_assert_failed(self, message, back_count=2):
         """记录断言失败的信息
