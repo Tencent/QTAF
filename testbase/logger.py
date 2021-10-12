@@ -64,7 +64,7 @@ class TestResultBridge(logging.Handler):
         '''
         testresult = context.current_testresult()
         if testresult is None:
-            # _stream_handler.emit(log_record)
+            _stream_handler.emit(log_record)
             return
         record = {}
         if log_record.exc_info:
@@ -82,8 +82,8 @@ result_handler.addFilter(PackagePathFilter())
 _LOGGER_NAME = "QTA_LOGGER"
 _logger = logging.getLogger(_LOGGER_NAME)
 _logger.setLevel(logging.DEBUG)
-if settings.CONSOLE_REPORT:
-    _logger.addHandler(_stream_handler)
+# if settings.CONSOLE_REPORT:
+#     _logger.addHandler(_stream_handler)
 _logger.addHandler(result_handler)
 
 

@@ -501,6 +501,9 @@ class StreamResult(TestResultBase):
         if "traceback" in record:
             self._write(smart_text_by_lines("%s\n" % record["traceback"]))
 
+        if "trace_stack" in record:
+            self._write(smart_text_by_lines("%s\n" % record["trace_stack"]))
+
         for name in attachments:
             file_path = smart_text(attachments[name])
             if path_exists(file_path):

@@ -392,7 +392,6 @@ class TestCase(object):
             msg += ", 错误码[{}]".format(actual.name)
         msg += "\n期望值：%s %s\n实际值：%s %s" % (expect.__class__, expect, actual.__class__, actual)
         record = {"trace_stack": smart_text(stack)}
-        _logger.critical(msg)
         self.__testresult.log_record(EnumLogLevel.ASSERT, msg, record={"trace_stack": smart_text(stack)})
 
     def _log_assert_failed(self, message, back_count=2):
