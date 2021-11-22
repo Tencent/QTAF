@@ -507,7 +507,7 @@ class StreamResult(TestResultBase):
         for name in attachments:
             file_path = smart_text(attachments[name])
             if path_exists(file_path):
-                file_path = os.path.abspath(file_path)
+                file_path = file_path
             self._write("   %s:%s\n" % (smart_text(name), file_path))
 
 
