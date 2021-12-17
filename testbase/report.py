@@ -528,6 +528,7 @@ class StreamTestReport(TestReportBase):
             if line.strip():
                 break
         self._write_err("load test failed: %s (error: %s)\n" % (name, line))
+        self._write_err(smart_binary(error))
 
     def get_testresult_factory(self):
         """获取对应的TestResult工厂
