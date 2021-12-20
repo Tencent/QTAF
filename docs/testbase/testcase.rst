@@ -247,7 +247,7 @@ pre_test这个接口的一个作用是可以提高测试用例代码的复用，
    class EnvTestBase(TestCase):
        
        def pre_test(self):
-           super(EnvTestBase, self).post_test()    
+           super(EnvTestBase, self).pre_test()    
            _add_host("www.qq.com", "11.11.12.12")
    
        def post_test(self):
