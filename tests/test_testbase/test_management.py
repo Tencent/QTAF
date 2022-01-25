@@ -94,10 +94,8 @@ class RuntestTest(unittest.TestCase):
         self.addCleanup(shutil.rmtree, working_dir, ignore_errors=True)
         sys.argv = ["qtaf"]
         sys.argv.extend(cmdline.split())
-        proc = multiprocessing.Process(target=lambda: sys.exit(ManagementTools().run()))
-        proc.start()
-        proc.join()
-        self.assertEqual(proc.exitcode, 1)
+        exitcode = ManagementTools().run()
+        self.assertEqual(exitcode, 1)
 
     def test_success_returncode(self):
         working_dir = "test_online_report_%s" % get_time_str()
