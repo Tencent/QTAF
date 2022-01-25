@@ -21,9 +21,10 @@ import os
 import shlex
 import shutil
 import unittest
+import sys
 
 from testbase.testcase import TestCase
-from testbase.management import RunTest, DiscoverTests, RunScript
+from testbase.management import RunTest, DiscoverTests, RunScript, ManagementTools
 from testbase.types import runner_types, report_types
 from testbase.util import get_time_str
 
@@ -83,7 +84,17 @@ class RuntestTest(unittest.TestCase):
         cmdline += " -w " + working_dir
         self.addCleanup(shutil.rmtree, working_dir, ignore_errors=True)
         args = RunTest.parser.parse_args(cmdline.split())
-        proc = multiprocessing.Process(target=RunTest().execute, args=(args,))
+        return_code = RunTest().execute(args)
+        self.assertEqual(return_code, 1)
+
+    def test_failed_exit_code(self):
+        working_dir = "test_online_report_%s" % get_time_str()
+        cmdline = 'runtest --report-type html tests.sampletest.hellotest.FailedCase'
+        cmdline += " -w " + working_dir
+        self.addCleanup(shutil.rmtree, working_dir, ignore_errors=True)
+        sys.argv = ["qtaf"]
+        sys.argv.extend(cmdline.split())
+        proc = multiprocessing.Process(target=lambda: sys.exit(ManagementTools().run()))
         proc.start()
         proc.join()
         self.assertEqual(proc.exitcode, 1)
