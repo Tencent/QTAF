@@ -185,10 +185,10 @@ class RunTest(Command):
         """
         if args.report_args_help:
             report_types[args.report_args_help].get_parser().print_help()
-            return
+            return 1
         if args.runner_args_help:
             runner_types[args.runner_args_help].get_parser().print_help()
-            return
+            return 1
         if not args.tests:
             logger.info("no test set specified")
             return 1
@@ -267,6 +267,7 @@ class RunTest(Command):
                 os.system("start iexplore %s" % report_xml)
             else:
                 logger.info("XML report generated: %s" % os.path.abspath("TestReport.xml"))
+
         if not report.is_passed():
             return 1
 
