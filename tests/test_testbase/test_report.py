@@ -292,22 +292,16 @@ class RuntestReportTest(TestReportBase):
             args.tags = None
             args.excluded_tags = None
             args.resmgr_backend_type = "local"
-            try:
-                with context:
-                    RunTest().execute(args)
-            except SystemExit as e:
-                self.assertEqual(e.args[0], 1)
-            else:
-                self.fail("runtest didn't failed with code 1 for report type: %s" % report_type)
+
+            with context:
+                self.assertEqual(RunTest().execute(args), 1)
 
             args.working_dir = "runtest_%s" % get_time_str()
             self.addCleanup(shutil.rmtree, args.working_dir, True)
             args.tests = test_cases[:1]
-            try:
-                with context:
-                    RunTest().execute(args)
-            except SystemExit as e:
-                self.fail("online test report return non-zero: \n%s" % traceback.format_exc())
+
+            with context:
+                self.assertEqual(RunTest().execute(args), None)
 
 
 if __name__ == "__main__":

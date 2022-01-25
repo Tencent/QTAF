@@ -51,7 +51,7 @@ Type '%(ProgramName)s help <subcommand>' for help on a specific subcommand.
 Available subcommands:
 
 %(SubcmdList)s
-    
+
 """
 
     def __init__(self, subcmd_classes):
@@ -71,7 +71,7 @@ Available subcommands:
         """
         if len(args) < 1:
             self.print_help()
-            sys.exit(1)
+            return 1
 
         subcmd = args[0]
         for it in self.subcmd_classes:
@@ -81,7 +81,7 @@ Available subcommands:
                 break
         else:
             logger.error("invalid subcommand \"%s\"\n" % subcmd)
-            sys.exit(1)
+            return 1
 
         ns = parser.parse_args(args[1:])
         subcmd = subcmd_class()
@@ -144,7 +144,7 @@ class RunScript(Command):
         import runpy
         if not os.path.isfile(args.script_path):
             print("invalid file path: %s" % args.script_path)
-            exit(1)
+            return 1
         runpy.run_path(args.script_path, run_name='__main__')
 
 
@@ -185,13 +185,13 @@ class RunTest(Command):
         """
         if args.report_args_help:
             report_types[args.report_args_help].get_parser().print_help()
-            return
+            return 1
         if args.runner_args_help:
             runner_types[args.runner_args_help].get_parser().print_help()
-            return
+            return 1
         if not args.tests:
             logger.info("no test set specified")
-            exit(1)
+            return 1
 
         if args.working_dir is None:
             args.working_dir = os.getcwd()
@@ -267,8 +267,9 @@ class RunTest(Command):
                 os.system("start iexplore %s" % report_xml)
             else:
                 logger.info("XML report generated: %s" % os.path.abspath("TestReport.xml"))
+
         if not report.is_passed():
-            sys.exit(1)
+            return 1
 
 
 class DiscoverTests(Command):
@@ -299,7 +300,7 @@ class DiscoverTests(Command):
     def execute(self, args):
         if not args.tests:
             logger.info("no test set specified")
-            exit(1)
+            return 1
         shows = args.shows or ["filtered", "error", "normal"]
         priorities = args.priorities or [TestCase.EnumPriority.Normal, TestCase.EnumPriority.High]
         status = args.status or [TestCase.EnumStatus.Ready]
@@ -375,7 +376,7 @@ class RunPlan(Command):
         plancls = getattr(planmod, planclsname)
         runner.run(plancls())
         if not report.is_passed():
-            sys.exit(1)
+            return 1
 
 
 class InstallLib(Command):
@@ -428,7 +429,7 @@ class UpgradeProject(Command):
         """
         if os.path.isfile(__file__):
             logger.error("should run in egg mode")
-            sys.exit(1)
+            return 1
 
         qtaf_path = os.path.dirname(os.path.abspath(__file__))
         project.update_project_qtaf(args.proj_path, qtaf_path)
@@ -534,7 +535,7 @@ class RunTestDistPackage(Command):
 
         runner.run(test)
         if not report.is_passed():
-            sys.exit(1)
+            return 1
 
 
 class RunPlanDistPackage(Command):
@@ -589,7 +590,7 @@ class RunPlanDistPackage(Command):
         plancls = getattr(planmod, planclsname)
         runner.run(plancls())
         if not report.is_passed():
-            sys.exit(1)
+            return 1
 
 
 class ManagementToolsConsole(object):
@@ -688,9 +689,10 @@ class ManagementTools(object):
         argparser = ArgumentParser(cmds)
         if len(sys.argv) > 1:
             subcmd, args = argparser.parse_args(sys.argv[1:])
-            subcmd.execute(args)
+            return subcmd.execute(args) or 0
         else:
             ManagementToolsConsole(argparser).cmdloop()
+            return 0
 
 
 def qta_manage_main():
@@ -703,4 +705,5 @@ def qta_manage_main():
         cmds = [CreateProject, RunTestDistPackage, RunPlanDistPackage, Help]
     argparser = ArgumentParser(cmds)
     subcmd, args = argparser.parse_args(sys.argv[1:])
-    subcmd.execute(args)
+    exit_code = subcmd.execute(args) or 0
+    os._exit(exit_code)
