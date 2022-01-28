@@ -36,6 +36,8 @@ ITestResultHandler来实现一个新的Handler，详细请参考ITestResultHandl
 import json
 import locale
 import os
+
+import qtaf_settings
 import six
 import socket
 import sys
@@ -130,6 +132,7 @@ class TestResultBase(object):
         self.__failed_info = ""
         self.__failed_priority = 0
         self._custom_result = None
+        self.__trace_log = [] # 集中记录case中的堆栈信息
 
     @property
     def testcase(self):
@@ -334,6 +337,14 @@ class TestResultBase(object):
         record['traceback'] = traceback.format_exc()
         self.log_record(EnumLogLevel.CRITICAL, msg, record, attachments)
 
+    def critical(self, msg, record=None, attachments=None):
+        '''处理一个DEBUG日志
+        '''
+        if record is None:
+            record = {}
+        self.__trace_log.append(traceback.format_exc())
+        self.log_record(EnumLogLevel.CRITICAL, msg, record, attachments)
+
     def handle_test_begin(self, testcase):
         '''处理一个测试用例执行的开始
 
@@ -490,10 +501,13 @@ class StreamResult(TestResultBase):
         if "traceback" in record:
             self._write(smart_text_by_lines("%s\n" % record["traceback"]))
 
+        if "trace_stack" in record:
+            self._write(smart_text_by_lines("%s\n" % record["trace_stack"]))
+
         for name in attachments:
             file_path = smart_text(attachments[name])
             if path_exists(file_path):
-                file_path = os.path.abspath(file_path)
+                file_path = file_path
             self._write("   %s:%s\n" % (smart_text(name), file_path))
 
 
@@ -708,6 +722,7 @@ class JSONResult(TestResultBase):
         self._data["start_time"] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(self.begin_time))
         self._data["end_time"] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(self.end_time))
         self._data["failed_info"] = self.failed_info
+        self._data["trace_info"] = self._TestResultBase__trace_log
 
     def handle_step_begin(self, msg):
         '''处理一个测试步骤的开始
@@ -764,7 +779,7 @@ class HtmlResult(JSONResult):
             var_name = os.path.splitext(file_name)[0].replace(".", "_")
             content = "var %s = %s" % (var_name, json.dumps(self._data))
             content = smart_binary(content)
-            with codecs_open(file_name, mode="wb") as fd:
+            with codecs_open(file_name, mode="wb", buffering=-1) as fd:
                 fd.write(content)
         return file_name
 

@@ -948,7 +948,7 @@ class HtmlTestReport(JSONTestReportBase):
         super(HtmlTestReport, self).end_report()
         data = json.dumps(self._data)
         content = "var qta_report_data = %s" % data
-        with codecs_open("qta-report.js", "w", encoding="utf-8") as fd:
+        with codecs_open("qta-report.js", "w", encoding="utf-8",buffering=-1) as fd:
             fd.write(content)
 
         qta_report_html = get_inner_resource("qta_statics", "qta-report.html")
