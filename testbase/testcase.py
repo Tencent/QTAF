@@ -390,6 +390,8 @@ class TestCase(object):
                                                     expect.__class__, expect,
                                                     actual.__class__, actual)
         self.__testresult.log_record(EnumLogLevel.ASSERT, msg)
+        if not settings.get("QTAF_ASSERT_CONTINUE", True):
+            raise RuntimeError("testcase assert failed:%s" % message)
 
     def _log_assert_failed(self, message, back_count=2):
         """记录断言失败的信息
