@@ -17,6 +17,7 @@
 '''
 from __future__ import absolute_import
 
+import inspect
 import os
 import sys
 import re
@@ -313,6 +314,19 @@ class TestCase(object):
         if not self.__resmgr_session:
             self.__resmgr_session = self.__resmgr.create_session(self)
         return self.__resmgr_session
+
+    def get_test_extra_properties(self):
+        var_dicts = {}
+        for k, v in inspect.getmembers(self):
+            if k in self.ATTRIB_OVERWRITE_WHITELIST:
+                continue
+            if not (isinstance(v, bool) or isinstance(v, int) or isinstance(v, float) or isinstance(v, (six.string_types, six.binary_type))):
+                continue
+            if k.islower() and not k.startswith('_') and not k.startswith('test_'):
+                if isinstance(v, (six.string_types, six.binary_type)):
+                    v = smart_text(v)
+                var_dicts[k] = v
+        return var_dicts
 
     def init_test(self, testresult):
         '''初始化测试用例。慎用此函数，尽量将初始化放到preTest里。
