@@ -539,6 +539,9 @@ class XmlResult(TestResultBase):
         self._testnode.setAttribute("priority", str(priority))
         self._testnode.setAttribute("timeout", str(timeout))
         self._testnode.setAttribute('begintime', time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(self.begin_time)))
+        extra_properties = testcase.get_test_extra_properties()
+        for k, v in extra_properties.items():
+            self._testnode.setAttribute(k, str(v))
         self._xmldoc.appendChild(self._testnode)
 
         self.begin_step('测试用例初始步骤')
