@@ -184,6 +184,54 @@ class PassedCase(testbase.TestCase):
     def run_test(self):
         self.assert_equal("assert success", True, True)
 
+class TestProperty(object):
+    pass
+
+def test_func():
+    return True
+
+class ExtraPropertyTestBase(testbase.TestCase):
+    base_property_str = '123'
+    base_property_int = 123
+    base_property_type = TestProperty
+    base_property_class = TestProperty()
+    base_property_func_value = test_func()
+    base_property_bool = True
+    base_property_dict = {'a': 'a1_test'}
+
+class ExtraPropertyTest(ExtraPropertyTestBase):
+    '''测试extra property的用例
+    '''
+    owner = "foo"
+    status = testbase.TestCase.EnumStatus.Ready
+    timeout = 1
+    priority = testbase.TestCase.EnumPriority.Normal
+    property_str = '123'
+    property_int = 123
+    property_type = TestProperty
+    property_class = TestProperty()
+    property_func_value = test_func()
+    property_bool = True
+    property_dict = {'b': 'b1_test'}
+
+    def run_test(self):
+        self.run_property_str = '123'
+        self.run_property_int = 123
+        self.run_property_type = TestProperty
+        self.run_property_class = TestProperty()
+
+    @property
+    def property_variable(self):
+        return self.base_property_dict['b']
+
+    @property
+    def property_variable2(self):
+        return self.property_dict['b']
+
+    @property
+    def property_exception(self):
+        raise RuntimeError
+
 if __name__ == '__main__':
 #     HelloTest().run()
 #     x = CrashTest().debug_run()
