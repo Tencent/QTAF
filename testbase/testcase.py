@@ -175,6 +175,7 @@ class TestCase(object):
     timeout = None
 
     ATTRIB_OVERWRITE_WHITELIST = ["priority", "status", "owner", "timeout", "tags", "__doc__"]
+    EXTRA_PROPERTY_BLACKLIST = ["start_time", "end_time", "begintime", "endtime", "duration"]
 
     def __init__(self, testdata=None, testdataname=None, attrs=None):
         '''构造函数
@@ -318,6 +319,8 @@ class TestCase(object):
         var_dicts = {}
         for k, v in getmembers(self):
             if k in self.ATTRIB_OVERWRITE_WHITELIST:
+                continue
+            if k in self.EXTRA_PROPERTY_BLACKLIST:
                 continue
             if not (isinstance(v, bool) or isinstance(v, int) or isinstance(v, float) or isinstance(v, (six.string_types, six.binary_type))):
                 continue
