@@ -17,7 +17,6 @@
 '''
 from __future__ import absolute_import
 
-import inspect
 import os
 import sys
 import re
@@ -28,7 +27,7 @@ import types
 import six
 
 from testbase.assertion import AssertionRewriter
-from testbase.util import Singleton, ThreadGroupLocal, ThreadGroupScope, smart_text, get_last_frame_stack
+from testbase.util import Singleton, ThreadGroupLocal, ThreadGroupScope, smart_text, get_last_frame_stack, getmembers
 from testbase.testresult import EnumLogLevel, TestResultCollection, TestResultType
 from testbase.conf import settings
 from testbase.retry import Retry
@@ -317,7 +316,7 @@ class TestCase(object):
 
     def get_test_extra_properties(self):
         var_dicts = {}
-        for k, v in inspect.getmembers(self):
+        for k, v in getmembers(self):
             if k in self.ATTRIB_OVERWRITE_WHITELIST:
                 continue
             if not (isinstance(v, bool) or isinstance(v, int) or isinstance(v, float) or isinstance(v, (six.string_types, six.binary_type))):

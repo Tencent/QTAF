@@ -98,6 +98,47 @@ class XmlReportTest(TestReportBase):
             finally:
                 os.chdir(old_cwd)
 
+    def test_xml_report_with_extra_properties(self):
+        test_pairs = [("HelloTest", "断言失败"),
+                    ("TimeoutTest", "用例执行超时"),
+                    ("CrashTest", "App Crash"),
+                    ("QT4iTest", "run_test执行失败"), ]
+
+        old_cwd = os.getcwd()
+        try:
+            test_report = report_types["xml"]()
+            test_runner = runner_types["basic"](test_report)
+            test_name = "tests.sampletest.hellotest.ExtraPropertyTest"
+            working_dir = test_name + "_" + get_time_str()
+            os.makedirs(working_dir)
+            os.chdir(working_dir)
+            self.addCleanup(shutil.rmtree, working_dir, True)
+            print("xml report test for test: %s" % test_name)
+            test_runner.run(test_name)
+            report_path = os.path.join(os.getcwd(), "TestReport.xml")
+            xml_report = minidom.parse(report_path)
+            test_results = xml_report.getElementsByTagName("TestResult")
+            self.assertEqual(len(test_results), 1)
+            attrs = test_results[0].attributes
+            self.assertEqual(attrs["name"].value, test_name)
+            self.assertEqual(attrs["result"].value, "True")
+            result_path = os.path.join(os.getcwd(), attrs["log"].value)
+            result_xml = minidom.parse(result_path)
+            test_nodes = result_xml.getElementsByTagName("TEST")
+            self.assertEqual(len(test_nodes), 1)
+            attrs = test_nodes[0].attributes
+            self.assertEqual(attrs['base_property_str'].value, '123')
+            self.assertEqual(attrs['base_property_int'].value, '123')
+            self.assertEqual(attrs['base_property_func_value'].value, 'True')
+            self.assertEqual(attrs['base_property_bool'].value, 'True')
+            self.assertEqual(attrs['property_str'].value, '123')
+            self.assertEqual(attrs['property_int'].value, '123')
+            self.assertEqual(attrs['property_func_value'].value, 'True')
+            self.assertEqual(attrs['property_bool'].value, 'True')
+            self.assertEqual(attrs['property_variable2'].value, 'b1_test')
+        finally:
+            os.chdir(old_cwd)
+
 
 class JsonReportTest(TestReportBase):
     """json report test
