@@ -254,14 +254,14 @@ class RunTest(Command):
         runner.run(test_conf)
         os.chdir(prev_dir)
         if args.report_type == 'online':
-            if sys.platform == "win32":
+            if sys.platform == "win32" and os.environ.get("AUTO_OPEN_URL", "1") == "1":
                 logger.info("opening online report url:%s" % report.url)
                 os.system("start %s" % report.url)
             else:
                 logger.info("online report generated: %s" % report.url)
 
         elif args.report_type == 'xml':
-            if sys.platform == "win32":
+            if sys.platform == "win32" and os.environ.get("AUTO_OPEN_URL", "1") == "1":
                 logger.info("opening XML report with IE...")
                 report_xml = os.path.abspath(os.path.join(args.working_dir, "TestReport.xml"))
                 os.system("start iexplore %s" % report_xml)
