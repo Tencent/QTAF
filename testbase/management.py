@@ -18,7 +18,9 @@
 
 import argparse
 import inspect
+import json
 import os
+import re
 import traceback
 import sys
 import shlex
@@ -180,9 +182,33 @@ class RunTest(Command):
     parser.add_argument("--runner-args", help="additional arguments for specific runner", default="")
     parser.add_argument("--runner-args-help", help="show help information for specific runner arguemnts", choices=runner_types.keys())
 
+    parser.add_argument("--run-file", help="runtime config file path")
+
+    def run_args_parser(self, runner_args):
+        """兼容参数传入concurrency=5,retries=1，支持subprocess shell=False"""
+        regex_c = re.compile(r'(\w+=\w+)+')
+        regex = regex_c.search(runner_args)
+        if regex:
+            # concurrency=5,retries=1
+            ret = []
+            args = regex_c.findall(runner_args)
+            for arg in args:
+                tmp = arg.split("=")
+                ret.append("--%s %s" % (tmp[0], tmp[1]))
+            return " ".join(ret)
+        else:
+            # --concurrency 5 --retries 1
+            return runner_args
+
     def execute(self, args):
         """执行过程
         """
+        if args.run_file:
+            with open(args.run_file, 'r') as fp:
+                data = json.load(fp)
+                for k, value in data.items():
+                    setattr(args, k, value)
+
         if args.report_args_help:
             report_types[args.report_args_help].get_parser().print_help()
             return 1
@@ -249,7 +275,9 @@ class RunTest(Command):
         resmgr_backend = resmgr_backend_types[args.resmgr_backend_type]()
 
         runner_type = runner_types[args.runner_type]
-        runner = runner_type.parse_args(shlex.split(args.runner_args), report, resmgr_backend)
+        # 解析runner_args参数, 用于支持命令行传入concurrency=5,retries=1
+        runner_args = self.run_args_parser(args.runner_args)
+        runner = runner_type.parse_args(shlex.split(runner_args), report, resmgr_backend)
 
         runner.run(test_conf)
         os.chdir(prev_dir)

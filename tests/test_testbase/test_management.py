@@ -50,6 +50,13 @@ class RuntestTest(unittest.TestCase):
         self.assertEqual(args.owners, ["apple", "banana"])
         self.assertEqual(args.tests, ["xxxx"])
 
+    def test_config_file(self):
+        cmdline = "-w working_dir xxxx oooo.test --run-file test.json".split()
+        args = RunTest.parser.parse_args(cmdline)
+        self.assertEqual(args.working_dir, "working_dir")
+        self.assertEqual(args.tests, ["xxxx", "oooo.test"])
+        self.assertEqual(args.run_file, "test.json")
+
     def test_report_args_parsing(self):
         cmdline = 'xxxx --report-type stream --report-args "--no-output-result --no-summary"'
         cmdline = shlex.split(cmdline)
@@ -107,6 +114,16 @@ class RuntestTest(unittest.TestCase):
         proc.start()
         proc.join()
         self.assertEqual(proc.exitcode, 0)
+
+    def test_run_file_success(self):
+        working_dir = "test_online_report_%s" % get_time_str()
+        cmdline = 'runtest --report-type html tests.sampletest.hellotest.FailedCase --run-file tests/sampletest/test.json'
+        cmdline += " -w " + working_dir
+        self.addCleanup(shutil.rmtree, working_dir, ignore_errors=True)
+        sys.argv = ["qtaf"]
+        sys.argv.extend(cmdline.split())
+        exitcode = ManagementTools().run()
+        self.assertEqual(exitcode, 0)
 
 
 class DiscoverTest(unittest.TestCase):
