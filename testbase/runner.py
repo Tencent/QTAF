@@ -34,6 +34,7 @@ import multiprocessing
 import traceback
 import collections
 import random
+import re
 import types
 import sys
 import argparse
@@ -61,7 +62,7 @@ class TestCaseSettings(object):
 
     def __init__(self, names=None, excluded_names=None, priorities=None, status=None, owners=None, tags=None, excluded_tags=None):
         '''构造函数
-        
+
         :param names: 测试用例名
         :type names: list
         :param excluded_names: 排除测试用例名
@@ -81,6 +82,7 @@ class TestCaseSettings(object):
             self.names = []
         else:
             self.names = list(names)
+            # self.names = [name if isinstance(name, dict) else {"name": self._generate_test_names(testcase)} for name in names]
         if owners is None:
             self.owners = []
         else:
@@ -121,6 +123,12 @@ class TestCaseSettings(object):
         self.tags = set(tags) if tags else None
         self.excluded_tags = set(excluded_tags) if excluded_tags else None
 
+    def _generate_testcase_names(testcase):
+        if testcase.endswith(".py"):
+            testcase = re.sub(r'\\|/', '.', testcase)
+            testcase = re.sub(r'\.py$', '', testcase)
+        return testcase
+
     def _is_test_class(self, name):
         '''判断路径是否是一个类名
         '''
@@ -144,7 +152,7 @@ class TestCaseSettings(object):
 
     def filter(self, testcase):
         '''测试用例过滤函数
-        
+
         :param testcase: 测试用例
         :type testcase: TestCase
         '''
@@ -174,7 +182,7 @@ class BaseTestRunner(object):
 
     def __init__(self, report, resmgr_backend=None):
         '''构造函数
-        
+
         :param report: 测试报告
         :type report: ITestReport
         '''
@@ -186,7 +194,7 @@ class BaseTestRunner(object):
     @property
     def report(self):
         '''对应的测试报告
-        
+
         :returns: ITestReport
         '''
         return self.__report
@@ -220,7 +228,7 @@ class BaseTestRunner(object):
 
     def run(self, target):
         '''运行测试
-        
+
         :param target: 指定要执行的测试
         :type target: list(TestCase) or list(string) or string or TestCaseSettings or TestPlan
         '''
@@ -270,7 +278,7 @@ class BaseTestRunner(object):
 
     def run_all_tests(self, tests):
         '''执行全部的测试用例
-        
+
         :param tests: 测试用例对象列表
         :type tests: list
         '''
@@ -280,7 +288,7 @@ class BaseTestRunner(object):
 
     def run_test(self, test):
         '''执行一个测试用例
-        
+
         :param test: 测试用例
         :type test: TestCase
         :returns: boolean - 测试是否通过
@@ -320,7 +328,7 @@ class BaseTestRunner(object):
     @classmethod
     def parse_args(cls, args_string, report, resmgr_backend):
         '''通过命令行参数构造对象
-        
+
         :returns: 测试报告
         :rtype: cls
         '''
@@ -333,7 +341,7 @@ class TestRunner(BaseTestRunner):
 
     def __init__(self, report, retries=0, resmgr_backend=None):
         '''构造函数
-        
+
         :param result: 测试报告
         :type result: ITestReport
         :param retries: 用例失败时重试次数
@@ -344,7 +352,7 @@ class TestRunner(BaseTestRunner):
 
     def run_all_tests(self, tests):
         '''执行全部的测试用例
-        
+
         :param test: 测试用例对象列表
         :type tests: list
         '''
@@ -374,7 +382,7 @@ class TestRunner(BaseTestRunner):
     @classmethod
     def parse_args(cls, args_string, report, resmgr_backend):
         '''通过命令行参数构造对象
-        
+
         :returns: 测试报告
         :rtype: cls
         '''
@@ -388,7 +396,7 @@ class ThreadSafetyReport(TestReportBase):
 
     def __init__(self, report):
         '''构造函数
-        
+
         :param result: 测试报告
         :type result: ITestReport
         '''
@@ -404,7 +412,7 @@ class ThreadSafetyReport(TestReportBase):
 
     def end_report(self):
         '''结束测试执行
-        
+
         :param passed: 测试是否通过
         :type passed: boolean
         '''
@@ -413,7 +421,7 @@ class ThreadSafetyReport(TestReportBase):
 
     def log_test_result(self, testcase, testresult):
         '''记录一个测试结果
-        
+
         :param testcase: 测试用例
         :type testcase: TestCase
         :param testresult: 测试结果
@@ -460,7 +468,7 @@ class ThreadSafetyReport(TestReportBase):
 
     def get_testresult_factory(self):
         '''获取对应的TestResult工厂
-        
+
         :returns: ITestResultFactory
         '''
         with self._lock:
@@ -468,7 +476,7 @@ class ThreadSafetyReport(TestReportBase):
 
     def log_record(self, level, tag, msg, record):
         '''增加一个记录
-        
+
         :param level: 日志级别
         :param msg: 日志消息
         :param tag: 日志标签
@@ -488,7 +496,7 @@ class ThreadingTestRunner(BaseTestRunner):
 
     def __init__(self, report, thread_cnt=0, retries=0, resmgr_backend=None):
         '''构造函数
-        
+
         :param report: 测试报告
         :type report: ITestReport
         :param thread_cnt: 线程数
@@ -505,7 +513,7 @@ class ThreadingTestRunner(BaseTestRunner):
 
     def run_all_tests(self, tests):
         '''执行全部的测试用例
-        
+
         :param test: 测试用例对象列表
         :type tests: list
         '''
@@ -522,7 +530,7 @@ class ThreadingTestRunner(BaseTestRunner):
 
     def _run_test_from_queue(self, tests_queue, tests_retry_dict):
         '''从队列中不断取用例并执行
-        
+
         :param tests_queue: 测试用例队列
         :type tests_queue: deque
         :param tests_retry_dict: 测试用例重跑记录
@@ -556,7 +564,7 @@ class ThreadingTestRunner(BaseTestRunner):
     @classmethod
     def parse_args(cls, args_string, report, resmgr_backend):
         '''通过命令行参数构造对象
-        
+
         :returns: 测试报告
         :rtype: cls
         '''
@@ -590,7 +598,7 @@ class TestResultFunctionProxy(object):
 
     def __init__(self, from_worker, obj_id, func_name):
         '''构造函数
-        
+
         :param from_worker: 所属的工作者
         :type from_worker: TestWorker
         :param obj_id: 对象ID
@@ -621,7 +629,7 @@ class TestResultProxy(object):
 
     def __init__(self, from_worker, obj_id, passed, testcase):
         '''构造函数
-        
+
         :param from_worker: 来源的工作者
         :type from_worker: TestWorker
         :param obj_id: 对象ID
@@ -668,7 +676,7 @@ class TestReportProxy(TestReportBase):
 
     def __init__(self, worker_id, ctrl_msg_queue, result_factory, result_manager):
         '''构造函数
-        
+
         :param worker_id: 工作者ID
         :type worker_id: string
         :param ctrl_msg_queue: 控制进程的消息队列
@@ -691,7 +699,7 @@ class TestReportProxy(TestReportBase):
 
     def end_report(self):
         '''结束测试执行
-        
+
         :param passed: 测试是否通过
         :type passed: boolean
         '''
@@ -699,7 +707,7 @@ class TestReportProxy(TestReportBase):
 
     def log_test_result(self, testcase, testresult):
         '''记录一个测试结果
-        
+
         :param testcase: 测试用例
         :type testcase: TestCase
         :param testresult: 测试结果
@@ -712,7 +720,7 @@ class TestReportProxy(TestReportBase):
 
     def log_record(self, level, tag, msg, record):
         '''增加一个记录
-        
+
         :param level: 日志级别
         :param tag: 日志标签
         :param msg: 日志消息
@@ -726,7 +734,7 @@ class TestReportProxy(TestReportBase):
 
     def get_testresult_factory(self):
         '''获取对应的TestResult工厂
-        
+
         :returns: ITestResultFactory
         '''
         return self._result_factory
@@ -742,7 +750,7 @@ class TestResultStubManager(object):
 
     def __init__(self, rsp_queue):
         '''构造函数
-        
+
         :param rsp_queue: 对工作者请求结果的答复消息队列
         :type rsp_queue:  multiprocessing.Queue
         '''
@@ -757,7 +765,7 @@ class TestResultStubManager(object):
 
     def get_result_attr(self, objid, attrname):
         '''获取一个测试结果的属性值
-        
+
         :param objid: 对象ID
         :type objid: int
         :param attrname: 属性名
@@ -777,7 +785,7 @@ class TestResultStubManager(object):
 
     def call_result_func(self, objid, funcname, args, kwargs):
         '''调用一个测试结果的函数
-        
+
         :param objid: 对象ID
         :type objid: int
         :param funcname: 函数名
@@ -807,7 +815,7 @@ def _log_collection_result(testreport, result_collection):
 
 def _run_test_thread(worker_id, ctrl_msg_queue, testcase, testreport, resmgr):
     '''执行测试用例的线程
-    
+
     :param worker_id: 工作者ID
     :type worker_id: string
     :param ctrl_msg_queue: 控制进程的消息队列
@@ -837,7 +845,7 @@ def _worker_process(worker_id,
                      ctrl_msg_queue, msg_queue, rsp_queue,
                      result_factory_type, result_factory_data, resmgr):
     '''执行测试的子进程过程
-    
+
     :param worker_id: 工作者ID，全局唯一
     :type worker_id: string
     :param ctrl_msg_queue: 控制进程通信的消息队列
@@ -891,7 +899,7 @@ class TestWorker(object):
 
     def __init__(self, worker_id, ctrl_msg_queue, result_factory, resmgr):
         '''构造函数
-        
+
         :param worker_id: 工作者ID，全局唯一
         :type worker_id: string
         :param ctrl_msg_queue: 控制进程的消息队列
@@ -955,7 +963,7 @@ class TestWorker(object):
 
     def run_testcase(self, testcase):
         '''分配一个测试用例
-        
+
         :param testcase: 要执行的测试用例
         :type testcase: TestCase
         '''
@@ -964,14 +972,14 @@ class TestWorker(object):
 
     def current_testcase(self):
         '''当前正在执行的测试用例
-        
+
         :returns: TestCase
         '''
         return self._testcase
 
     def send_message(self, msg):
         '''发送消息到工作者
-        
+
         :param msg: 消息
         :type msg: tuple
         '''
@@ -991,25 +999,25 @@ class TestWorker(object):
 
 class MultiProcessTestRunner(BaseTestRunner):
     '''使用多进程并发执行用例
-    
+
     多进程并发时，有两个特殊的问题需要处理：
-    
+
     1、测试执行工作进程需要通知TestReport测试用例的执行情况等，
     解决方案是：
     为每个工作进程提供一个TestReportProxy，TestReportProxy通过消息机制通知
     真正的TestReport
-    
+
     2、TestReport需要访问在工作进程的TestResult对象，
     解决方案是：
     每个工作进程有一个TestResultStubManager，提供给TestReport的是一个TestResultProxy
     对象，TestResultProxy通过消息机制和TestResultStubManager通信，来获取真正的TestResult
     的信息
-           
+
     '''
 
     def __init__(self, report, process_cnt=0, retries=0, resmgr_backend=None):
         '''构造函数
-        
+
         :param report: 测试报告
         :type report: ITestReport
         :param process_cnt: 进程数
@@ -1024,7 +1032,7 @@ class MultiProcessTestRunner(BaseTestRunner):
 
     def run_all_tests(self, tests):
         '''执行全部的测试用例
-        
+
         :param test: 测试用例对象列表
         :type tests: list
         '''
@@ -1116,7 +1124,7 @@ class MultiProcessTestRunner(BaseTestRunner):
     @classmethod
     def parse_args(cls, args_string, report, resmgr_backend):
         '''通过命令行参数构造对象
-        
+
         :returns: 测试报告
         :rtype: cls
         '''

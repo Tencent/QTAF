@@ -47,7 +47,7 @@ class TestLoader(object):
 
     def get_last_errors(self):
         '''返回最后一次load调用时加载失败的全部模块和对应错误信息
-        
+
         :returns dict: 模块和对应的错误信息
         '''
         return self._module_errs
@@ -64,10 +64,10 @@ class TestLoader(object):
 
     def load(self, testname):
         '''通过名字加载测试用例
-        
+
         :param name: 用例或用例名称
         :type name: string/list
-        
+
         :returns list - 测试用例对象列表
         '''
 
@@ -80,6 +80,10 @@ class TestLoader(object):
         testcases = []
 
         for testname in testnames:
+            if isinstance(testname, dict):
+                parameters = testname.get("parameters", {})
+                exclude_data_keys = testname.get("exclude_data_keys")
+                testname = testname.get("name")
             testname = smart_text(testname)
             if settings.DATA_DRIVE:
                 self._dataset = TestDataLoader().load()
@@ -107,7 +111,7 @@ class TestLoader(object):
 
     def _load(self, testname):
         '''加载对应的对象
-        
+
         :param name: 用例或用例集名称
         :type name: string
         :returns - Type/ModuleType
@@ -157,7 +161,7 @@ class TestLoader(object):
 
     def _is_testcase_class(self, obj):
         '''是否为测试用例类
-        
+
         :returns bool - 是否为用例类
         '''
         return (isinstance(obj, type) and
@@ -170,9 +174,9 @@ class TestLoader(object):
         '''
         self._module_errs[modulename] = traceback.format_exc()
 
-    def _load_from_package(self, pkg, data_key=None):
+    def _load_from_package(self, pkg, data_key=None, exclude_data_key=None):
         '''从一个python包加载测试用例
-        
+
         :param pkg: Python包
         :type pkg: ModuleType
         :returns list - 测试用例对象列表
@@ -183,14 +187,14 @@ class TestLoader(object):
                 continue
             try:
                 __import__(modulename)
-                tests += self._load_from_module(sys.modules[modulename], data_key)
+                tests += self._load_from_module(sys.modules[modulename], data_key, exclude_data_key=exclude_data_key)
             except:
                 self._module_errs[modulename] = traceback.format_exc()
         return tests
 
-    def _load_from_module(self, mod, data_key=None):
+    def _load_from_module(self, mod, data_key=None, exclude_data_key=None):
         '''从一个python模块加载测试用例
-        
+
         :param mod: Python模块
         :type mod: ModuleType
         :returns list - 测试用例对象列表
@@ -199,7 +203,7 @@ class TestLoader(object):
         for name in dir(mod):
             obj = getattr(mod, name)
             if self._is_testcase_class(obj):
-                tests += self._load_from_class(obj, data_key)
+                tests += self._load_from_class(obj, data_key, exclude_data_key=exclude_data_key)
         if hasattr(mod, '__qtaf_seq_tests__'):  # 测试用例需要顺序执行
             seqdef = mod.__qtaf_seq_tests__
             if not isinstance(seqdef, list):
@@ -218,13 +222,17 @@ class TestLoader(object):
             tests = [SeqTestSuite([ test_dict[it] for it in seqdef])]
         return tests
 
-    def _load_from_class(self, cls, data_key=None):
+    def _load_from_class(self, cls, data_key=None, exclude_data_key=None):
         '''加载用例类
-        
-        :param cls: Python类 
+
+        :param cls: Python类
         :type cls: Type
         :returns list - 测试用例对象列表
         '''
+        if exclude_data_key is None:
+            exclude_data_key = []
+        exclude_data_key = [smart_text(i) for i in exclude_data_key]
+
         tests = []
         if datadrive.is_datadrive(cls) or settings.DATA_DRIVE:
             tests = datadrive.load_datadrive_tests(cls, data_key)
