@@ -333,6 +333,7 @@ class RuntestReportTest(TestReportBase):
             args.tags = None
             args.excluded_tags = None
             args.resmgr_backend_type = "local"
+            args.config_file = None
 
             with context:
                 self.assertEqual(RunTest().execute(args), 1)
