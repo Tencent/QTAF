@@ -182,7 +182,7 @@ class RunTest(Command):
     parser.add_argument("--runner-args", help="additional arguments for specific runner", default="")
     parser.add_argument("--runner-args-help", help="show help information for specific runner arguemnts", choices=runner_types.keys())
 
-    parser.add_argument("--run-file", help="runtime config file path")
+    parser.add_argument("--config-file", help="runtime config file path")
 
     def run_args_parser(self, runner_args):
         """兼容参数传入concurrency=5,retries=1，支持subprocess shell=False"""

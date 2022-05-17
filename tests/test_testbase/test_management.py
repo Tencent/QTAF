@@ -51,7 +51,7 @@ class RuntestTest(unittest.TestCase):
         self.assertEqual(args.tests, ["xxxx"])
 
     def test_config_file(self):
-        cmdline = "-w working_dir xxxx oooo.test --run-file test.json".split()
+        cmdline = "-w working_dir xxxx oooo.test --config-file test.json".split()
         args = RunTest.parser.parse_args(cmdline)
         self.assertEqual(args.working_dir, "working_dir")
         self.assertEqual(args.tests, ["xxxx", "oooo.test"])
@@ -117,7 +117,7 @@ class RuntestTest(unittest.TestCase):
 
     def test_run_file_success(self):
         working_dir = "test_online_report_%s" % get_time_str()
-        cmdline = 'runtest --report-type html tests.sampletest.hellotest.FailedCase --run-file tests/sampletest/test.json'
+        cmdline = 'runtest --report-type html tests.sampletest.hellotest.FailedCase --config-file tests/sampletest/test.json'
         cmdline += " -w " + working_dir
         self.addCleanup(shutil.rmtree, working_dir, ignore_errors=True)
         sys.argv = ["qtaf"]
