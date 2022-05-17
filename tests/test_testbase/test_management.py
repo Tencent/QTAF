@@ -55,7 +55,7 @@ class RuntestTest(unittest.TestCase):
         args = RunTest.parser.parse_args(cmdline)
         self.assertEqual(args.working_dir, "working_dir")
         self.assertEqual(args.tests, ["xxxx", "oooo.test"])
-        self.assertEqual(args.run_file, "test.json")
+        self.assertEqual(args.config_file, "test.json")
 
     def test_report_args_parsing(self):
         cmdline = 'xxxx --report-type stream --report-args "--no-output-result --no-summary"'
@@ -115,7 +115,7 @@ class RuntestTest(unittest.TestCase):
         proc.join()
         self.assertEqual(proc.exitcode, 0)
 
-    def test_run_file_success(self):
+    def test_config_file_success(self):
         working_dir = "test_online_report_%s" % get_time_str()
         cmdline = 'runtest --report-type html tests.sampletest.hellotest.FailedCase --config-file tests/sampletest/test.json'
         cmdline += " -w " + working_dir

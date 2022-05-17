@@ -203,8 +203,8 @@ class RunTest(Command):
     def execute(self, args):
         """执行过程
         """
-        if args.run_file:
-            with open(args.run_file, 'r') as fp:
+        if args.config_file:
+            with open(args.config_file, 'r') as fp:
                 data = json.load(fp)
                 for k, value in data.items():
                     setattr(args, k, value)
