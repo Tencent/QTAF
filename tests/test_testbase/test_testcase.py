@@ -411,6 +411,11 @@ class TestCaseTest(unittest.TestCase):
             self.assertEqual(tc.test, 200)
             self.assertEqual(tc.test1, 1000)
 
+            tc1 = ParamTest(attrs={"test": 200, "test1": "1000"})
+            tc1.debug_run()
+            self.assertEqual(tc1.test, 200)
+            self.assertEqual(tc1.test1, 1000)
+
     def test_parameter_without_add_params(self):
         from tests.sampletest.paramtest import ParamTestWithoutAddParams
         with modify_settings(QTAF_PARAM_MODE=True):

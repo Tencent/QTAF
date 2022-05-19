@@ -28,7 +28,7 @@ import types
 import six
 
 from testbase.assertion import AssertionRewriter
-from testbase.util import Singleton, ThreadGroupLocal, ThreadGroupScope, smart_text, get_last_frame_stack, getmembers
+from testbase.util import Singleton, ThreadGroupLocal, ThreadGroupScope, smart_text, get_last_frame_stack, getmembers, translate2type
 from testbase.testresult import EnumLogLevel, TestResultCollection, TestResultType
 from testbase.conf import settings
 from testbase.retry import Retry
@@ -415,7 +415,7 @@ class TestCase(object):
                     else:
                         if not isinstance(value, define_type):
                             # 如果期望类型是float，int型的数据, 转换为字符串，判断是否是数值型数据，如果是强制转换为数值型数据
-                            ret = self.translate2type(define_type, value)
+                            ret = translate2type(define_type, value)
                             if ret is not None:
                                 self.__params[c_name] = ret
                             else:

@@ -732,5 +732,23 @@ def getmembers(object, predicate=None):
     return results
 
 
+def translate2type(dst_type, value):
+    '''仅针对float、int'''
+    if dst_type not in [float, int]:
+        return
+    text = str(value)
+    float_regex = re.compile(r'^[+-]?((\d+(\.\d*)?)|\.\d+)([eE][+-]?[0-9]+)?$')
+    if float_regex.match(text):
+        if dst_type is float:
+            return float(text)
+        else:
+            _float_value = float(text)
+            _int_value = int(_float_value)
+            if _float_value != _int_value:
+                return None
+            return _int_value
+    return
+
+
 if __name__ == "__main__":
     pass
