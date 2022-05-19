@@ -110,8 +110,6 @@ class TestLoader(object):
         for testcase in testcases:
             testcase_dict[testcase.test_name] = testcase
 
-        print(testcases)
-
         return list(testcase_dict.values())
 
     def _load(self, testname):
