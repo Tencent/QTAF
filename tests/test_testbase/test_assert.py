@@ -51,6 +51,21 @@ class AssertionInnerInvokeTest(AssertionFailureTest):
     def assert_foo_bar(self):
         self.assert_("assert", self.foo(self.bar(1)) in [2, 4])
 
+    def assert_foo_bar_with_for(self):
+        for _ in range(2):
+            self.assert_("assert", self.foo(self.bar(1)) in [2, 4])
+
+
+class AssertionInnerInvokeForTest(AssertionFailureTest):
+    """xxxx
+    """
+    def run_test(self):
+        self.assert_foo_bar()
+
+    def assert_foo_bar_with_for(self):
+        for _ in range(2):
+            self.assert_("assert", self.foo(self.bar(1)) in [2, 4])
+
 
 @DataDrive([1,2])
 class AssertionDatadriveTest(AssertionFailureTest):
@@ -82,6 +97,14 @@ class AssertionTest(unittest.TestCase):
 
         self.assertEqual(case.test_result.passed, False, "断言失败，用例没有失败")
         self.assertEqual(self.is_func_rewritten(case.assert_foo_bar, old_assert_foo_bar_code), True, "重写assert失败，code对象没有改变")
+
+    def test_assert_inner_invoke_with_for(self):
+        case = AssertionInnerInvokeForTest()
+        old_assert_foo_bar_with_for_code = case.assert_foo_bar_with_for.__func__.__code__
+        case.debug_run()
+
+        self.assertEqual(case.test_result.passed, False, "断言失败，用例没有失败")
+        self.assertEqual(self.is_func_rewritten(case.assert_foo_bar_with_for, old_assert_foo_bar_with_for_code), True, "重写assert失败，code对象没有改变")
 
     def test_assert_datadrive(self):
         case = AssertionDatadriveTest()
