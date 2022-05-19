@@ -60,7 +60,8 @@ class TestCaseSettings(object):
     '''目标测试用例配置
     '''
 
-    def __init__(self, names=None, excluded_names=None, priorities=None, status=None, owners=None, tags=None, excluded_tags=None):
+    def __init__(self, names=None, excluded_names=None, priorities=None, status=None, owners=None,
+                tags=None, excluded_tags=None, global_parameters={}):
         '''构造函数
 
         :param names: 测试用例名
@@ -81,8 +82,17 @@ class TestCaseSettings(object):
         if names is None:
             self.names = []
         else:
-            self.names = list(names)
-            # self.names = [name if isinstance(name, dict) else {"name": self._generate_test_names(testcase)} for name in names]
+            # self.names = list(names)
+            self.names = [name if isinstance(name, dict) else {"name": self._generate_testcase_names(name)} for name in names]
+
+        for case in self.names:
+            if "parameters" in case:
+                for parameter in global_parameters:
+                    if parameter not in case['parameters']:
+                        case['parameters'][parameter] = global_parameters[parameter]
+            else:
+                case['parameters'] = global_parameters
+
         if owners is None:
             self.owners = []
         else:
@@ -123,7 +133,7 @@ class TestCaseSettings(object):
         self.tags = set(tags) if tags else None
         self.excluded_tags = set(excluded_tags) if excluded_tags else None
 
-    def _generate_testcase_names(testcase):
+    def _generate_testcase_names(self, testcase):
         if testcase.endswith(".py"):
             testcase = re.sub(r'\\|/', '.', testcase)
             testcase = re.sub(r'\.py$', '', testcase)

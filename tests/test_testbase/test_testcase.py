@@ -395,6 +395,30 @@ class TestCaseTest(unittest.TestCase):
         self.assertEqual(type(report), EmptyTestReport)
         self.assertRaises(ValueError, DataTest().debug_run_one, "XXXX")
 
+    def test_parameter(self):
+        from tests.sampletest.paramtest import ParamTest
+        with modify_settings(QTAF_PARAM_MODE=True):
+            tc = ParamTest()
+            tc.debug_run()
+            self.assertEqual(tc.test, 100)
+            self.assertEqual(tc.test1, 100)
+
+    def test_parameter_rewrite(self):
+        from tests.sampletest.paramtest import ParamTest
+        with modify_settings(QTAF_PARAM_MODE=True):
+            tc = ParamTest(attrs={"test": 200, "test1": 1000})
+            tc.debug_run()
+            self.assertEqual(tc.test, 200)
+            self.assertEqual(tc.test1, 1000)
+
+    def test_parameter_without_add_params(self):
+        from tests.sampletest.paramtest import ParamTestWithoutAddParams
+        with modify_settings(QTAF_PARAM_MODE=True):
+            tc = ParamTestWithoutAddParams(attrs={"test": 200, "test1": 1000})
+            tc.debug_run()
+            self.assertNotIn('test', tc.__dict__)
+            self.assertNotIn('test1', tc.__dict__)
+
 
 if __name__ == "__main__":
     unittest.main()

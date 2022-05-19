@@ -80,6 +80,9 @@ class TestLoader(object):
         testcases = []
 
         for testname in testnames:
+            parameters = {}
+            exclude_data_keys = None
+
             if isinstance(testname, dict):
                 parameters = testname.get("parameters", {})
                 exclude_data_keys = testname.get("exclude_data_keys")
@@ -96,16 +99,18 @@ class TestLoader(object):
 
             if isinstance(obj, types.ModuleType):
                 if hasattr(obj, '__path__'):
-                    testcases += self._load_from_package(obj, data_key)
+                    testcases += self._load_from_package(obj, data_key, exclude_data_keys, parameters)
                 else:
-                    testcases += self._load_from_module(obj, data_key)
+                    testcases += self._load_from_module(obj, data_key, exclude_data_keys, parameters)
             elif isinstance(obj, type):
-                testcases += self._load_from_class(obj, data_key)
+                testcases += self._load_from_class(obj, data_key, exclude_data_keys, parameters)
 
         # 过滤掉重复的用例
         testcase_dict = {}
         for testcase in testcases:
             testcase_dict[testcase.test_name] = testcase
+
+        print(testcases)
 
         return list(testcase_dict.values())
 
@@ -174,7 +179,7 @@ class TestLoader(object):
         '''
         self._module_errs[modulename] = traceback.format_exc()
 
-    def _load_from_package(self, pkg, data_key=None, exclude_data_key=None):
+    def _load_from_package(self, pkg, data_key=None, exclude_data_key=None, attrs=None):
         '''从一个python包加载测试用例
 
         :param pkg: Python包
@@ -187,12 +192,12 @@ class TestLoader(object):
                 continue
             try:
                 __import__(modulename)
-                tests += self._load_from_module(sys.modules[modulename], data_key, exclude_data_key=exclude_data_key)
+                tests += self._load_from_module(sys.modules[modulename], data_key, exclude_data_key=exclude_data_key, attrs=None)
             except:
                 self._module_errs[modulename] = traceback.format_exc()
         return tests
 
-    def _load_from_module(self, mod, data_key=None, exclude_data_key=None):
+    def _load_from_module(self, mod, data_key=None, exclude_data_key=None, attrs=None):
         '''从一个python模块加载测试用例
 
         :param mod: Python模块
@@ -203,7 +208,7 @@ class TestLoader(object):
         for name in dir(mod):
             obj = getattr(mod, name)
             if self._is_testcase_class(obj):
-                tests += self._load_from_class(obj, data_key, exclude_data_key=exclude_data_key)
+                tests += self._load_from_class(obj, data_key, exclude_data_key=exclude_data_key, attrs=attrs)
         if hasattr(mod, '__qtaf_seq_tests__'):  # 测试用例需要顺序执行
             seqdef = mod.__qtaf_seq_tests__
             if not isinstance(seqdef, list):
@@ -222,7 +227,7 @@ class TestLoader(object):
             tests = [SeqTestSuite([ test_dict[it] for it in seqdef])]
         return tests
 
-    def _load_from_class(self, cls, data_key=None, exclude_data_key=None):
+    def _load_from_class(self, cls, data_key=None, exclude_data_key=None, attrs=None):
         '''加载用例类
 
         :param cls: Python类
@@ -235,9 +240,9 @@ class TestLoader(object):
 
         tests = []
         if datadrive.is_datadrive(cls) or settings.DATA_DRIVE:
-            tests = datadrive.load_datadrive_tests(cls, data_key)
+            tests = datadrive.load_datadrive_tests(cls, data_key, attrs)
         else:
-            tests = [cls()]
+            tests = [cls(attrs=attrs)]
 
         if self._filter:
             final_tests = []

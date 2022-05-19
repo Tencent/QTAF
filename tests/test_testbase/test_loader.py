@@ -69,6 +69,15 @@ class TestLoaderTest(unittest.TestCase):
         self.assertEqual(list(result.keys())[0].test_class_name, filtered_test)
         self.assertEqual("hello filtered", list(result.values())[0])
 
+    def test_load_testcasedict(self):
+        testcases = [
+            {"name": "tests.sampletest.paramtest.ParamTest", "parameters": {"test": 200, "test1": 400}}
+        ]
+        with modify_settings(QTAF_PARAM_MODE=True):
+            tests = self.loader.load(testcases)
+            self.assertEqual(len(tests), 1)
+            self.assertEqual(tests[0].test, 200)
+
 
 class LoadDataDriveReversibleTest(unittest.TestCase):
 

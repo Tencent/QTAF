@@ -19,6 +19,7 @@ from __future__ import absolute_import
 
 import os
 import sys
+import json
 import re
 import threading
 import traceback
@@ -31,6 +32,10 @@ from testbase.util import Singleton, ThreadGroupLocal, ThreadGroupScope, smart_t
 from testbase.testresult import EnumLogLevel, TestResultCollection, TestResultType
 from testbase.conf import settings
 from testbase.retry import Retry
+
+
+class BaseTestCaseException(Exception):
+    pass
 
 
 # 后续需专门花时间去除TestCaseStatus和TestCasePriority这两个类
@@ -195,6 +200,11 @@ class TestCase(object):
         self.__resmgr = None
         self.__test_doc = None
 
+        # 参数相关
+        self.__params_definitions = {}  # add_params原始的用例参数数据
+        self.__params = {}  # key，name的用例参数数据
+        self.__dynamic_params = {}  # 外部传入的参数数据
+
         if attrs:
             for k, v in attrs.items():
                 if k in self.ATTRIB_OVERWRITE_WHITELIST:
@@ -206,6 +216,10 @@ class TestCase(object):
                         self.tags = self.base_tags | set(v)
                     else:
                         setattr(self, k, v)
+                else:
+                    self.__dynamic_params[k] = v
+
+        self.handle_params()
 
     @property
     def casedata(self):
@@ -315,6 +329,18 @@ class TestCase(object):
             self.__resmgr_session = self.__resmgr.create_session(self)
         return self.__resmgr_session
 
+    @property
+    def params_definitions(self):
+        return self.__params_definitions
+
+    @property
+    def params(self):
+        return self.__params
+
+    @property
+    def dynamic_params(self):
+        return self.__dynamic_params
+
     def get_test_extra_properties(self):
         var_dicts = {}
         for k, v in getmembers(self):
@@ -329,6 +355,156 @@ class TestCase(object):
                     v = smart_text(v)
                 var_dicts[k] = v
         return var_dicts
+
+    def add_parameters(self):
+        # 用例重写或者不重写
+        self.add_params()
+
+    def add_parameter(self, name, type=str, optional=False, default=None, description='', validation=None,
+                      rewrite=False, **kwargs):
+        if type not in (bool, list, str, int, float, dict, "json"):
+            raise BaseTestCaseException('Unsupported type of parameter.')
+
+        if rewrite is False:  # 如果不能重写，需要判断是否存在
+            assert name not in self.params_definitions, \
+                'Parameters with the same name "{}" were found.'.format(name)
+
+        if not optional and default is None:
+            raise BaseTestCaseException("Parameter {} must define default value".format(name))
+
+        self.__params_definitions[name] = {
+            'name': name,
+            'type': type,
+            'optional': optional,
+            'default': default,
+            'description': description,
+            'validation': validation,
+            'kwargs': kwargs
+        }
+
+    def add_params(self):
+        # 用例重写
+        pass
+
+    add_param = add_parameter
+
+    def assert_types(self):
+        '''参数校验并设置self.params'''
+        errors = []
+        for d_name in self.params_definitions:
+            default = self.params_definitions[d_name]["default"]
+            define_type = self.params_definitions[d_name]['type']
+            optional = self.params_definitions[d_name]['optional']
+            for c_name in self.dynamic_params:
+                c_name = smart_text(c_name)
+                if c_name == d_name:
+                    # 如果有外部传入，直接进行参数类型检查，检查正确设置参数否则记录异常
+                    value = self.dynamic_params[c_name]
+                    if optional and value is None and default is None:
+                        self.__params[c_name] = value
+                        break
+                    if isinstance(value, six.text_type):
+                        value = smart_text(value)
+                    if self.params_definitions[d_name]['type'] == "json":
+                        # json单独处理
+                        try:
+                            value = json.loads(self.dynamic_params[c_name])
+                            self.__params[c_name] = value
+                        except Exception:
+                            errors.append("Parameter:{}, value:{}, is not json type.".format(c_name, value))
+                    else:
+                        if not isinstance(value, define_type):
+                            # 如果期望类型是float，int型的数据, 转换为字符串，判断是否是数值型数据，如果是强制转换为数值型数据
+                            ret = self.translate2type(define_type, value)
+                            if ret is not None:
+                                self.__params[c_name] = ret
+                            else:
+                                errors.append(
+                                    "Parameter:{}, value:{}, type {} is not:{} type.".format(c_name,
+                                                                                             value,
+                                                                                             type(value),
+                                                                                             str(define_type)))
+                        else:
+                            self.__params[c_name] = value
+                    break
+            else:
+                # 如果外部未传入使用默认参数
+                if default is not None:
+                    if define_type == "json":
+                        # json单独处理
+                        try:
+                            value = json.loads(default)
+                            default = value
+                        except Exception:
+                            raise BaseTestCaseException("Parameter {}, value {}, is not json type.".format(d_name,
+                                                                                                           default))
+                    else:
+                        if not isinstance(default, define_type):
+                            raise BaseTestCaseException(
+                                "Parameter {}, value {}, is not {} type.".format(d_name, default,
+                                                                                 repr(define_type.__name__)))
+                self.__params[d_name] = default
+
+        # validation检查
+        for d_name in self.params_definitions:
+            validation = self.params_definitions[d_name]['validation']
+            kwargs = self.params_definitions[d_name]['kwargs']
+            default = self.params_definitions[d_name]['default']
+            if kwargs is None:
+                kwargs = {}
+            if not isinstance(kwargs, dict):
+                errors.append("Parameter:{}, param(kwargs) must be dict.".format(d_name))
+            if d_name not in self.params:
+                value = default
+                # 如果是default就不进行校验
+            else:
+                value = self.params[d_name]
+
+            if value == default:  # 如果值与default相等就不进行校验
+                continue
+            # 否则进行校验
+            if validation is not None and callable(validation):
+                try:
+                    validation(value, self.params, **kwargs)
+                except Exception as exe:
+                    errors.append(
+                        "Parameter:{}, value:{}, validation error, detail: {}.".format(d_name, value, str(exe)))
+        if errors:  # 如果参数校验失败抛出异常
+            raise BaseTestCaseException("\n".join(errors))
+
+    def handle_params(self):
+        '''
+        加载并设置参数,用例中可重写加载方法方式; 并显示的调用以适配不支持参数传递的方式
+        正常模式：不设置参数
+        设置数据驱动参数：只设置数据驱动参数
+        设置全部参数：如果传入参数，以传入参数为准，否则设置数据驱动参数
+        '''
+        # 通过参数控制是否进行参数传递
+        param_mode = settings.get("QTAF_PARAM_MODE", False)
+        if not param_mode:
+            param_mode = settings.get("QC_PARAM_MODE", False)
+
+        if not param_mode:  # 正常模式
+            return
+
+        self.add_params()  # 添加参数定义
+        self.assert_types()  # 参数校验
+
+        temp_data = self.params
+
+        if param_mode == "DATADRIVE":
+            if isinstance(self.casedata, dict):
+                temp_data.update(self.casedata)
+        elif param_mode == "PARAM" or param_mode is True:
+            if isinstance(self.casedata, dict):
+                temp_data.update(self.casedata)
+
+        if not temp_data or not isinstance(temp_data, dict):
+            return
+        for key, value in temp_data.items():
+            if not isinstance(key, six.string_types):
+                continue
+            setattr(self, str(key), value)
 
     def init_test(self, testresult):
         '''初始化测试用例。慎用此函数，尽量将初始化放到preTest里。

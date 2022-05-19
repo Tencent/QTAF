@@ -182,6 +182,8 @@ class RunTest(Command):
     parser.add_argument("--runner-args", help="additional arguments for specific runner", default="")
     parser.add_argument("--runner-args-help", help="show help information for specific runner arguemnts", choices=runner_types.keys())
 
+    parser.add_argument("--global-parameters", help="global parameters", default="")
+
     parser.add_argument("--config-file", help="runtime config file path")
 
     def run_args_parser(self, runner_args):
@@ -236,13 +238,17 @@ class RunTest(Command):
                                   TestCase.EnumStatus.Review,
                                   TestCase.EnumStatus.Ready]
 
+        if args.global_parameters and isinstance(args.global_parameters, six.string_types):
+            args.global_parameters = json.loads(args.global_parameters)
+
         test_conf = TestCaseSettings(names=args.tests,
                                     excluded_names=args.excluded_names,
                                     priorities=priorities,
                                     status=status,
                                     owners=args.owners,
                                     tags=args.tags,
-                                    excluded_tags=args.excluded_tags)
+                                    excluded_tags=args.excluded_tags,
+                                    global_parameters=args.global_parameters)
 
         report_type = report_types[args.report_type]
         if args.report_type == 'xml':

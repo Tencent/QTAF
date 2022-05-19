@@ -195,7 +195,7 @@ def _translate_bad_char4exclude_keys(data_key):
     return data_key
 
 
-def load_datadrive_tests(cls, name=None, exclude_data_key=None):
+def load_datadrive_tests(cls, name=None, exclude_data_key=None, attrs=None):
     '''加载对应数据驱动测试用例类的数据驱动用例
     '''
     if is_datadrive(cls):
@@ -239,9 +239,16 @@ def load_datadrive_tests(cls, name=None, exclude_data_key=None):
             logger.warn(warn_msg)
 
         if isinstance(testdata, dict) and "__attrs__" in testdata:
-            attrs = testdata.get("__attrs__")
+            new_attrs = testdata.get("__attrs__")
         else:
-            attrs = None
-        tests.append(cls(testdata, casedata_name, attrs))
+            new_attrs = None
+
+        if attrs:
+            if not new_attrs:
+                new_attrs = attrs
+            else:
+                new_attrs.update(attrs)
+
+        tests.append(cls(testdata, casedata_name, new_attrs))
     return tests
 

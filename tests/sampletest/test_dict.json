@@ -1,0 +1,9 @@
+{
+  "tests": [{"name": "tests.sampletest.paramtest.ParamOverWriteTest", "parameters": {"test": 200, "test1": 400}}],
+  "excluded_name": [],
+  "owner": [],
+  "priority": ["BVT", "High"],
+  "status": ["Design", "Ready"],
+  "tag": [],
+  "excluded_tag": []
+}
