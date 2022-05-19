@@ -1,0 +1,19 @@
+{
+  "tests": [{"name": "tests.sampletest.paramtest.ParamOverWriteTest"}],
+  "excluded_name": [],
+  "owner": [],
+  "priority": ["BVT", "High"],
+  "status": ["Design", "Ready"],
+  "tag": [],
+  "excluded_tag": [],
+  "working_dir": null,
+  "stop_on_failure": true,
+  "execute_type": "random",
+  "report_type": "stream",
+  "report_args": "",
+  "resmgr_backend_type": "local",
+  "runner_type": "basic",
+  "runner_args": "",
+  "share_data": {},
+  "global_parameters": {"test": 200, "test1": 400}
+}

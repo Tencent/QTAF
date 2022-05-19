@@ -27,6 +27,7 @@ from testbase.testcase import TestCase
 from testbase.management import RunTest, DiscoverTests, RunScript, ManagementTools
 from testbase.types import runner_types, report_types
 from testbase.util import get_time_str
+from testbase.test import modify_settings
 
 
 class RuntestTest(unittest.TestCase):
@@ -124,6 +125,28 @@ class RuntestTest(unittest.TestCase):
         sys.argv.extend(cmdline.split())
         exitcode = ManagementTools().run()
         self.assertEqual(exitcode, 0)
+
+    def test_config_file_with_dict(self):
+        with modify_settings(QTAF_PARAM_MODE=True):
+            working_dir = "test_online_report_%s" % get_time_str()
+            cmdline = 'runtest --report-type html --config-file tests/sampletest/test_dict.json'
+            cmdline += " -w " + working_dir
+            self.addCleanup(shutil.rmtree, working_dir, ignore_errors=True)
+            sys.argv = ["qtaf"]
+            sys.argv.extend(cmdline.split())
+            exitcode = ManagementTools().run()
+            self.assertEqual(exitcode, 0)
+
+    def test_config_file_with_global_parameters(self):
+        with modify_settings(QTAF_PARAM_MODE=True):
+            working_dir = "test_online_report_%s" % get_time_str()
+            cmdline = 'runtest --config-file tests/sampletest/test_global_parameters.json'
+            cmdline += " -w " + working_dir
+            self.addCleanup(shutil.rmtree, working_dir, ignore_errors=True)
+            sys.argv = ["qtaf"]
+            sys.argv.extend(cmdline.split())
+            exitcode = ManagementTools().run()
+            self.assertEqual(exitcode, 0)
 
 
 class DiscoverTest(unittest.TestCase):
