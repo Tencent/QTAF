@@ -152,26 +152,28 @@ class AssertionRewriter(ast.NodeVisitor):
         self.rewrite_code = False
         while nodes:
             node = nodes.pop()
-            for field, value in ast.iter_fields(node):
-                if isinstance(value, list):
-                    new_nodes = []
-                    for child in value:
-                        if isinstance(child, ast.Expr):
-                            new_nodes.extend(self.visit(child))
-                        elif isinstance(child, ast.For):
-                            for c in child.body:
-                                if isinstance(c, ast.Expr):
-                                    new_nodes.extend(self.visit(c))
-                        else:
-                            new_nodes.append(child)
-                    setattr(node, field, new_nodes)
-                if isinstance(value, ast.Expr):
-                    self.visit(value)
+            self.iter_ast_node(node)
         if self.rewrite_code:
             source_file = inspect.getsourcefile(func)
             new_code = compile(mod, source_file, "exec")
             set_func_code(func, new_code)
         _AssertHookedCache().add(func)
+
+    def iter_ast_node(self, node):
+        for field, value in ast.iter_fields(node):
+            if isinstance(value, list):
+                new_nodes = []
+                for child in value:
+                    if isinstance(child, ast.Expr):
+                        new_nodes.extend(self.visit(child))
+                    elif isinstance(child, ast.For):
+                        self.iter_ast_node(child)
+                        new_nodes.append(child)
+                    else:
+                        new_nodes.append(child)
+                setattr(node, field, new_nodes)
+            if isinstance(value, ast.Expr):
+                self.visit(value)
 
     def visit_Expr(self, expr):
         value = expr.value

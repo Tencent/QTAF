@@ -419,6 +419,12 @@ class TestCaseTest(unittest.TestCase):
             self.assertNotIn('test', tc.__dict__)
             self.assertNotIn('test1', tc.__dict__)
 
+    def test_for(self):
+        from tests.sampletest.hellotest import ForTest
+        tc = ForTest()
+        x = tc.debug_run()
+        self.assertEqual(x.is_passed(), True)
+
 
 if __name__ == "__main__":
     unittest.main()

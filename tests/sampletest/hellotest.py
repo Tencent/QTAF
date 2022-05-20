@@ -232,6 +232,25 @@ class ExtraPropertyTest(ExtraPropertyTestBase):
     def property_exception(self):
         raise RuntimeError
 
+
+class ForTest(testbase.TestCase):
+    '''超时示例
+    '''
+    owner = "foo"
+    status = testbase.TestCase.EnumStatus.Ready
+    timeout = 1
+    priority = testbase.TestCase.EnumPriority.Normal
+
+    def run_test(self):
+        for i in range(5):
+            self.log_info("i: %s" % i)
+            self.assert_("Assert Info", 1 == 1)
+
+            for j in range(3):
+                self.log_info("j: %s" % j)
+                self.assert_("Assert Info", 1 == 1)
+
+
 if __name__ == '__main__':
 #     HelloTest().run()
 #     x = CrashTest().debug_run()
