@@ -198,6 +198,7 @@ class TestCase(object):
         self.__testresult = None
         self.__resmgr_session = None
         self.__resmgr = None
+        self.__share_data_mgr = None
         self.__test_doc = None
 
         # 参数相关
@@ -330,6 +331,16 @@ class TestCase(object):
         return self.__resmgr_session
 
     @property
+    def share_data_mgr(self):
+        '''共享数据管理器
+        '''
+        return self.__share_data_mgr
+
+    @share_data_mgr.setter
+    def share_data_mgr(self, share_data_mgr):
+        self.__share_data_mgr = share_data_mgr
+
+    @property
     def params_definitions(self):
         return self.__params_definitions
 
@@ -355,6 +366,26 @@ class TestCase(object):
                     v = smart_text(v)
                 var_dicts[k] = v
         return var_dicts
+
+    def add_share_data(self, name, value, level=0):
+        '''添加共享数据
+
+        :type name: string
+        :param name: 需要共享的数据名称
+        :param value: 需要共享的数据内容
+        '''
+        if self.share_data_mgr:
+            self.share_data_mgr.set(name, value, level)
+
+    def get_share_data(self, name):
+        '''从内存中获取存储的全局数据，给当前用例使用'''
+        if self.share_data_mgr:
+            return self.share_data_mgr.get(name)
+
+    def remove_share_data(self, name):
+        '''从内存中移除存储的共享数据'''
+        if self.share_data_mgr:
+            return self.share_data_mgr.remove(name)
 
     def add_parameters(self):
         # 用例重写或者不重写
@@ -389,7 +420,8 @@ class TestCase(object):
     add_param = add_parameter
 
     def assert_types(self):
-        '''参数校验并设置self.params'''
+        '''参数校验并设置self.params
+        '''
         errors = []
         for d_name in self.params_definitions:
             default = self.params_definitions[d_name]["default"]
@@ -1189,6 +1221,7 @@ class SeqTestSuite(TestSuite):
         '''
         self._testcases = testcases
         self._resmgr = None
+        self.__share_data_mgr = None
 
     def __iter__(self):
         for it in self._testcases:
@@ -1254,6 +1287,19 @@ class SeqTestSuite(TestSuite):
         self._resmgr = resmgr
         for it in self._testcases:
             it.test_resmgr = resmgr
+
+
+    @property
+    def share_data_mgr(self):
+        '''共享数据管理器
+        '''
+        return self.__share_data_mgr
+
+    @share_data_mgr.setter
+    def share_data_mgr(self, share_data_mgr):
+        self.__share_data_mgr = share_data_mgr
+        for it in self._testcases:
+            it._share_data_mgr = share_data_mgr
 
     def dumps(self):
         '''序列化

@@ -333,6 +333,8 @@ class RuntestReportTest(TestReportBase):
             args.tags = None
             args.excluded_tags = None
             args.resmgr_backend_type = "local"
+            args.execute_type = "random"
+            args.share_data = None
             args.global_parameters = None
             args.config_file = None
 

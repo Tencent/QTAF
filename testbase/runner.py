@@ -41,17 +41,19 @@ import argparse
 import socket
 import uuid
 import itertools
+import json
 import six
 
 from six.moves import queue
 
 from testbase.loader import TestLoader
 from testbase import serialization
-from testbase.testcase import TestCase, TestCaseRunner
+from testbase.testcase import TestCase, TestCaseRunner, TestSuite
 from testbase.report import TestReportBase
 from testbase.testresult import TestResultCollection
 from testbase.resource import TestResourceManager, LocalResourceManagerBackend
 from testbase.plan import TestPlan
+from testbase.util import ShareDataManager
 
 runner_usage = 'runtest <test ...> --runner-type <runner-type> [--runner-args "<runner-args>"]'
 
@@ -61,7 +63,7 @@ class TestCaseSettings(object):
     '''
 
     def __init__(self, names=None, excluded_names=None, priorities=None, status=None, owners=None,
-                tags=None, excluded_tags=None, global_parameters={}):
+                tags=None, excluded_tags=None, share_data={}, global_parameters={}):
         '''构造函数
 
         :param names: 测试用例名
@@ -132,6 +134,7 @@ class TestCaseSettings(object):
 
         self.tags = set(tags) if tags else None
         self.excluded_tags = set(excluded_tags) if excluded_tags else None
+        self.share_data = share_data
 
     def _generate_testcase_names(self, testcase):
         if testcase.endswith(".py"):
@@ -190,7 +193,7 @@ class BaseTestRunner(object):
     '''测试执行器基类
     '''
 
-    def __init__(self, report, resmgr_backend=None):
+    def __init__(self, report, resmgr_backend=None, execute_type="random"):
         '''构造函数
 
         :param report: 测试报告
@@ -200,6 +203,9 @@ class BaseTestRunner(object):
         if resmgr_backend is None:
             resmgr_backend = LocalResourceManagerBackend()
         self._resmgr = TestResourceManager(resmgr_backend)
+        self._execute_type = execute_type
+
+        self._share_data_mgr = ShareDataManager()
 
     @property
     def report(self):
@@ -208,6 +214,19 @@ class BaseTestRunner(object):
         :returns: ITestReport
         '''
         return self.__report
+
+    def load_share_data(self, data):
+        for key, value in data.items():
+            self._share_data_mgr.set(key, value)
+
+    def get_share_data(self, key):
+        return self._share_data_mgr.get(key)
+
+    def add_share_data(self, key, value, level=0):
+        self._share_data_mgr.set(key, value, level)
+
+    def remove_share_data(self, name):
+        self._share_data_mgr.remove(name)
 
     def load(self, target):
         '''加载测试用例
@@ -252,6 +271,10 @@ class BaseTestRunner(object):
                 test_target_args = {}
 
             plan = SimplePlan()
+
+        if isinstance(target, TestCaseSettings):
+            self.load_share_data(target.share_data)
+
         self.__report.begin_report()
         plan.test_setup(self.__report)
         self.__report.log_test_target(plan.get_test_target())
@@ -292,7 +315,8 @@ class BaseTestRunner(object):
         :param tests: 测试用例对象列表
         :type tests: list
         '''
-        random.shuffle(tests)
+        if self._execute_type == "random":
+            random.shuffle(tests)
         for test in tests:
             self.run_test(test)
 
@@ -304,6 +328,12 @@ class BaseTestRunner(object):
         :returns: boolean - 测试是否通过
         '''
         test.test_resmgr = self._resmgr
+        if isinstance(test, TestCase):
+            test.share_data_mgr = self._share_data_mgr  # 用于传递共享数据
+        elif isinstance(test, TestSuite):
+            for it in test:
+                it.share_data_mgr = self._share_data_mgr
+
         runner = getattr(test, 'case_runner', TestCaseRunner())
         result = runner.run(test, self.__report.get_testresult_factory())
         if isinstance(result, TestResultCollection):
@@ -336,7 +366,7 @@ class BaseTestRunner(object):
         raise NotImplementedError()
 
     @classmethod
-    def parse_args(cls, args_string, report, resmgr_backend):
+    def parse_args(cls, args_string, report, resmgr_backend, execute_type):
         '''通过命令行参数构造对象
 
         :returns: 测试报告
@@ -349,7 +379,7 @@ class TestRunner(BaseTestRunner):
     '''测试执行器
     '''
 
-    def __init__(self, report, retries=0, resmgr_backend=None):
+    def __init__(self, report, retries=0, resmgr_backend=None, execute_type="random"):
         '''构造函数
 
         :param result: 测试报告
@@ -357,7 +387,7 @@ class TestRunner(BaseTestRunner):
         :param retries: 用例失败时重试次数
         :type retries: int
         '''
-        super(TestRunner, self).__init__(report, resmgr_backend)
+        super(TestRunner, self).__init__(report, resmgr_backend, execute_type)
         self._retries = retries
 
     def run_all_tests(self, tests):
@@ -366,7 +396,8 @@ class TestRunner(BaseTestRunner):
         :param test: 测试用例对象列表
         :type tests: list
         '''
-        random.shuffle(tests)
+        if self._execute_type == "random":
+            random.shuffle(tests)
         tests_queue = collections.deque(tests)
         tests_retry_dict = {}
         while len(tests_queue) > 0:
@@ -390,14 +421,14 @@ class TestRunner(BaseTestRunner):
         return parser
 
     @classmethod
-    def parse_args(cls, args_string, report, resmgr_backend):
+    def parse_args(cls, args_string, report, resmgr_backend, execute_type):
         '''通过命令行参数构造对象
 
         :returns: 测试报告
         :rtype: cls
         '''
         args = cls.get_parser().parse_args(args_string)
-        return cls(report, args.retries, resmgr_backend)
+        return cls(report, args.retries, resmgr_backend, execute_type)
 
 
 class ThreadSafetyReport(TestReportBase):
@@ -504,7 +535,7 @@ class ThreadingTestRunner(BaseTestRunner):
     '''使用多线程并发执行用例
     '''
 
-    def __init__(self, report, thread_cnt=0, retries=0, resmgr_backend=None):
+    def __init__(self, report, thread_cnt=0, retries=0, resmgr_backend=None, execute_type="random"):
         '''构造函数
 
         :param report: 测试报告
@@ -519,7 +550,7 @@ class ThreadingTestRunner(BaseTestRunner):
         self._lock = threading.Lock()
         if self.concurrency > 1:
             report = ThreadSafetyReport(report)
-        super(ThreadingTestRunner, self).__init__(report, resmgr_backend)
+        super(ThreadingTestRunner, self).__init__(report, resmgr_backend, execute_type)
 
     def run_all_tests(self, tests):
         '''执行全部的测试用例
@@ -527,7 +558,8 @@ class ThreadingTestRunner(BaseTestRunner):
         :param test: 测试用例对象列表
         :type tests: list
         '''
-        random.shuffle(tests)
+        if self._execute_type == "random":
+            random.shuffle(tests)
         tests_queue = collections.deque(tests)
         tests_retry_dict = {}
         threads = []
@@ -572,14 +604,14 @@ class ThreadingTestRunner(BaseTestRunner):
         return parser
 
     @classmethod
-    def parse_args(cls, args_string, report, resmgr_backend):
+    def parse_args(cls, args_string, report, resmgr_backend, execute_type):
         '''通过命令行参数构造对象
 
         :returns: 测试报告
         :rtype: cls
         '''
         args = cls.get_parser().parse_args(args_string)
-        return cls(report, args.concurrency, args.retries, resmgr_backend)
+        return cls(report, args.concurrency, args.retries, resmgr_backend, execute_type)
 
 
 class EnumProcessMsgType(object):
@@ -823,7 +855,7 @@ def _log_collection_result(testreport, result_collection):
             testreport.log_test_result(it.testcase, it)
 
 
-def _run_test_thread(worker_id, ctrl_msg_queue, testcase, testreport, resmgr):
+def _run_test_thread(worker_id, ctrl_msg_queue, testcase, testreport, resmgr, share_data_mgr=None):
     '''执行测试用例的线程
 
     :param worker_id: 工作者ID
@@ -838,9 +870,10 @@ def _run_test_thread(worker_id, ctrl_msg_queue, testcase, testreport, resmgr):
     :type resmgr: TestResourceManager
     '''
     try:
-        runnner = getattr(testcase, 'case_runner', TestCaseRunner())
+        case_runner = getattr(testcase, 'case_runner', TestCaseRunner())
         testcase.test_resmgr = resmgr
-        result = runnner.run(testcase, testreport.get_testresult_factory())
+        testcase.share_data_mgr = share_data_mgr
+        result = case_runner.run(testcase, testreport.get_testresult_factory())
         if isinstance(result, TestResultCollection):
             _log_collection_result(testreport, result)
         else:
@@ -853,7 +886,7 @@ def _run_test_thread(worker_id, ctrl_msg_queue, testcase, testreport, resmgr):
 
 def _worker_process(worker_id,
                      ctrl_msg_queue, msg_queue, rsp_queue,
-                     result_factory_type, result_factory_data, resmgr):
+                     result_factory_type, result_factory_data, resmgr, share_data_mgr=None):
     '''执行测试的子进程过程
 
     :param worker_id: 工作者ID，全局唯一
@@ -888,7 +921,7 @@ def _worker_process(worker_id,
             elif msg_type == EnumProcessMsgType.Worker_RunTest:
                 testcase = serialization.loads(msg_data[0])
                 t = threading.Thread(target=_run_test_thread,
-                                     args=(worker_id, ctrl_msg_queue, testcase, report, resmgr))
+                                     args=(worker_id, ctrl_msg_queue, testcase, report, resmgr, share_data_mgr))
                 t.daemon = True
                 t.start()
 
@@ -907,7 +940,7 @@ class TestWorker(object):
     '''多进程执行用例时，执行测试的子进程
     '''
 
-    def __init__(self, worker_id, ctrl_msg_queue, result_factory, resmgr):
+    def __init__(self, worker_id, ctrl_msg_queue, result_factory, resmgr, share_data_mgr=None):
         '''构造函数
 
         :param worker_id: 工作者ID，全局唯一
@@ -923,6 +956,7 @@ class TestWorker(object):
         self._result_factory = result_factory
         self._ctrl_msg_queue = ctrl_msg_queue
         self._resmgr = resmgr
+        self._share_data_mgr = share_data_mgr
         self._reset()
 
     def _reset(self):
@@ -937,7 +971,8 @@ class TestWorker(object):
                                                       self._rsp_queue,
                                                       type(self._result_factory),
                                                       self._result_factory.dumps(),
-                                                      self._resmgr))
+                                                      self._resmgr,
+                                                      self._share_data_mgr))
         self._monitor = threading.Thread(target=self._process_monitor)
         self._monitor.daemon = True
         self._testcase = None
@@ -1025,7 +1060,7 @@ class MultiProcessTestRunner(BaseTestRunner):
 
     '''
 
-    def __init__(self, report, process_cnt=0, retries=0, resmgr_backend=None):
+    def __init__(self, report, process_cnt=0, retries=0, resmgr_backend=None, execute_type="random"):
         '''构造函数
 
         :param report: 测试报告
@@ -1038,7 +1073,9 @@ class MultiProcessTestRunner(BaseTestRunner):
         self.concurrency = int(process_cnt) or multiprocessing.cpu_count()
         self._retries = retries
         self._workers_dict = {}
-        super(MultiProcessTestRunner, self).__init__(report, resmgr_backend)
+        super(MultiProcessTestRunner, self).__init__(report, resmgr_backend, execute_type)
+
+        self._share_data_mgr = ShareDataManager(lock=multiprocessing.Lock(), data=multiprocessing.Manager().dict())
 
     def run_all_tests(self, tests):
         '''执行全部的测试用例
@@ -1051,13 +1088,14 @@ class MultiProcessTestRunner(BaseTestRunner):
         if len(tests) < self.concurrency:
             self.concurrency = len(tests)
 
-        random.shuffle(tests)
+        if self._execute_type == "random":
+            random.shuffle(tests)
         tests_queue = collections.deque(tests)
         tests_retry_dict = {}
         msg_queue = multiprocessing.Queue()
         result_factory = self.report.get_testresult_factory()
         for i in range(self.concurrency):
-            worker = TestWorker(i, msg_queue, result_factory, self._resmgr)
+            worker = TestWorker(i, msg_queue, result_factory, self._resmgr, self._share_data_mgr)
             worker.start()
             worker.run_testcase(tests_queue.popleft())
             self._workers_dict[i] = worker
@@ -1132,11 +1170,11 @@ class MultiProcessTestRunner(BaseTestRunner):
         return parser
 
     @classmethod
-    def parse_args(cls, args_string, report, resmgr_backend):
+    def parse_args(cls, args_string, report, resmgr_backend, execute_type):
         '''通过命令行参数构造对象
 
         :returns: 测试报告
         :rtype: cls
         '''
         args = cls.get_parser().parse_args(args_string)
-        return cls(report, args.concurrency, args.retries, resmgr_backend)
+        return cls(report, args.concurrency, args.retries, resmgr_backend, execute_type)
