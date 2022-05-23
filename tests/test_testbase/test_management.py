@@ -83,7 +83,7 @@ class RuntestTest(unittest.TestCase):
         for cmdline, concurrency in test_pairs:
             args = RunTest.parser.parse_args(shlex.split(cmdline))
             runner_type = runner_types[args.runner_type]
-            runner = runner_type.parse_args(shlex.split(args.runner_args), None, None)
+            runner = runner_type.parse_args(shlex.split(args.runner_args), None, None, "random")
             self.assertEqual(getattr(runner, "concurrency", 1), concurrency)
 
     def test_failed_returncode(self):

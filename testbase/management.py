@@ -182,6 +182,9 @@ class RunTest(Command):
     parser.add_argument("--runner-args", help="additional arguments for specific runner", default="")
     parser.add_argument("--runner-args-help", help="show help information for specific runner arguemnts", choices=runner_types.keys())
 
+    parser.add_argument("--execute-type", help="execute type", choices=["random", "sequential"], default="random")
+
+    parser.add_argument("--share-data", help="share data", default="")
     parser.add_argument("--global-parameters", help="global parameters", default="")
 
     parser.add_argument("--config-file", help="runtime config file path")
@@ -238,6 +241,9 @@ class RunTest(Command):
                                   TestCase.EnumStatus.Review,
                                   TestCase.EnumStatus.Ready]
 
+        if args.share_data and isinstance(args.share_data, six.string_types):
+            args.share_data = json.loads(args.share_data)
+
         if args.global_parameters and isinstance(args.global_parameters, six.string_types):
             args.global_parameters = json.loads(args.global_parameters)
 
@@ -279,11 +285,12 @@ class RunTest(Command):
 
         report = report_type.parse_args(shlex.split(args.report_args))
         resmgr_backend = resmgr_backend_types[args.resmgr_backend_type]()
+        execute_type = args.execute_type
 
         runner_type = runner_types[args.runner_type]
         # 解析runner_args参数, 用于支持命令行传入concurrency=5,retries=1
         runner_args = self.run_args_parser(args.runner_args)
-        runner = runner_type.parse_args(shlex.split(runner_args), report, resmgr_backend)
+        runner = runner_type.parse_args(shlex.split(runner_args), report, resmgr_backend, execute_type)
 
         runner.run(test_conf)
         os.chdir(prev_dir)

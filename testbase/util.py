@@ -249,6 +249,51 @@ class LazyInit(object):
         del self.__init_func
 
 
+class ShareDataManager(object):
+    def __init__(self, lock=threading.Lock(), data={}):
+        self._data = data
+        self._lock = lock
+
+    @property
+    def data(self):
+        return self._data
+
+    def get(self, key):
+        self._lock.acquire()
+        data = self._data.get(key)
+        self._lock.release()
+        if not data:
+            raise KeyError("No such key %s exists" % key)
+        return data.get('value', None)
+
+    def set(self, key, value, level=0):
+        self._lock.acquire()
+        self._data[key] = {
+            "value": value,
+            "level": level
+        }
+        self._lock.release()
+
+    def pop(self, key):
+        try:
+            self._lock.acquire()
+            data = self._data.pop(key)
+        except KeyError:
+            raise KeyError("No such key %s exists" % key)
+        finally:
+            self._lock.release()
+        return data.get("value", None)
+
+    def remove(self, key):
+        try:
+            self._lock.acquire()
+            self._data.pop(key)
+        except KeyError:
+            raise KeyError("No such key %s exists" % key)
+        finally:
+            self._lock.release()
+
+
 class ThreadGroupLocal(object):
     '''使用线程组本地存储的元类
 

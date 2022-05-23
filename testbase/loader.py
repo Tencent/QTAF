@@ -106,7 +106,7 @@ class TestLoader(object):
                 testcases += self._load_from_class(obj, data_key, exclude_data_keys, parameters)
 
         # 过滤掉重复的用例
-        testcase_dict = {}
+        testcase_dict = OrderedDict()
         for testcase in testcases:
             testcase_dict[testcase.test_name] = testcase
 

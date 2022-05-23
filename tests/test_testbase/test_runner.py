@@ -207,6 +207,114 @@ class RunnerTest(unittest.TestCase):
         from tests.sampletest.tagtest import TagTest
         self.assertIsInstance(tc, TagTest)
 
+    def test_add_share_data(self):
+        runner_types = [runner.TestRunner, runner.ThreadingTestRunner, runner.MultiProcessTestRunner]
+        for runner_type in runner_types:
+            if runner_type == runner.MultiProcessTestRunner:
+                import sys
+                old_main = sys.modules["__main__"]
+                old_main_file = sys.modules["__main__"].__file__
+                sys.modules["__main__"] = sys.modules[__name__]
+                sys.modules["__main__"].__file__ = sys.modules[__name__].__file__
+
+            share_data = {
+                'test1': 100,
+                'test2': {'a': 'b', 'b': 123, 'c': [1, 2, 3]}
+            }
+            report = TestReport()
+            r = runner_type(report)
+            r.run(runner.TestCaseSettings(["tests.sampletest.sharedatatest.AddShareDataTest"]))
+            test1 = r.get_share_data('test1')
+            self.assertEqual(test1, share_data['test1'])
+            test2 = r.get_share_data('test2')
+            self.assertEqual(test2, share_data['test2'])
+
+            if runner_type == runner.MultiProcessTestRunner:
+                sys.modules["__main__"] = old_main
+                sys.modules["__main__"].__file__ = old_main_file
+
+    def test_get_share_data(self):
+        runner_types = [runner.TestRunner, runner.ThreadingTestRunner, runner.MultiProcessTestRunner]
+        for runner_type in runner_types:
+            if runner_type == runner.MultiProcessTestRunner:
+                import sys
+                old_main = sys.modules["__main__"]
+                old_main_file = sys.modules["__main__"].__file__
+                sys.modules["__main__"] = sys.modules[__name__]
+                sys.modules["__main__"].__file__ = sys.modules[__name__].__file__
+
+            share_data = {
+                'test1': 100,
+                'test2': {'a': 'b', 'b': 123, 'c': [1, 2, 3]}
+            }
+            report = TestReport()
+            r = runner_type(report)
+            r.load_share_data(share_data)
+            r.run(runner.TestCaseSettings(["tests.sampletest.sharedatatest.GetShareDataTest"]))
+            testresults = {}
+            for it in report.logs:
+                if it[0] == 'log_test_result':
+                    testresults[it[1]] = it[2]
+
+            for tc, testresult in testresults.items():
+                self.assertEqual(True, testresult.passed, msg=str(tc))
+
+            if runner_type == runner.MultiProcessTestRunner:
+                sys.modules["__main__"] = old_main
+                sys.modules["__main__"].__file__ = old_main_file
+
+    def test_remove_share_data(self):
+        runner_types = [runner.TestRunner, runner.ThreadingTestRunner, runner.MultiProcessTestRunner]
+        for runner_type in runner_types:
+            if runner_type == runner.MultiProcessTestRunner:
+                import sys
+                old_main = sys.modules["__main__"]
+                old_main_file = sys.modules["__main__"].__file__
+                sys.modules["__main__"] = sys.modules[__name__]
+                sys.modules["__main__"].__file__ = sys.modules[__name__].__file__
+
+            share_data = {
+                'test1': 100,
+                'test2': {'a': 'b', 'b': 123, 'c': [1, 2, 3]}
+            }
+            report = TestReport()
+            r = runner_type(report)
+            r.load_share_data(share_data)
+            r.run(runner.TestCaseSettings(["tests.sampletest.sharedatatest.RemoveShareDataTest"]))
+            share_data_mgr = r._share_data_mgr
+            self.assertNotIn('test1', share_data_mgr.data)
+            self.assertIn('test2', share_data_mgr.data)
+
+            if runner_type == runner.MultiProcessTestRunner:
+                sys.modules["__main__"] = old_main
+                sys.modules["__main__"].__file__ = old_main_file
+
+
+    def test_execute_type(self):
+        runner_types = [runner.TestRunner, runner.ThreadingTestRunner, runner.MultiProcessTestRunner]
+        for runner_type in runner_types:
+            if runner_type == runner.MultiProcessTestRunner:
+                import sys
+                old_main = sys.modules["__main__"]
+                old_main_file = sys.modules["__main__"].__file__
+                sys.modules["__main__"] = sys.modules[__name__]
+                sys.modules["__main__"].__file__ = sys.modules[__name__].__file__
+
+            report = TestReport()
+            r = runner_type(report, execute_type="sequential")
+            r.run(runner.TestCaseSettings(["tests.sampletest.sharedatatest.AddShareDataTest", "tests.sampletest.sharedatatest.GetShareDataTest"]))
+            testresults = {}
+            for it in report.logs:
+                if it[0] == 'log_test_result':
+                    testresults[it[1]] = it[2]
+
+            for tc, testresult in testresults.items():
+                self.assertEqual(True, testresult.passed, msg=str(tc))
+
+            if runner_type == runner.MultiProcessTestRunner:
+                sys.modules["__main__"] = old_main
+                sys.modules["__main__"].__file__ = old_main_file
+
 
 if __name__ == "__main__":
     unittest.main()
