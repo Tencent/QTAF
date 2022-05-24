@@ -116,7 +116,12 @@ bingfile.mp4.link是一个文本文件，内容为真实文件的链接，例如
       **获取文件需要拼接文件夹和单个文件条目后，再次调用get_file获取文件**。
     * walk:遍历某个资源目录，传入参数为上文描述规则的相对路径，返回结果类似os.walk，只是dirpath仍然是
       相对路径，以便用户拼接后，使用get_file获取文件。
-    
+
+使用上述接口获取文件资源，还需要做如下配置：
+    * 如果测试用例库的配置文件是settings.py的话，需要在settings.py文件中配置PROJECT_ROOT变量，该变量需要定义为当前测试项目的绝对路径，可以定义为：PROJECT_ROOT=os.path.abspath(os.path.dirname(__file__))，以便于测试项目迁移到不同的测试环境；
+    * 如果测试用例库的配置文件是放在settings目录下，则需要在该目录下的__init__.py文件中增加PROJECT_ROOT变量，同样，该变量需要拍定义为当前测试项目的绝对路径，如：PROJECT_ROOT=os.path.abspath(os.path.dirname(os.path.dirname(__file__)))。
+
+
 用户如果需要在测试用例中使用特定的文件资源的时候，可以通过访问TestCase基类提供的方法::
 
    from testbase.testcase import TestCase
