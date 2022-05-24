@@ -345,7 +345,7 @@ class TestCase(object):
         return self.__params_definitions
 
     @property
-    def params(self):
+    def qtaf_params(self):
         return self.__params
 
     @property
@@ -420,7 +420,7 @@ class TestCase(object):
     add_param = add_parameter
 
     def assert_types(self):
-        '''参数校验并设置self.params
+        '''参数校验并设置self.qtaf_params
         '''
         errors = []
         for d_name in self.params_definitions:
@@ -486,18 +486,18 @@ class TestCase(object):
                 kwargs = {}
             if not isinstance(kwargs, dict):
                 errors.append("Parameter:{}, param(kwargs) must be dict.".format(d_name))
-            if d_name not in self.params:
+            if d_name not in self.qtaf_params:
                 value = default
                 # 如果是default就不进行校验
             else:
-                value = self.params[d_name]
+                value = self.qtaf_params[d_name]
 
             if value == default:  # 如果值与default相等就不进行校验
                 continue
             # 否则进行校验
             if validation is not None and callable(validation):
                 try:
-                    validation(value, self.params, **kwargs)
+                    validation(value, self.qtaf_params, **kwargs)
                 except Exception as exe:
                     errors.append(
                         "Parameter:{}, value:{}, validation error, detail: {}.".format(d_name, value, str(exe)))
@@ -522,7 +522,7 @@ class TestCase(object):
         self.add_params()  # 添加参数定义
         self.assert_types()  # 参数校验
 
-        temp_data = self.params
+        temp_data = self.qtaf_params
 
         if param_mode == "DATADRIVE":
             if isinstance(self.casedata, dict):
