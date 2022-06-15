@@ -218,11 +218,17 @@ class TestLoader(object):
                     raise TypeError("__qtaf_seq_tests__的元素必须为测试用例类")
             test_dict = {}
             for test in tests:
-                test_dict[type(test)] = test
+                if type(test) in test_dict:
+                    test_dict[type(test)].append(test)
+                else:
+                    test_dict[type(test)] = [test, ]
             for it in seqdef:
                 if it not in test_dict:
                     raise RuntimeError("__qtaf_seq_tests__中的测试用例'%s'已被过滤" % it.__name__)
-            tests = [SeqTestSuite([ test_dict[it] for it in seqdef])]
+            tests_list = []
+            for it in seqdef:
+                tests_list += test_dict[it]
+            tests = [SeqTestSuite(tests_list)]
         return tests
 
     def _load_from_class(self, cls, data_key=None, exclude_data_key=None, attrs=None):
