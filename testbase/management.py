@@ -24,6 +24,7 @@ import re
 import traceback
 import sys
 import shlex
+from xmlrpc.client import Boolean, boolean
 import six
 
 from testbase import logger
@@ -186,11 +187,11 @@ class RunTest(Command):
 
     parser.add_argument("--share-data", help="share data", default="")
     parser.add_argument("--global-parameters", help="global parameters", default="")
-
+    parser.add_argument("--stop-on-failure", help="when the testcase execute fail, the test task will stop", default="true")
     parser.add_argument("--config-file", help="runtime config file path")
 
     def run_args_parser(self, runner_args):
-        """兼容参数传入concurrency=5,retries=1，支持subprocess shell=False"""
+        """兼容参数传入concurrency=5,retries=1, 支持subprocess shell=False"""
         regex_c = re.compile(r'(\w+=\w+)+')
         regex = regex_c.search(runner_args)
         if regex:
@@ -246,6 +247,9 @@ class RunTest(Command):
 
         if args.global_parameters and isinstance(args.global_parameters, six.string_types):
             args.global_parameters = json.loads(args.global_parameters)
+        
+        if args.stop_on_failure and isinstance(args.stop_on_failure, six.string_types):
+            args.stop_on_failure = json.loads(args.stop_on_failure)
 
         test_conf = TestCaseSettings(names=args.tests,
                                     excluded_names=args.excluded_names,
@@ -254,7 +258,8 @@ class RunTest(Command):
                                     owners=args.owners,
                                     tags=args.tags,
                                     excluded_tags=args.excluded_tags,
-                                    global_parameters=args.global_parameters)
+                                    global_parameters=args.global_parameters,
+                                    stop_on_failure=args.stop_on_failure)
 
         report_type = report_types[args.report_type]
         if args.report_type == 'xml':

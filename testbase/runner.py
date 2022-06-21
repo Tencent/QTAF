@@ -48,7 +48,7 @@ from six.moves import queue
 
 from testbase.loader import TestLoader
 from testbase import serialization
-from testbase.testcase import TestCase, TestCaseRunner, TestSuite
+from testbase.testcase import TestCase, TestCaseRunner, TestCaseStatus, TestSuite
 from testbase.report import TestReportBase
 from testbase.testresult import TestResultCollection
 from testbase.resource import TestResourceManager, LocalResourceManagerBackend
@@ -63,7 +63,7 @@ class TestCaseSettings(object):
     '''
 
     def __init__(self, names=None, excluded_names=None, priorities=None, status=None, owners=None,
-                tags=None, excluded_tags=None, share_data={}, global_parameters={}):
+                tags=None, excluded_tags=None, share_data={}, global_parameters={}, stop_on_failure=None):
         '''构造函数
 
         :param names: 测试用例名
@@ -80,6 +80,8 @@ class TestCaseSettings(object):
         :type tags: list
         :param excluded_tags: 指定标签排除用例
         :type tags: list
+        :param stop_on_failure: 失败停止用例执行
+        :type stop_on_failure: string(true or false)
         '''
         if names is None:
             self.names = []
@@ -135,6 +137,7 @@ class TestCaseSettings(object):
         self.tags = set(tags) if tags else None
         self.excluded_tags = set(excluded_tags) if excluded_tags else None
         self.share_data = share_data
+        self.stop_on_failure = stop_on_failure
 
     def _generate_testcase_names(self, testcase):
         if testcase.endswith(".py"):
@@ -245,6 +248,7 @@ class BaseTestRunner(object):
             tests = loader.load(target.names)
             self.__report.log_loaded_tests(loader, tests)
             filtered_tests = loader.get_filtered_tests_with_reason().items()
+            self._stop_on_failure = target.stop_on_failure
             for test, reason in filtered_tests:
                 self.__report.log_filtered_test(loader, test, reason)
             for testname, error in loader.get_last_errors().items():
