@@ -63,7 +63,7 @@ class TestCaseSettings(object):
     '''
 
     def __init__(self, names=None, excluded_names=None, priorities=None, status=None, owners=None,
-                tags=None, excluded_tags=None, share_data={}, global_parameters={}, stop_on_failure=None):
+                tags=None, excluded_tags=None, share_data={}, global_parameters={}, stop_on_failure=False):
         '''构造函数
 
         :param names: 测试用例名
@@ -81,7 +81,7 @@ class TestCaseSettings(object):
         :param excluded_tags: 指定标签排除用例
         :type tags: list
         :param stop_on_failure: 失败停止用例执行
-        :type stop_on_failure: string(true or false)
+        :type stop_on_failure: bool
         '''
         if names is None:
             self.names = []
@@ -408,10 +408,16 @@ class TestRunner(BaseTestRunner):
             test = tests_queue.popleft()
             passed = self.run_test(test)
             if not passed:
-                tests_retry_dict.setdefault(test, 0)
-                if tests_retry_dict[test] < self._retries:
-                    tests_retry_dict[test] += 1
-                    tests_queue.append(test)
+                if self._stop_on_failure:
+                    test.status = TestCase.EnumStatus.Ignored
+                    for case in tests_queue:
+                        case.status = TestCase.EnumStatus.Ignored
+                    tests_queue.clear()
+                else:
+                    tests_retry_dict.setdefault(test, 0)
+                    if tests_retry_dict[test] < self._retries:
+                        tests_retry_dict[test] += 1
+                        tests_queue.append(test)
 
     @classmethod
     def get_parser(cls):
