@@ -15,6 +15,7 @@
 """测试报告
 """
 
+from pydoc import doc
 import sys
 import socket
 import os
@@ -106,6 +107,17 @@ class ITestReport(object):
         :type testcase: TestCase
         :param reason: 过滤原因
         :type reason: str
+        """
+        pass
+
+    def log_ignored_test(self, testcase, reason):
+        """
+        记录一个忽略的测试用例
+
+        :param  testcase:   测试用例
+        :type   testcase:   TestCase实例
+        :param  reason:     忽略原因
+        :type   reason:     str
         """
         pass
 
@@ -513,6 +525,19 @@ class StreamTestReport(TestReportBase):
         self._write(
             "filtered test case: %s (reason: %s)\n" % (testcase.test_name, reason)
         )
+    
+    def log_ignored_test(self, testcase, reason):
+        """
+        记录一个被忽略的测试用例
+        :param  testcase:   测试用例
+        :type   testcase:   TestCase
+        :param  reason:     忽略原因
+        :type   reason:     str
+        """
+
+        self._write(
+            "ignored test case: %s (rease %s)\n" % (testcase.test_name, reason)
+        )
 
     def log_load_error(self, loader, name, error):
         """记录一个加载失败的用例或用例集
@@ -693,6 +718,24 @@ class XMLTestReport(TestReportBase):
         doc2 = dom.parseString(nodestr)
         filterNode = doc2.childNodes[0]
         self._runrstnode.appendChild(filterNode)
+    
+    def log_ignored_test(self, testcase, reason):
+        """
+        记录一个被忽略的测试用例
+        :param  testcase:   测试用例
+        :type   testcase:   TestCase
+        :param  reason:     忽略原因
+        :type   reason:     str
+        """
+
+        nodestr = """<IgnoreTest name="%s" reason="%s"><IgnoreTest>
+        """ % (
+            smart_text(saxutils.escape(testcase.test_name)),
+            smart_text(saxutils.escape(reason)),
+        )
+        doc2 = dom.parseString(nodestr)
+        ignoreNode = doc2.childNodes[0]
+        self._runrstnode.appendChild(ignoreNode)
 
     def log_load_error(self, loader, name, error):
         """记录一个加载失败的用例或用例集
@@ -764,6 +807,7 @@ class JSONTestReportBase(TestReportBase):
         super(JSONTestReportBase, self).__init__()
         self._logs = []
         self._filtered_tests = []
+        self._ignored_tests = []
         self._load_errors = []
         self._passed_tests = {}
         self._failed_tests = {}
@@ -869,6 +913,16 @@ class JSONTestReportBase(TestReportBase):
         :type reason: str
         """
         self._filtered_tests.append({"name": testcase.test_name, "reason": reason})
+    
+    def log_ignored_test(self, testcase, reason):
+        """
+        记录一个被忽略的测试用例
+        :param  testcase:   测试用例
+        :type   testcase:   TestCase
+        :param  reason:     忽略原因
+        :type   reason:     str
+        """
+        self._ignored_tests.append({"name": testcase.test_name, "reason": reason})
 
     def log_load_error(self, loader, name, error):
         """记录一个加载失败的用例或用例集

@@ -86,6 +86,9 @@ class TestReport(report.ITestReport):
 
     def log_filtered_test(self, loader, testcase, reason):
         self.logs.append(["log_filtered_test", loader, testcase, reason])
+    
+    def log_ignored_test(self, testcase, reason):
+        self.logs.append(["log_ignored_test", testcase, reason])
 
     def log_load_error(self, loader, name, error):
         self.logs.append(["log_load_error", loader, name, error])
@@ -328,7 +331,9 @@ class RunnerTest(unittest.TestCase):
             
             report = TestReport()
             r = runner_type(report, execute_type="random")
-            # TODO：完善测试用例
+            r.run(runner.TestCaseSettings(["tests.sampletest.stoponfailuretest.FirstFailureTest", "tests.sampletest.stoponfailuretest.SecondFailureTest"]))
+            for it in report.logs:
+                print(it[0])
 
 if __name__ == "__main__":
     unittest.main()

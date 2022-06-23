@@ -44,7 +44,7 @@ class TestCaseStatus(object):
 
     :attention: 此类将会被移除，请使用TestCase.EnumStatus
     '''
-    Design, Implement, Review, Ready, Suspend, Ignored = ('Design', 'Implement', 'Review', 'Ready', 'Suspend', 'Ignored')
+    Design, Implement, Review, Ready, Suspend = ('Design', 'Implement', 'Review', 'Ready', 'Suspend')
 
 
 class TestCasePriority(object):
@@ -160,12 +160,11 @@ class TestCase(object):
                                                      则可以先置为该字段为Suspend,等到可用的时候再将该字段置为Ready
 
         '''
-        Design, Implement, Review, Ready, Suspend, Ignored = (TestCaseStatus.Design,
+        Design, Implement, Review, Ready, Suspend = (TestCaseStatus.Design,
                                                      TestCaseStatus.Implement,
                                                      TestCaseStatus.Review,
                                                      TestCaseStatus.Ready,
-                                                     TestCaseStatus.Suspend,
-                                                     TestCaseStatus.Ignored)
+                                                     TestCaseStatus.Suspend,)
 
     class EnumPriority(object):
         '''测试用例优先级枚举类
