@@ -14,8 +14,6 @@
 #
 """测试报告
 """
-
-from pydoc import doc
 import sys
 import socket
 import os
