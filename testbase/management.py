@@ -254,6 +254,7 @@ class RunTest(Command):
                                     owners=args.owners,
                                     tags=args.tags,
                                     excluded_tags=args.excluded_tags,
+                                    share_data=args.share_data,
                                     global_parameters=args.global_parameters)
 
         report_type = report_types[args.report_type]
