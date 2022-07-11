@@ -542,6 +542,11 @@ class XmlResult(TestResultBase):
         extra_properties = testcase.get_test_extra_properties()
         for k, v in extra_properties.items():
             self._testnode.setAttribute(k, str(v))
+        if hasattr(testcase, "tags"):
+            tag_str = "|".join(testcase.tags)
+            if tag_str:
+                tag_str = "|%s|" % tag_str
+            self._testnode.setAttribute("tags", smart_text(saxutils.escape(tag_str)))
         self._xmldoc.appendChild(self._testnode)
 
         self.begin_step('测试用例初始步骤')
