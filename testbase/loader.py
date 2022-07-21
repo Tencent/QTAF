@@ -245,6 +245,8 @@ class TestLoader(object):
         tests = []
         if datadrive.is_datadrive(cls) or settings.DATA_DRIVE:
             tests = datadrive.load_datadrive_tests(cls, data_key, attrs)
+            if len(tests) == 0:
+                tests = [cls(attrs=attrs)]
         else:
             tests = [cls(attrs=attrs)]
 
