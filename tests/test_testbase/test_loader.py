@@ -109,6 +109,12 @@ class LoadDataDriveReversibleTest(unittest.TestCase):
         new_tests = loader.load(test_set)
         self.assertEqual(len(new_tests), len(tests))
 
+    def test_empty_data_reversible(self):
+        from tests.sampletest.datatest import EmptyDataTest
+        tests = self.loader.load("tests.sampletest.datatest.EmptyDataTest")
+        self.assertEqual(len(tests), 1)
+        self.assertEqual(type(tests[0]), EmptyDataTest)
+
     def test_global_data_reversible(self):
         from tests.data import server
         with modify_settings(DATA_DRIVE=True, DATA_SOURCE='tests/data/server.py'):
