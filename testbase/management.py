@@ -184,7 +184,7 @@ class RunTest(Command):
 
     parser.add_argument("--execute-type", help="execute type", choices=["random", "sequential"], default="random")
 
-    parser.add_argument("--share-data", help="share data", default="")
+    parser.add_argument("--share-data", help="share data", default="{}")
     parser.add_argument("--global-parameters", help="global parameters", default="")
 
     parser.add_argument("--config-file", help="runtime config file path")
@@ -254,6 +254,7 @@ class RunTest(Command):
                                     owners=args.owners,
                                     tags=args.tags,
                                     excluded_tags=args.excluded_tags,
+                                    share_data=args.share_data,
                                     global_parameters=args.global_parameters)
 
         report_type = report_types[args.report_type]
