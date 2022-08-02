@@ -46,6 +46,7 @@ import six
 
 from six.moves import queue
 
+from testbase import logger
 from testbase.loader import TestLoader
 from testbase import serialization
 from testbase.testcase import TestCase, TestCaseRunner, TestSuite
@@ -216,6 +217,9 @@ class BaseTestRunner(object):
         return self.__report
 
     def load_share_data(self, data):
+        if not isinstance(data, dict):
+            logger.warn("share_data expected dict instance, %s found" % type(data).__name__)
+            return
         for key, value in data.items():
             self._share_data_mgr.set(key, value)
 
