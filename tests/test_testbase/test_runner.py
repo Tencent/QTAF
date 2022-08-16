@@ -86,6 +86,9 @@ class TestReport(report.ITestReport):
 
     def log_filtered_test(self, loader, testcase, reason):
         self.logs.append(["log_filtered_test", loader, testcase, reason])
+    
+    def log_ignored_test(self, testcase, reason):
+        self.logs.append(["log_ignored_test", testcase, reason])
 
     def log_load_error(self, loader, name, error):
         self.logs.append(["log_load_error", loader, name, error])
@@ -314,7 +317,23 @@ class RunnerTest(unittest.TestCase):
             if runner_type == runner.MultiProcessTestRunner:
                 sys.modules["__main__"] = old_main
                 sys.modules["__main__"].__file__ = old_main_file
+    
+    def test_stop_on_failure(self):
+        runner_types = [runner.TestRunner, runner.ThreadingTestRunner, runner.MultiProcessTestRunner]
 
+        for runner_type in runner_types:
+            if runner_type == runner.MultiProcessTestRunner:
+                import sys
+                old_main = sys.modules["__main__"]
+                old_main_file = sys.modules["__main__"].__file__
+                sys.modules["__main__"] = sys.modules[__name__]
+                sys.modules["__main__"].__file__ = sys.modules[__name__].__file__
+            
+            report = TestReport()
+            r = runner_type(report, execute_type="random")
+            r.run(runner.TestCaseSettings(["tests.sampletest.stoponfailuretest.FirstFailureTest", "tests.sampletest.stoponfailuretest.SecondFailureTest"]))
+            for it in report.logs:
+                print(it[0])
 
 if __name__ == "__main__":
     unittest.main()

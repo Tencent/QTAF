@@ -164,7 +164,7 @@ class TestCase(object):
                                                      TestCaseStatus.Implement,
                                                      TestCaseStatus.Review,
                                                      TestCaseStatus.Ready,
-                                                     TestCaseStatus.Suspend)
+                                                     TestCaseStatus.Suspend,)
 
     class EnumPriority(object):
         '''测试用例优先级枚举类

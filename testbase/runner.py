@@ -49,7 +49,7 @@ from six.moves import queue
 from testbase import logger
 from testbase.loader import TestLoader
 from testbase import serialization
-from testbase.testcase import TestCase, TestCaseRunner, TestSuite
+from testbase.testcase import TestCase, TestCaseRunner, TestCaseType, TestSuite
 from testbase.report import TestReportBase
 from testbase.testresult import TestResultCollection
 from testbase.resource import TestResourceManager, LocalResourceManagerBackend
@@ -64,7 +64,7 @@ class TestCaseSettings(object):
     '''
 
     def __init__(self, names=None, excluded_names=None, priorities=None, status=None, owners=None,
-                tags=None, excluded_tags=None, share_data={}, global_parameters={}):
+                tags=None, excluded_tags=None, share_data={}, global_parameters={}, stop_on_failure=False):
         '''构造函数
 
         :param names: 测试用例名
@@ -81,6 +81,8 @@ class TestCaseSettings(object):
         :type tags: list
         :param excluded_tags: 指定标签排除用例
         :type tags: list
+        :param stop_on_failure: 失败停止用例执行
+        :type stop_on_failure: bool
         '''
         if names is None:
             self.names = []
@@ -136,6 +138,7 @@ class TestCaseSettings(object):
         self.tags = set(tags) if tags else None
         self.excluded_tags = set(excluded_tags) if excluded_tags else None
         self.share_data = share_data
+        self.stop_on_failure = stop_on_failure
 
     def _generate_testcase_names(self, testcase):
         if testcase.endswith(".py"):
@@ -249,6 +252,7 @@ class BaseTestRunner(object):
             tests = loader.load(target.names)
             self.__report.log_loaded_tests(loader, tests)
             filtered_tests = loader.get_filtered_tests_with_reason().items()
+            self._stop_on_failure = target.stop_on_failure
             for test, reason in filtered_tests:
                 self.__report.log_filtered_test(loader, test, reason)
             for testname, error in loader.get_last_errors().items():
@@ -408,6 +412,10 @@ class TestRunner(BaseTestRunner):
             test = tests_queue.popleft()
             passed = self.run_test(test)
             if not passed:
+                if self._stop_on_failure:
+                    reason = "The execution of the previous test case failed, setting current testcase ignored."
+                    for case in tests_queue:
+                        self.__report.log_ignored_test(case, reason)
                 tests_retry_dict.setdefault(test, 0)
                 if tests_retry_dict[test] < self._retries:
                     tests_retry_dict[test] += 1
@@ -498,6 +506,17 @@ class ThreadSafetyReport(TestReportBase):
         '''
         with self._lock:
             return self._report.log_filtered_test(loader, testcase, reason)
+    
+    def log_ignored_test(self, testcase, reason):
+        """
+        记录一个被忽略的测试用例
+        :param  testcase:   测试用例
+        :type   testcase:   TestCase
+        :param  reason:     忽略原因
+        :type   reason:     str
+        """
+        with self._lock:
+            return self._report.log_ignored_test(testcase, reason)
 
     def log_load_error(self, loader, name, error):
         '''记录一个加载失败的用例或用例集
@@ -590,10 +609,16 @@ class ThreadingTestRunner(BaseTestRunner):
             passed = self.run_test(test)
             with self._lock:
                 if not passed:
-                    tests_retry_dict.setdefault(test, 0)
-                    if tests_retry_dict[test] < self._retries:
-                        tests_retry_dict[test] += 1
-                        tests_queue.append(test)
+                    if self._stop_on_failure:
+                        reason = "The execution of the previous test case failed, setting current testcase ignored."
+                        for case in tests_queue:
+                            self.__report.log_ignored_test(case, reason)
+                        tests_queue.clear()
+                    else:
+                        tests_retry_dict.setdefault(test, 0)
+                        if tests_retry_dict[test] < self._retries:
+                            tests_retry_dict[test] += 1
+                            tests_queue.append(test)
 
     @classmethod
     def get_parser(cls):
@@ -1124,10 +1149,16 @@ class MultiProcessTestRunner(BaseTestRunner):
                 test = serialization.loads(msg[2])
                 passed = msg[3]
                 if not passed:
-                    tests_retry_dict.setdefault(test.test_name, 0)
-                    if tests_retry_dict[test.test_name] < self._retries:
-                        tests_retry_dict[test.test_name] += 1
-                        tests_queue.append(test)
+                    if self._stop_on_failure:
+                        for case in tests_queue:
+                            reason = "The execution of the previous test case failed, setting current testcase ignored."
+                            self.__report.log_ignored_test(case, reason)
+                        tests_queue.clear()
+                    else:
+                        tests_retry_dict.setdefault(test.test_name, 0)
+                        if tests_retry_dict[test.test_name] < self._retries:
+                            tests_retry_dict[test.test_name] += 1
+                            tests_queue.append(test)
 
                 if len(tests_queue) > 0:
                     worker.run_testcase(tests_queue.popleft())
