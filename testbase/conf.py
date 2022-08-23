@@ -216,6 +216,10 @@ class _Settings(object):
 
 settings = _Settings()
 
+logg_level = settings.LOG_LEVEL or 10
+
+logger._logger.setLevel(logg_level)
+
 
 class _InnerSettings(object):
     """inner settings for a SettingsMixin class
