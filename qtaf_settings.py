@@ -20,7 +20,7 @@ QTAF配置文件
 # -----------------------------------
 DEBUG = False
 
-LOG_LEVEL = 10
+LOG_LEVEL = 10  # 默认DEBUG
 
 # -----------------------------------
 # 全局数据驱动配置
@@ -32,13 +32,11 @@ DATA_SOURCE = 'test/data/server.py'
 # 项目配置
 # -----------------------------------
 PROJECT_NAME = 'qtaf'
-PROJECT_MODE = 'standalone' #choices: standard/standalone
-PROJECT_ROOT = None#os.path.dirname(__file__)
+PROJECT_MODE = 'standalone'  # choices: standard/standalone
+PROJECT_ROOT = None  # os.path.dirname(__file__)
 INSTALLED_APPS = []
-
 
 # -----------------------------------
 # Assert
 # -----------------------------------
 QTAF_REWRITE_ASSERT = True
-

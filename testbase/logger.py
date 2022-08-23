@@ -30,7 +30,7 @@ class _Formatter(logging.Formatter):
         return smart_binary(s, encoding=_encoding)
 
 
-_stream_handler=logging.StreamHandler(_stream)
+_stream_handler = logging.StreamHandler(_stream)
 _stream_handler.terminator = b"\n"
 _stream_handler.setFormatter(_Formatter())
 
@@ -38,6 +38,7 @@ _stream_handler.setFormatter(_Formatter())
 class TestResultBridge(logging.Handler):
     '''中转log信息到TestResult
     '''
+
     def emit(self, log_record):
         '''Log Handle 必须实现此函数
         '''
@@ -47,58 +48,67 @@ class TestResultBridge(logging.Handler):
             return
         record = {}
         if log_record.exc_info:
-            record['traceback'] = ''.join(traceback.format_tb(log_record.exc_info[2])) + '%s: %s' %(
-                                   log_record.exc_info[0].__name__, log_record.exc_info[1])
+            record['traceback'] = ''.join(traceback.format_tb(log_record.exc_info[2])) + '%s: %s' % (
+                log_record.exc_info[0].__name__, log_record.exc_info[1])
         testresult.log_record(log_record.levelno, log_record.msg, record)
 
 
 _LOGGER_NAME = "QTA_LOGGER"
 _logger = logging.getLogger(_LOGGER_NAME)
-# _logger.setLevel(logging.DEBUG)
 _logger.addHandler(TestResultBridge())
 
 
 def critical(msg, *args, **kwargs):
     _logger.error(msg, *args, **kwargs)
 
+
 fatal = critical
+
 
 def error(msg, *args, **kwargs):
     '''Log a message with severity 'ERROR' on the root logger.
     '''
     _logger.error(msg, *args, **kwargs)
 
+
 def exception(msg, *args):
     '''Log a message with severity 'ERROR' on the root logger,with exception information.
     '''
     _logger.exception(msg, *args)
+
 
 def warning(msg, *args, **kwargs):
     '''Log a message with severity 'WARNING' on the root logger.
     '''
     _logger.warning(msg, *args, **kwargs)
 
+
 warn = warning
+
 
 def info(msg, *args, **kwargs):
     '''Log a message with severity 'INFO' on the root logger.
     '''
     _logger.info(msg, *args, **kwargs)
 
+
 def debug(msg, *args, **kwargs):
     '''Log a message with severity 'DEBUG' on the root logger.
     '''
     _logger.debug(msg, *args, **kwargs)
+
 
 def log(level, msg, *args, **kwargs):
     '''Log 'msg % args' with the integer severity 'level' on the root logger.
     '''
     _logger.log(level, msg, *args, **kwargs)
 
+
 def addHandler(hdlr):
     '''Add the specified handler to this logger.
     '''
     _logger.addHandler(hdlr)
+
 
 def removeHandler(hdlr):
     '''Remove the specified handler from this logger.
