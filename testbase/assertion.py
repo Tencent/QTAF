@@ -22,14 +22,14 @@ import copy
 import inspect
 import itertools
 import pprint
-import six
 import sys
 import threading
 import traceback
 import types
 
+import six
+
 from testbase.util import Singleton, get_method_defined_class, smart_text
-from testbase.conf import settings
 
 unary_map = {ast.Not: "not %s", ast.Invert: "~%s", ast.USub: "-%s", ast.UAdd: "+%s"}
 
@@ -114,7 +114,7 @@ class AssertionRewriter(ast.NodeVisitor):
     def rewrite(self, item):
         try:
             self.rewrite_(item)
-        except:
+        except Exception as ex:  # pylint: disable=broad-except
             stack = traceback.format_exc()
             msg = "[WARN]rewrite item %s failed: %s" % (item, stack)
             print(msg, file=sys.stderr)
@@ -507,7 +507,7 @@ def _call_reprcompare(ops, results, expls, each_obj):
     for _, res, expl in zip(range(len(ops)), results, expls):
         try:
             done = not res
-        except Exception:
+        except Exception as ex:  # pylint: disable=broad-except
             done = True
         if done:
             break

@@ -21,10 +21,10 @@ QPath是一个用于定位各个平台的UI控件（除Web控件）的查询语�
 
     QPath ::= Seperator QPath Seperator UIObjectLocator
     UIObjectLocator ::= UIObjectProperty PropertyConnector UIObjectLocator
-    UIObjectProperty ::= UIProperty 
-                        | RelationProperty 
+    UIObjectProperty ::= UIProperty
+                        | RelationProperty
                         | IndexProperty
-                        | UITypeProperty 
+                        | UITypeProperty
     UIProperty ::= PropertyName Operator Literal
     RelationProperty ::= MaxDepthIdentifier EqualOperator Literal
     IndexProperty ::= InstanceIdentifier EqualOperator Literal
@@ -49,15 +49,16 @@ QPath是一个用于定位各个平台的UI控件（除Web控件）的查询语�
  - 需要注意的是，QPath的属性名都是大小写无关的。
 
  - 简单举例如下::
- 
+
     / ClassName='TxGuiFoundation' && Caption~='QQ\d+' / name='mainpanel'
 
 
 """
 from __future__ import absolute_import
 
-import six
 import types
+
+import six
 
 try:
     from .ply import lex, yacc

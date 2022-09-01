@@ -17,13 +17,13 @@
 
 import os
 import shutil
-import six
 import sys
 import unittest
 
+import six
+
 from testbase import resource
 from testbase.conf import settings
-from testbase.test import modify_environ
 from testbase.util import codecs_open
 
 suffix = "%s%s" % (sys.version_info[0], sys.version_info[1])

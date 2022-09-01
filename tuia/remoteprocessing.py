@@ -19,4 +19,4 @@ warnings.warn(
     "`tuia.remoteprocessing` is depressed, please use `qt4c.remoteprocessing` instead",
     DeprecationWarning,
 )
-from qt4c.remoteprocessing import *
+from qt4c.remoteprocessing import * # pylint: disable=unused-wildcard-import

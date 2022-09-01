@@ -23,7 +23,6 @@ import inspect
 import io
 import locale
 import os
-import pkg_resources
 import re
 import six
 import sys
@@ -34,6 +33,8 @@ import traceback
 from inspect import isclass, getmro, types
 from xml.dom.minidom import Node
 from datetime import datetime
+
+import pkg_resources
 
 from tuia.exceptions import TimeoutError
 
@@ -100,7 +101,7 @@ class Timeout(object):
                 else:
                     raise TypeError("args type %s is not a dict or tuple" % type(args))
 
-                if resultmatcher == None or resultmatcher(ret) == True:
+                if resultmatcher is None or resultmatcher(ret):
                     return ret
             except exceptions:
                 pass
@@ -250,8 +251,8 @@ class LazyInit(object):
 
 
 class ShareDataManager(object):
-    def __init__(self, lock=threading.Lock(), data={}):
-        self._data = data
+    def __init__(self, lock=threading.Lock(), data=None):
+        self._data = data or {}
         self._lock = lock
 
     @property
@@ -747,7 +748,7 @@ def getmembers(object, predicate=None):
             for k, v in base.__dict__.items():
                 if isinstance(v, types.DynamicClassAttribute):
                     names.append(k)
-    except:
+    except Exception as ex: # pylint: disable=broad-except
         pass
     for key in names:
         # First try to get the value via getattr.  Some descriptors don't
@@ -767,7 +768,7 @@ def getmembers(object, predicate=None):
                 # could be a (currently) missing slot member, or a buggy
                 # __dir__; discard and move on
                 continue
-        except:
+        except Exception as ex: # pylint: disable=broad-except
             continue
         if not predicate or predicate(value):
             results.append((key, value))

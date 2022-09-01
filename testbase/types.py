@@ -15,8 +15,9 @@
 """qtaf related types
 """
 
-import pkg_resources
 import traceback
+
+import pkg_resources
 
 from testbase import runner, report, resource, logger
 
@@ -66,7 +67,7 @@ def __init_report_types():
         if ep.name not in report_types:
             try:
                 report_types[ep.name] = ep.load()
-            except:
+            except Exception as ex: # pylint: disable=broad-except
                 stack = traceback.format_exc()
                 logger.warn(
                     "load ITestReport entry point for %s failed:\n%s" % (ep.name, stack)

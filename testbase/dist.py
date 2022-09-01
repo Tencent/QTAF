@@ -21,8 +21,9 @@ import sys
 import re
 import shutil
 import zipfile
-import pkg_resources
 import subprocess
+
+import pkg_resources
 
 from testbase import resource
 from testbase.conf import settings

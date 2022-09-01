@@ -39,7 +39,7 @@ def load_case(case_path):
             mod_name = ".".join(temp_parts)
             mod = importlib.import_module(mod_name)
             break
-        except:
+        except Exception as ex:  # pylint: disable=broad-except
             temp_parts.pop()
     if not mod:
         raise RuntimeError("case path=%s cannot be imported." % case_path)

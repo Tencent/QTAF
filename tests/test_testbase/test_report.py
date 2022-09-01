@@ -19,10 +19,10 @@ import argparse
 import json
 import os
 import shutil
-import six
 import sys
-import traceback
 import unittest
+
+import six
 
 from xml.dom import minidom
 from testbase.test import modify_attributes
@@ -100,12 +100,12 @@ class XmlReportTest(TestReportBase):
                 os.chdir(old_cwd)
 
     def test_xml_report_with_extra_properties(self):
-        test_pairs = [
-            ("HelloTest", "断言失败"),
-            ("TimeoutTest", "用例执行超时"),
-            ("CrashTest", "App Crash"),
-            ("QT4iTest", "run_test执行失败"),
-        ]
+        # test_pairs = [
+        #     ("HelloTest", "断言失败"),
+        #     ("TimeoutTest", "用例执行超时"),
+        #     ("CrashTest", "App Crash"),
+        #     ("QT4iTest", "run_test执行失败"),
+        # ]
 
         old_cwd = os.getcwd()
         try:

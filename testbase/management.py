@@ -127,7 +127,7 @@ class Help(Command):
 
     def execute(self, args):
         """执行过程"""
-        if args.subcommand == None:
+        if args.subcommand is None:
             self.main_parser.print_help()
         else:
             subcmd = self.main_parser.get_subcommand(args.subcommand)
@@ -976,7 +976,7 @@ class ManagementToolsConsole(object):
                 subcmd.execute(ns)
             except SystemExit:
                 logger.info("command exit")
-            except:
+            except Exception as ex:  # pylint: disable=broad-except
                 traceback.print_exc()
 
 

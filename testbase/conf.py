@@ -99,7 +99,7 @@ class _Settings(object):
             modname = "%s.settings" % appname
             try:
                 __import__(modname)
-            except:
+            except Exception as ex:  # pylint: disable=broad-except
                 stack = traceback.format_exc()
                 logger.warn(
                     '[WARN]load library settings module "%s" failed:\n%s'

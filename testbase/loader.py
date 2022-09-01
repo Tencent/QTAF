@@ -20,10 +20,11 @@ from __future__ import absolute_import
 import imp
 import pkgutil
 import os
-import six
 import sys
 import traceback
 import types
+
+import six
 
 from collections import OrderedDict
 from testbase import datadrive
@@ -133,7 +134,7 @@ class TestLoader(object):
                 break
             except ImportError:
                 del parts_imp[-1]
-            except:
+            except Exception as ex:  # pylint: disable=broad-except
                 del parts_imp[-1]
                 break
 
@@ -147,7 +148,7 @@ class TestLoader(object):
                 testclass = getattr(module, parts[-1])
                 if not self._is_testcase_class(testclass):
                     raise TypeError("%s不是一个有效的测试用例" % testname)
-            except:
+            except Exception as ex:  # pylint: disable=broad-except
                 self._module_errs[testname] = traceback.format_exc()
                 return
             else:
@@ -162,7 +163,7 @@ class TestLoader(object):
             modulename += parts[len(parts_imp)]
             try:
                 __import__(modulename)
-            except:
+            except Exception as ex:  # pylint: disable=broad-except
                 self._module_errs[modulename] = traceback.format_exc()
 
     def _is_testcase_class(self, obj):
@@ -202,7 +203,7 @@ class TestLoader(object):
                     exclude_data_key=exclude_data_key,
                     attrs=None,
                 )
-            except:
+            except Exception as ex:  # pylint: disable=broad-except
                 self._module_errs[modulename] = traceback.format_exc()
         return tests
 

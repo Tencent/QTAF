@@ -84,8 +84,9 @@
 '''
 from __future__ import absolute_import
 
-import six
 import types
+
+import six
 
 from testbase import logger
 from testbase.conf import settings

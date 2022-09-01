@@ -36,8 +36,6 @@ ITestResultHandler来实现一个新的Handler，详细请参考ITestResultHandl
 import json
 import locale
 import os
-import six
-import socket
 import sys
 import time
 import threading
@@ -45,6 +43,8 @@ import traceback
 import xml.dom.minidom as dom
 import xml.parsers.expat as xmlexpat
 import xml.sax.saxutils as saxutils
+
+import six
 
 from testbase import context
 from testbase.util import (
@@ -57,7 +57,6 @@ from testbase.util import (
     codecs_open,
     get_time_str,
     translate_bad_char,
-    file_encoding,
     path_exists,
 )
 
@@ -280,7 +279,7 @@ class TestResultBase(object):
         def _run(outputs, errors):
             try:
                 outputs.append(context.current_testcase().get_extra_fail_record())
-            except:
+            except Exception as ex: # pylint: disable=broad-except
                 errors.append(traceback.format_exc())
 
         errors = []

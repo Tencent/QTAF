@@ -15,11 +15,12 @@
 """testcase test
 """
 
+import unittest
+
 from testbase.loader import TestLoader
 from testbase.testcase import TestCase
 from testbase.testresult import TestResultType
 from testbase.test import modify_settings
-import unittest
 
 TestLoader.__test__ = False  # for nauseated Nose
 
@@ -39,7 +40,7 @@ class TestCaseTest(unittest.TestCase):
     def test_forbidden_overload_init(self):
         with self.assertRaises(RuntimeError):
 
-            class Error(TestCase):
+            class _(TestCase):
                 def __init__(self):
                     pass
 

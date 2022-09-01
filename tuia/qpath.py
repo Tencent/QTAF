@@ -16,14 +16,14 @@
 import warnings
 
 try:
-    from qt4c.qpath import QPath, QPathError
+    from qt4c.qpath import QPath, QPathError # pylint: disable=unused-wildcard-import
 
     warnings.warn(
         "`tuia.qpath` is depressed, please use `qt4c.qpath` instead", DeprecationWarning
     )
 except ImportError:
     try:
-        from qt4a.qpath import QPath, QPathError
+        from qt4a.qpath import QPath, QPathError # pylint: disable=unused-wildcard-import
 
         warnings.warn(
             "`tuia.qpath` is depressed, please use `qt4a.qpath` instead",
