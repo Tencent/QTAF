@@ -1022,7 +1022,7 @@ class TestCaseRunner(ITestCaseRunner):
                 else:
                     it()
 
-        except:
+        except: # pylint: disable=broad-except
             self._error = traceback.format_exc()
 
     def _thread_cleanup(self):

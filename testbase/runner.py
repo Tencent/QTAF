@@ -29,19 +29,19 @@ TestRunner负责多个测试用例，目前提供三种方式:
 """
 from __future__ import absolute_import
 
-import threading
-import multiprocessing
-import traceback
+import argparse
 import collections
+import itertools
+import multiprocessing
 import random
 import re
-import types
-import sys
-import argparse
 import socket
+import sys
+import threading
+import traceback
+import types
 import uuid
-import itertools
-import json
+
 import six
 
 from six.moves import queue
@@ -73,8 +73,8 @@ class TestCaseSettings(object):
         owners=None,
         tags=None,
         excluded_tags=None,
-        share_data={},
-        global_parameters={},
+        share_data=None,
+        global_parameters=None,
     ):
         """构造函数
 
@@ -93,6 +93,8 @@ class TestCaseSettings(object):
         :param excluded_tags: 指定标签排除用例
         :type tags: list
         """
+        share_data = share_data or {}
+        global_parameters = global_parameters or {}
         if names is None:
             self.names = []
         else:
@@ -173,12 +175,12 @@ class TestCaseSettings(object):
         try:
             __import__(name)
             return False  # 为模块
-        except ImportError:
+        except ImportError: # pylint: disable=broad-except
             modname, clsname = name.rsplit(".", 1)
             try:
                 __import__(modname)
                 mod = sys.modules[modname]
-            except:
+            except: # pylint: disable=broad-except
                 return False  # 不存在的模块
             else:
                 return hasattr(mod, clsname)
@@ -263,7 +265,7 @@ class BaseTestRunner(object):
             target = TestCaseSettings(names=target.split(" "))
         elif (
             isinstance(target, list)
-            and len(target)
+            and target
             and isinstance(target[0], six.string_types)
         ):
             target = TestCaseSettings(names=target)
@@ -876,7 +878,7 @@ class TestResultStubManager(object):
             else:
                 rsp = (EnumProcessMsgType.Result_Func,)
             self._rsp_queue.put(rsp)
-        except:
+        except: # pylint: disable=broad-except
             self._rsp_queue.put(
                 (
                     EnumProcessMsgType.Result_AttrError,
@@ -902,7 +904,7 @@ class TestResultStubManager(object):
             rsp = EnumProcessMsgType.Result_Return, getattr(result, funcname)(
                 *args, **kwargs
             )
-        except:
+        except: # pylint: disable=broad-except
             rsp = EnumProcessMsgType.Result_Raise, traceback.format_exc()
         self._rsp_queue.put(rsp)
 
@@ -950,7 +952,7 @@ def _run_test_thread(
                 result.passed,
             )
         )
-    except:
+    except: # pylint: disable=broad-except
         ctrl_msg_queue.put(
             (EnumProcessMsgType.Worker_Error, worker_id, traceback.format_exc())
         )
@@ -1022,7 +1024,7 @@ def _worker_process(
             elif msg_type == EnumProcessMsgType.Result_CallFunc:
                 objid, func, args, kwargs = msg_data
                 result_manager.call_result_func(objid, func, args, kwargs)
-    except:
+    except: # pylint: disable=broad-except
         ctrl_msg_queue.put(
             (EnumProcessMsgType.Worker_Error, worker_id, traceback.format_exc())
         )

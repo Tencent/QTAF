@@ -488,7 +488,7 @@ class StreamTestReport(TestReportBase):
             "run test case: %s(pass?:%s)\n" % (testcase.test_name, testresult.passed)
         )
 
-    def log_record(self, level, tag, msg, record={}):
+    def log_record(self, level, tag, msg, record=None):
         """增加一个记录
         :param level: 日志级别
         :param msg: 日志消息
@@ -654,7 +654,7 @@ class XMLTestReport(TestReportBase):
         resultNode.setAttribute("owner", smart_text(saxutils.escape(testcase.owner)))
         self._runrstnode.appendChild(resultNode)
 
-    def log_record(self, level, tag, msg, record={}):
+    def log_record(self, level, tag, msg, record=None):
         """增加一个记录
         :param level: 日志级别
         :param msg: 日志消息
@@ -665,6 +665,7 @@ class XMLTestReport(TestReportBase):
         :type msg: string
         :type record: dict
         """
+        record = record or {}
         if tag == "LOADER" and level == EnumLogLevel.ERROR:
             if "error_testname" in record and "error" in record:
                 testname = record["error_testname"]
@@ -934,8 +935,9 @@ class JSONTestReport(JSONTestReportBase):
 class HtmlTestReport(JSONTestReportBase):
     """html test report"""
 
-    def __init__(self, title="调试测试", displays=["failed", "error"]):
+    def __init__(self, title="调试测试", displays=None):
         super(HtmlTestReport, self).__init__(title=title)
+        displays = displays or ["failed", "error"]
         self._data["displays"] = displays
 
     def get_testresult_factory(self):

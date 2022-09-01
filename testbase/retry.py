@@ -55,7 +55,7 @@ class _RetryWithTimeout(object):
         return self
 
     def next(self):
-        if self.__start_time == None:
+        if self.__start_time is None:
             self.__count += 1
             self.__start_time = time.time()
             return _RetryItem(self.__count, self.__start_time)
