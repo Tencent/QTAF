@@ -25,8 +25,7 @@ class _NotExistedItem(object):
 
 
 class modify_settings(object):
-    """temporarily modify settings
-    """
+    """temporarily modify settings"""
 
     def __init__(self, **kwargs):
         self.new_conf = kwargs
@@ -53,8 +52,7 @@ class modify_settings(object):
 
 
 class modify_environ(object):
-    """temporarily modify envrion
-    """
+    """temporarily modify envrion"""
 
     def __init__(self, **kwargs):
         self.new_conf = kwargs
@@ -75,8 +73,8 @@ class modify_environ(object):
 
 
 class modify_attributes(object):
-    """temporarily modify attributes
-    """
+    """temporarily modify attributes"""
+
     _lock = threading.Lock()
 
     def __init__(self, target, key_values):

@@ -44,7 +44,7 @@ def load_case(case_path):
     if not mod:
         raise RuntimeError("case path=%s cannot be imported." % case_path)
 
-    case_name = ".".join(parts[len(temp_parts):])
+    case_name = ".".join(parts[len(temp_parts) :])
     test_suites = []
     if case_name:
         test_suites.append(loader.loadTestsFromName(case_name, mod))
@@ -65,25 +65,34 @@ def load_cases(tests):
         try:
             test_suite.addTests(load_case(test))
         except:
-            print("cannot import test \"%s\":\n%s" % (test, traceback.format_exc()))
+            print('cannot import test "%s":\n%s' % (test, traceback.format_exc()))
             raise
     return test_suite
 
 
 def main(verbosity, tests):
     if not tests:
-        tests = ['test_testbase', 'test_tuia']
+        tests = ["test_testbase", "test_tuia"]
     test_suite = load_cases(tests)
     runner = unittest.TextTestRunner(verbosity=10 + verbosity)
     raise SystemExit(not runner.run(test_suite).wasSuccessful())
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("-v", metavar='v', nargs="*", dest="verbosity",
-                        help="verbose level for result output")
-    parser.add_argument("tests", metavar='TEST', nargs="*",
-                        help="a python style module path for testcase set, eg: hello.MyTestCase")
+    parser.add_argument(
+        "-v",
+        metavar="v",
+        nargs="*",
+        dest="verbosity",
+        help="verbose level for result output",
+    )
+    parser.add_argument(
+        "tests",
+        metavar="TEST",
+        nargs="*",
+        help="a python style module path for testcase set, eg: hello.MyTestCase",
+    )
     args = parser.parse_args(sys.argv[1:])
     if args.verbosity:
         verbosity = len(args.verbosity)

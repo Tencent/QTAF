@@ -12,8 +12,8 @@
 # OF ANY KIND, either express or implied. See the License for the specific language
 # governing permissions and limitations under the License.
 #
-'''testcase test
-'''
+"""testcase test
+"""
 
 from testbase.loader import TestLoader
 from testbase.testcase import TestCase
@@ -25,13 +25,12 @@ TestLoader.__test__ = False  # for nauseated Nose
 
 
 class TestCaseTest(unittest.TestCase):
-
     def test_property(self):
         test = TestLoader().load("tests.sampletest.hellotest.HelloTest")[0]
         self.assertEqual(test.test_class_name, "tests.sampletest.hellotest.HelloTest")
         self.assertEqual(test.test_name, "tests.sampletest.hellotest.HelloTest")
         self.assertEqual(test.casedata, None)
-        self.assertRegexpMatches(test.test_doc, '测试示例')
+        self.assertRegexpMatches(test.test_doc, "测试示例")
 
     def test_extra_info(self):
         test = TestLoader().load("tests.sampletest.hellotest.ExtraInfoTest")[0]
@@ -41,14 +40,13 @@ class TestCaseTest(unittest.TestCase):
         with self.assertRaises(RuntimeError):
 
             class Error(TestCase):
-
                 def __init__(self):
                     pass
 
     def test_tags(self):
-
         class Hello(TestCase):
             """tag test"""
+
             owner = "xxx"
             timeout = 1
             priority = TestCase.EnumPriority.BVT
@@ -60,6 +58,7 @@ class TestCaseTest(unittest.TestCase):
 
         class Hello1(Hello):
             """tag test"""
+
             owner = "xxx"
             timeout = 1
             priority = TestCase.EnumPriority.BVT
@@ -67,6 +66,7 @@ class TestCaseTest(unittest.TestCase):
 
         class Hello2(Hello1):
             """tag test"""
+
             owner = "xxx"
             timeout = 1
             priority = TestCase.EnumPriority.BVT
@@ -78,9 +78,9 @@ class TestCaseTest(unittest.TestCase):
         self.assertEqual(Hello2.tags, set(("test", "ok", "test2", "ok2")))
 
     def test_tags_str(self):
-
         class Hello(TestCase):
             """tag test"""
+
             owner = "xxx"
             timeout = 1
             priority = TestCase.EnumPriority.BVT
@@ -93,12 +93,12 @@ class TestCaseTest(unittest.TestCase):
         self.assertEqual(Hello.tags, set(("test",)))
 
     def test_tags_inhert(self):
-
         class Base(TestCase):
             tags = "base"
 
         class Hello(Base):
             """tag test"""
+
             owner = "xxx"
             timeout = 1
             priority = TestCase.EnumPriority.BVT
@@ -115,9 +115,9 @@ class TestCaseTest(unittest.TestCase):
         self.assertEqual(test.tags, set(("test", "mod")))
 
     def test_run(self):
-
         class Hello(TestCase):
             """tag test"""
+
             owner = "xxx"
             timeout = 1
             priority = TestCase.EnumPriority.BVT
@@ -140,12 +140,15 @@ class TestCaseTest(unittest.TestCase):
 
         hello = Hello()
         hello.debug_run()
-        self.assertEqual(hello.steps, ["init_test", "pre_test", "run_test", "post_test", "clean_test"])
+        self.assertEqual(
+            hello.steps,
+            ["init_test", "pre_test", "run_test", "post_test", "clean_test"],
+        )
 
     def test_run_ignored(self):
-
         class Hello(TestCase):
             """tag test"""
+
             owner = "xxx"
             timeout = 1
             priority = TestCase.EnumPriority.BVT
@@ -173,6 +176,7 @@ class TestCaseTest(unittest.TestCase):
 
         class Hello1(TestCase):
             """tag test"""
+
             owner = "xxx"
             timeout = 1
             priority = TestCase.EnumPriority.BVT
@@ -196,12 +200,14 @@ class TestCaseTest(unittest.TestCase):
 
         hello1 = Hello1()
         hello1.debug_run()
-        self.assertEqual(hello1.steps, ["init_test", "pre_test", "post_test", "clean_test"])
+        self.assertEqual(
+            hello1.steps, ["init_test", "pre_test", "post_test", "clean_test"]
+        )
 
     def test_skip_runtest_while_failed(self):
-
         class Hello(TestCase):
             """tag test"""
+
             owner = "xxx"
             timeout = 1
             priority = TestCase.EnumPriority.BVT
@@ -212,7 +218,7 @@ class TestCaseTest(unittest.TestCase):
 
             def pre_test(self):
                 self.steps.append("pre_test")
-                raise RuntimeError('runtime error')
+                raise RuntimeError("runtime error")
 
             def run_test(self):
                 self.steps.append("run_test")
@@ -226,12 +232,12 @@ class TestCaseTest(unittest.TestCase):
         with modify_settings(QTAF_FAILED_SKIP_RUNTEST=True):
             hello = Hello()
             hello.debug_run()
-            self.assertEqual(hello.steps, ["init_test", "pre_test", "post_test", "clean_test"])
+            self.assertEqual(
+                hello.steps, ["init_test", "pre_test", "post_test", "clean_test"]
+            )
 
     def test_run_inhert(self):
-
         class Base(TestCase):
-
             def init_test(self, testresult):
                 self.steps = ["init_test"]
 
@@ -246,6 +252,7 @@ class TestCaseTest(unittest.TestCase):
 
         class Hello(Base):
             """tag test"""
+
             owner = "xxx"
             timeout = 1
             priority = TestCase.EnumPriority.BVT
@@ -256,12 +263,13 @@ class TestCaseTest(unittest.TestCase):
 
         hello = Hello()
         hello.debug_run()
-        self.assertEqual(hello.steps, ["init_test", "pre_test", "run_test", "post_test", "clean_test"])
+        self.assertEqual(
+            hello.steps,
+            ["init_test", "pre_test", "run_test", "post_test", "clean_test"],
+        )
 
     def test_run_style_priority(self):
-
         class Base(TestCase):
-
             def init_test(self, testresult):
                 self.steps = ["init_test"]
 
@@ -276,6 +284,7 @@ class TestCaseTest(unittest.TestCase):
 
         class Hello(Base):
             """tag test"""
+
             owner = "xxx"
             timeout = 1
             priority = TestCase.EnumPriority.BVT
@@ -292,9 +301,7 @@ class TestCaseTest(unittest.TestCase):
         self.assertEqual(report.is_passed(), False)
 
     def test_run_style_priority_old(self):
-
         class Base(TestCase):
-
             def init_test(self, testresult):
                 self.steps = ["init_test"]
 
@@ -309,6 +316,7 @@ class TestCaseTest(unittest.TestCase):
 
         class Hello(Base):
             """tag test"""
+
             owner = "xxx"
             timeout = 1
             priority = TestCase.EnumPriority.BVT
@@ -319,12 +327,14 @@ class TestCaseTest(unittest.TestCase):
 
         hello = Hello()
         hello.debug_run()
-        self.assertEqual(hello.steps, ["init_test", "pre_test", "runTest", "post_test", "clean_test"])
+        self.assertEqual(
+            hello.steps, ["init_test", "pre_test", "runTest", "post_test", "clean_test"]
+        )
 
     def test_wait_for(self):
-
         class WaitForEqualTest(TestCase):
             """wait for equal test ok"""
+
             owner = "xxx"
             timeout = 1
             priority = TestCase.EnumPriority.BVT
@@ -334,22 +344,19 @@ class TestCaseTest(unittest.TestCase):
                 self.wait_for_equal("xxxx", self, "timeout", 1, 1, 0.2)
 
         class WaitForEqualFailureTest(WaitForEqualTest):
-            """wait for equal test failure
-            """
+            """wait for equal test failure"""
 
             def run_test(self):
                 self.wait_for_equal("xxxx", self, "timeout", 2, 1, 0.2)
 
         class WaitForMatchTest(WaitForEqualTest):
-            """wait for match ok
-            """
+            """wait for match ok"""
 
             def run_test(self):
                 self.wait_for_match("xxxx", self, "owner", "x*", 1, 0.2)
 
         class WaitForMatchFailureTest(WaitForEqualTest):
-            """wait for match failure
-            """
+            """wait for match failure"""
 
             def run_test(self):
                 self.wait_for_match("xxxx", self, "owner", "xxxxx*", 1, 0.2)
@@ -374,6 +381,7 @@ class TestCaseTest(unittest.TestCase):
         from tests.sampletest.hellotest import HelloTest
         from testbase.report import EmptyTestReport, StreamTestReport
         from tests.sampletest.datatest import DataTest
+
         report = HelloTest().debug_run()
         self.assertEqual(type(report), EmptyTestReport)
         report = DataTest().debug_run()
@@ -384,6 +392,7 @@ class TestCaseTest(unittest.TestCase):
     def test_debug_run_one(self):
         from tests.sampletest.datatest import DataTest, ArrayDataTest
         from testbase.report import EmptyTestReport
+
         report = ArrayDataTest().debug_run_one()
         self.assertEqual(type(report), EmptyTestReport)
         report = ArrayDataTest().debug_run_one(2)
@@ -397,6 +406,7 @@ class TestCaseTest(unittest.TestCase):
 
     def test_parameter(self):
         from tests.sampletest.paramtest import ParamTest
+
         with modify_settings(QTAF_PARAM_MODE=True):
             tc = ParamTest()
             tc.debug_run()
@@ -405,6 +415,7 @@ class TestCaseTest(unittest.TestCase):
 
     def test_parameter_rewrite(self):
         from tests.sampletest.paramtest import ParamTest
+
         with modify_settings(QTAF_PARAM_MODE=True):
             tc = ParamTest(attrs={"test": 200, "test1": 1000})
             tc.debug_run()
@@ -413,14 +424,16 @@ class TestCaseTest(unittest.TestCase):
 
     def test_parameter_without_add_params(self):
         from tests.sampletest.paramtest import ParamTestWithoutAddParams
+
         with modify_settings(QTAF_PARAM_MODE=True):
             tc = ParamTestWithoutAddParams(attrs={"test": 200, "test1": 1000})
             tc.debug_run()
-            self.assertNotIn('test', tc.__dict__)
-            self.assertNotIn('test1', tc.__dict__)
+            self.assertNotIn("test", tc.__dict__)
+            self.assertNotIn("test1", tc.__dict__)
 
     def test_for(self):
         from tests.sampletest.hellotest import ForTest
+
         tc = ForTest()
         x = tc.debug_run()
         self.assertEqual(x.is_passed(), True)

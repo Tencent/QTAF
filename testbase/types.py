@@ -28,6 +28,7 @@ runner_types = {}
 report_types = {}
 resmgr_backend_types = {}
 
+
 def __init_runner_types():
     global runner_types
     if runner_types:
@@ -41,20 +42,24 @@ def __init_runner_types():
                 runner_types[ep.name] = ep.load()
             except:
                 stack = traceback.format_exc()
-                logger.warn("load TestRunner type for %s failed:\n%s" % (ep.name, stack))
+                logger.warn(
+                    "load TestRunner type for %s failed:\n%s" % (ep.name, stack)
+                )
 
 
 def __init_report_types():
     global report_types
     if report_types:
         return
-    report_types.update({
-        "empty"  : report.EmptyTestReport,
-        "stream" : report.StreamTestReport,
-        "xml"    : report.XMLTestReport,
-        "json"   : report.JSONTestReport,
-        "html"   : report.HtmlTestReport,
-    })
+    report_types.update(
+        {
+            "empty": report.EmptyTestReport,
+            "stream": report.StreamTestReport,
+            "xml": report.XMLTestReport,
+            "json": report.JSONTestReport,
+            "html": report.HtmlTestReport,
+        }
+    )
 
     # Register other `ITestReport` implementations from entry points
     for ep in pkg_resources.iter_entry_points(REPORT_ENTRY_POINT):
@@ -63,7 +68,9 @@ def __init_report_types():
                 report_types[ep.name] = ep.load()
             except:
                 stack = traceback.format_exc()
-                logger.warn("load ITestReport entry point for %s failed:\n%s" % (ep.name, stack))
+                logger.warn(
+                    "load ITestReport entry point for %s failed:\n%s" % (ep.name, stack)
+                )
 
 
 def __init_resmgr_backend_types():
@@ -84,4 +91,3 @@ del __init_report_types
 
 __init_resmgr_backend_types()
 del __init_resmgr_backend_types
-

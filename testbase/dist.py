@@ -171,13 +171,15 @@ class DistGenerator(object):
 
     def _merge_requirements(self):
         """Merge exlib & requirements.txt"""
-        exlib = os.path.join(settings.PROJECT_ROOT, 'exlib')
-        egg_pattern = re.compile(r"(?P<name>[a-zA-Z0-9_]+)(\-(?P<version>[0-9a-zA-Z_\.]+)|)(\-.*|)\.egg$")
+        exlib = os.path.join(settings.PROJECT_ROOT, "exlib")
+        egg_pattern = re.compile(
+            r"(?P<name>[a-zA-Z0-9_]+)(\-(?P<version>[0-9a-zA-Z_\.]+)|)(\-.*|)\.egg$"
+        )
         reqs_dict = {}
 
         req_txt = os.path.join(settings.PROJECT_ROOT, "requirements.txt")
         if os.path.isfile(req_txt):
-            with codecs_open(req_txt, 'r', encoding="utf-8") as fd:
+            with codecs_open(req_txt, "r", encoding="utf-8") as fd:
                 for it in pkg_resources.parse_requirements(fd.read()):
                     reqs_dict[it.name] = str(it)
 
@@ -188,13 +190,13 @@ class DistGenerator(object):
                 result = egg_pattern.match(filename)
                 if not result:
                     continue
-                name, version = result.group('name'), result.group('version')
+                name, version = result.group("name"), result.group("version")
                 if version:
                     reqs_dict[name] = "%s==%s" % (name, version)
                 else:
                     reqs_dict[name] = name
 
-        if 'qtaf' not in reqs_dict:
+        if "qtaf" not in reqs_dict:
             reqs_dict["qtaf"] = "qtaf"
         return reqs_dict.values()
 
@@ -210,13 +212,16 @@ class DistGenerator(object):
             cmd = "sdist_qta"
 
         with codecs_open(setup_py, "w", encoding="utf-8") as fd:
-            fd.write(template % dict(
-                version=self._version,
-                name=settings.PROJECT_NAME,
-                requirements=repr(reqs),
-                python_main_ver=sys.version_info[0],
-                python_vice_ver=sys.version_info[1]
-            ))
+            fd.write(
+                template
+                % dict(
+                    version=self._version,
+                    name=settings.PROJECT_NAME,
+                    requirements=repr(reqs),
+                    python_main_ver=sys.version_info[0],
+                    python_vice_ver=sys.version_info[1],
+                )
+            )
 
         subprocess.call(["python", "setup.py", cmd], cwd=settings.PROJECT_ROOT)
         os.remove(setup_py)
@@ -233,8 +238,7 @@ class DistGenerator(object):
 
 
 class VirtuelEnv(object):
-    """virtual env for QTA test project
-    """
+    """virtual env for QTA test project"""
 
     VENV_ENV_NAME = "QTAF_VENV"
 
@@ -271,7 +275,7 @@ class VirtuelEnv(object):
                 venv_path = venv_path.rsplit(".", 1)[0]
             elif venv_path.endswith(".tar.gz"):
                 venv_path = venv_path.rsplit(".", 2)[0]
-            venv_path = venv_path + '_venv'
+            venv_path = venv_path + "_venv"
         if (not os.path.isdir(venv_path)) or self._recreate_venv:
             if os.path.isdir(venv_path):
                 shutil.rmtree(venv_path)
@@ -280,7 +284,7 @@ class VirtuelEnv(object):
         else:
             created = False
         _, _, _, bin_dir = virtualenv.path_locations(venv_path)
-        activation_script = os.path.join(bin_dir, 'activate_this.py')
+        activation_script = os.path.join(bin_dir, "activate_this.py")
         with open(activation_script) as fd:
             exec(fd.read(), dict(__file__=activation_script))
         if created:

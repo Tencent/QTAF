@@ -33,8 +33,7 @@ suffix = "%s%s" % (sys.version_info[0], sys.version_info[1])
 
 
 class TestReportBase(unittest.TestCase):
-    """base class of report test
-    """
+    """base class of report test"""
 
     def setUp(self):
         if six.PY3:
@@ -42,14 +41,15 @@ class TestReportBase(unittest.TestCase):
 
 
 class StreamReportTest(TestReportBase):
-    """test stream report
-    """
+    """test stream report"""
 
     def test_stream_report(self):
-        test_pairs = [("HelloTest", "ASSERT"),
-                      ("TimeoutTest", "TESTTIMEOUT"),
-                      ("CrashTest", "APPCRASH"),
-                      ("QT4iTest", "CRITICAL"), ]
+        test_pairs = [
+            ("HelloTest", "ASSERT"),
+            ("TimeoutTest", "TESTTIMEOUT"),
+            ("CrashTest", "APPCRASH"),
+            ("QT4iTest", "CRITICAL"),
+        ]
         for test_name, reason in test_pairs:
             test_report = report_types["stream"](output_testresult=True)
             test_runner = runner_types["basic"](test_report)
@@ -61,14 +61,15 @@ class StreamReportTest(TestReportBase):
 
 
 class XmlReportTest(TestReportBase):
-    """xml report test
-    """
+    """xml report test"""
 
     def test_xml_report(self):
-        test_pairs = [("HelloTest", "断言失败"),
-                    ("TimeoutTest", "用例执行超时"),
-                    ("CrashTest", "App Crash"),
-                    ("QT4iTest", "run_test执行失败"), ]
+        test_pairs = [
+            ("HelloTest", "断言失败"),
+            ("TimeoutTest", "用例执行超时"),
+            ("CrashTest", "App Crash"),
+            ("QT4iTest", "run_test执行失败"),
+        ]
 
         old_cwd = os.getcwd()
         for test_name, reason in test_pairs:
@@ -99,10 +100,12 @@ class XmlReportTest(TestReportBase):
                 os.chdir(old_cwd)
 
     def test_xml_report_with_extra_properties(self):
-        test_pairs = [("HelloTest", "断言失败"),
-                    ("TimeoutTest", "用例执行超时"),
-                    ("CrashTest", "App Crash"),
-                    ("QT4iTest", "run_test执行失败"), ]
+        test_pairs = [
+            ("HelloTest", "断言失败"),
+            ("TimeoutTest", "用例执行超时"),
+            ("CrashTest", "App Crash"),
+            ("QT4iTest", "run_test执行失败"),
+        ]
 
         old_cwd = os.getcwd()
         try:
@@ -127,28 +130,29 @@ class XmlReportTest(TestReportBase):
             test_nodes = result_xml.getElementsByTagName("TEST")
             self.assertEqual(len(test_nodes), 1)
             attrs = test_nodes[0].attributes
-            self.assertEqual(attrs['base_property_str'].value, '123')
-            self.assertEqual(attrs['base_property_int'].value, '123')
-            self.assertEqual(attrs['base_property_func_value'].value, 'True')
-            self.assertEqual(attrs['base_property_bool'].value, 'True')
-            self.assertEqual(attrs['property_str'].value, '123')
-            self.assertEqual(attrs['property_int'].value, '123')
-            self.assertEqual(attrs['property_func_value'].value, 'True')
-            self.assertEqual(attrs['property_bool'].value, 'True')
-            self.assertEqual(attrs['property_variable2'].value, 'b1_test')
+            self.assertEqual(attrs["base_property_str"].value, "123")
+            self.assertEqual(attrs["base_property_int"].value, "123")
+            self.assertEqual(attrs["base_property_func_value"].value, "True")
+            self.assertEqual(attrs["base_property_bool"].value, "True")
+            self.assertEqual(attrs["property_str"].value, "123")
+            self.assertEqual(attrs["property_int"].value, "123")
+            self.assertEqual(attrs["property_func_value"].value, "True")
+            self.assertEqual(attrs["property_bool"].value, "True")
+            self.assertEqual(attrs["property_variable2"].value, "b1_test")
         finally:
             os.chdir(old_cwd)
 
 
 class JsonReportTest(TestReportBase):
-    """json report test
-    """
+    """json report test"""
 
     def test_json_report_content(self):
-        test_pairs = [("HelloTest", "断言失败"),
-                    ("TimeoutTest", "用例执行超时"),
-                    ("CrashTest", "App Crash"),
-                    ("QT4iTest", "run_test执行失败")]
+        test_pairs = [
+            ("HelloTest", "断言失败"),
+            ("TimeoutTest", "用例执行超时"),
+            ("CrashTest", "App Crash"),
+            ("QT4iTest", "run_test执行失败"),
+        ]
 
         old_cwd = os.getcwd()
         for test_name, reason in test_pairs:
@@ -173,7 +177,9 @@ class JsonReportTest(TestReportBase):
                     self.assertEqual(failed_test_names[0], test_name)
                     failed_tests = report_json["failed_tests"]
                     self.assertEqual(len(failed_tests), 1)
-                    with codecs_open(failed_tests[test_name]["records"][0], "r", encoding="utf-8") as fd2:
+                    with codecs_open(
+                        failed_tests[test_name]["records"][0], "r", encoding="utf-8"
+                    ) as fd2:
                         content = fd2.read()
                         result_json = json.loads(content)
                         self.assertEqual(result_json["succeed"], False)
@@ -198,7 +204,9 @@ class JsonReportTest(TestReportBase):
             retry_count = 2
             with codecs_open(test_report_name, "w", encoding="utf-8") as fd:
                 test_report = report_types["json"](fd=fd, title="test_json_report")
-                test_runner = runner_types["multithread"](test_report, retries=retry_count)
+                test_runner = runner_types["multithread"](
+                    test_report, retries=retry_count
+                )
                 test_runner.run(test_name)
             with codecs_open(test_report_name, "r", encoding="utf-8") as fd:
                 content = fd.read()
@@ -215,14 +223,15 @@ class JsonReportTest(TestReportBase):
 
 
 class HtmlReportTest(TestReportBase):
-    """html report test
-    """
+    """html report test"""
 
     def test_html_report_content(self):
-        test_pairs = [("HelloTest", "断言失败"),
-                    ("TimeoutTest", "用例执行超时"),
-                    ("CrashTest", "App Crash"),
-                    ("QT4iTest", "run_test执行失败"), ]
+        test_pairs = [
+            ("HelloTest", "断言失败"),
+            ("TimeoutTest", "用例执行超时"),
+            ("CrashTest", "App Crash"),
+            ("QT4iTest", "run_test执行失败"),
+        ]
 
         old_cwd = os.getcwd()
         for test_name, reason in test_pairs:
@@ -247,7 +256,9 @@ class HtmlReportTest(TestReportBase):
                     self.assertEqual(failed_test_names[0], test_name)
                     failed_tests = qta_report["failed_tests"]
                     self.assertEqual(len(failed_tests), 1)
-                    with codecs_open(failed_tests[test_name]["records"][0], "r", encoding="utf-8") as fd2:
+                    with codecs_open(
+                        failed_tests[test_name]["records"][0], "r", encoding="utf-8"
+                    ) as fd2:
                         content = fd2.read()
                         index = content.find("{")
                         result_json_data = content[index:]
@@ -288,7 +299,9 @@ class HtmlReportTest(TestReportBase):
                 self.assertEqual(len(passed_tests), 2)
 
                 for test_name in passed_tests:
-                    with codecs_open(passed_tests[test_name]["records"][0], "r", encoding="utf-8") as fd2:
+                    with codecs_open(
+                        passed_tests[test_name]["records"][0], "r", encoding="utf-8"
+                    ) as fd2:
                         content = fd2.read()
                         index = content.find("{")
                         result_json_data = content[index:]
@@ -298,23 +311,29 @@ class HtmlReportTest(TestReportBase):
             os.chdir(old_cwd)
 
 
-
 class RuntestReportTest(TestReportBase):
-    """runtest report test
-    """
+    """runtest report test"""
 
     def test_runtest_return_code(self):
         from testbase.management import RunTest
-        test_cases = list(map(lambda x: "tests.sampletest.hellotest." + x, ["PassedCase",
-                                                                      "FailedCase",
-                                                                      "PassedCase", ]))
+
+        test_cases = list(
+            map(
+                lambda x: "tests.sampletest.hellotest." + x,
+                [
+                    "PassedCase",
+                    "FailedCase",
+                    "PassedCase",
+                ],
+            )
+        )
         report_pairs = [
             ("stream", ""),
             ("json", "-o xxxx.json"),
             ("html", ""),
-            ("xml", "")
+            ("xml", ""),
         ]
-        context = modify_attributes(os, {"system" : lambda _: None})
+        context = modify_attributes(os, {"system": lambda _: None})
         for report_type, report_args in report_pairs:
             args = argparse.Namespace()
             args.tests = test_cases

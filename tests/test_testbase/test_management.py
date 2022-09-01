@@ -31,8 +31,7 @@ from testbase.test import modify_settings
 
 
 class RuntestTest(unittest.TestCase):
-    """
-    """
+    """ """
 
     def test_args_parsing(self):
         cmdline = "-w working_dir xxxx oooo.test".split()
@@ -40,9 +39,11 @@ class RuntestTest(unittest.TestCase):
         self.assertEqual(args.working_dir, "working_dir")
         self.assertEqual(args.tests, ["xxxx", "oooo.test"])
 
-        cmdline = "--status Ready --status Design --priority BVT --priority High --priority Normal" \
-                  " --tag xxx --tag ooo --excluded-tag aaa --excluded-tag bbb" \
-                  " --owner apple --owner banana xxxx".split()
+        cmdline = (
+            "--status Ready --status Design --priority BVT --priority High --priority Normal"
+            " --tag xxx --tag ooo --excluded-tag aaa --excluded-tag bbb"
+            " --owner apple --owner banana xxxx".split()
+        )
         args = RunTest.parser.parse_args(cmdline)
         self.assertEqual(args.status, ["Ready", "Design"])
         self.assertEqual(args.priorities, ["BVT", "High", "Normal"])
@@ -59,7 +60,9 @@ class RuntestTest(unittest.TestCase):
         self.assertEqual(args.config_file, "test.json")
 
     def test_report_args_parsing(self):
-        cmdline = 'xxxx --report-type stream --report-args "--no-output-result --no-summary"'
+        cmdline = (
+            'xxxx --report-type stream --report-args "--no-output-result --no-summary"'
+        )
         cmdline = shlex.split(cmdline)
         args = RunTest.parser.parse_args(cmdline)
         report_type = report_types[args.report_type]
@@ -76,19 +79,27 @@ class RuntestTest(unittest.TestCase):
 
     def test_runner_args_parsing(self):
         test_pairs = [
-                   ('xxxx --runner-type basic --runner-args "--retries 3"', 1),
-                   ('xxxx --runner-type multithread --runner-args "--retries 3 --concurrency 0"', multiprocessing.cpu_count()),
-                   ('xxxx --runner-type multiprocess --runner-args "--retries 3 --concurrency 3"', 3)
-                   ]
+            ('xxxx --runner-type basic --runner-args "--retries 3"', 1),
+            (
+                'xxxx --runner-type multithread --runner-args "--retries 3 --concurrency 0"',
+                multiprocessing.cpu_count(),
+            ),
+            (
+                'xxxx --runner-type multiprocess --runner-args "--retries 3 --concurrency 3"',
+                3,
+            ),
+        ]
         for cmdline, concurrency in test_pairs:
             args = RunTest.parser.parse_args(shlex.split(cmdline))
             runner_type = runner_types[args.runner_type]
-            runner = runner_type.parse_args(shlex.split(args.runner_args), None, None, "random")
+            runner = runner_type.parse_args(
+                shlex.split(args.runner_args), None, None, "random"
+            )
             self.assertEqual(getattr(runner, "concurrency", 1), concurrency)
 
     def test_failed_returncode(self):
         working_dir = "test_online_report_%s" % get_time_str()
-        cmdline = '--report-type html tests.sampletest.hellotest.FailedCase'
+        cmdline = "--report-type html tests.sampletest.hellotest.FailedCase"
         cmdline += " -w " + working_dir
         self.addCleanup(shutil.rmtree, working_dir, ignore_errors=True)
         args = RunTest.parser.parse_args(cmdline.split())
@@ -97,7 +108,7 @@ class RuntestTest(unittest.TestCase):
 
     def test_failed_exit_code(self):
         working_dir = "test_online_report_%s" % get_time_str()
-        cmdline = 'runtest --report-type html tests.sampletest.hellotest.FailedCase'
+        cmdline = "runtest --report-type html tests.sampletest.hellotest.FailedCase"
         cmdline += " -w " + working_dir
         self.addCleanup(shutil.rmtree, working_dir, ignore_errors=True)
         sys.argv = ["qtaf"]
@@ -107,7 +118,7 @@ class RuntestTest(unittest.TestCase):
 
     def test_success_returncode(self):
         working_dir = "test_online_report_%s" % get_time_str()
-        cmdline = '--report-type html tests.sampletest.hellotest.PassedCase'
+        cmdline = "--report-type html tests.sampletest.hellotest.PassedCase"
         cmdline += " -w " + working_dir
         self.addCleanup(shutil.rmtree, working_dir, ignore_errors=True)
         args = RunTest.parser.parse_args(cmdline.split())
@@ -118,7 +129,7 @@ class RuntestTest(unittest.TestCase):
 
     def test_config_file_success(self):
         working_dir = "test_online_report_%s" % get_time_str()
-        cmdline = 'runtest --report-type html tests.sampletest.hellotest.FailedCase --config-file tests/sampletest/test.json'
+        cmdline = "runtest --report-type html tests.sampletest.hellotest.FailedCase --config-file tests/sampletest/test.json"
         cmdline += " -w " + working_dir
         self.addCleanup(shutil.rmtree, working_dir, ignore_errors=True)
         sys.argv = ["qtaf"]
@@ -129,7 +140,7 @@ class RuntestTest(unittest.TestCase):
     def test_config_file_with_dict(self):
         with modify_settings(QTAF_PARAM_MODE=True):
             working_dir = "test_online_report_%s" % get_time_str()
-            cmdline = 'runtest --report-type html --config-file tests/sampletest/test_dict.json'
+            cmdline = "runtest --report-type html --config-file tests/sampletest/test_dict.json"
             cmdline += " -w " + working_dir
             self.addCleanup(shutil.rmtree, working_dir, ignore_errors=True)
             sys.argv = ["qtaf"]
@@ -140,7 +151,9 @@ class RuntestTest(unittest.TestCase):
     def test_config_file_with_global_parameters(self):
         with modify_settings(QTAF_PARAM_MODE=True):
             working_dir = "test_online_report_%s" % get_time_str()
-            cmdline = 'runtest --config-file tests/sampletest/test_global_parameters.json'
+            cmdline = (
+                "runtest --config-file tests/sampletest/test_global_parameters.json"
+            )
             cmdline += " -w " + working_dir
             self.addCleanup(shutil.rmtree, working_dir, ignore_errors=True)
             sys.argv = ["qtaf"]
@@ -150,8 +163,7 @@ class RuntestTest(unittest.TestCase):
 
 
 class DiscoverTest(unittest.TestCase):
-    """discover command test
-    """
+    """discover command test"""
 
     def test_discover(self):
         file_name = "discovertest_%s.txt" % get_time_str()
@@ -175,11 +187,15 @@ class DiscoverTest(unittest.TestCase):
 
         self.assertTrue(content.find("tests.sampletest.tagtest.TagTest2, reason") >= 0)
         self.assertTrue(content.find("tests.sampletest.hellotest.PassedCase") >= 0)
-        self.assertTrue(content.find("cannot load test \"tests.sampletest.loaderr\"") >= 0)
+        self.assertTrue(
+            content.find('cannot load test "tests.sampletest.loaderr"') >= 0
+        )
 
     def test_discover_show(self):
         file_name = "discovertest_%s.txt" % get_time_str()
-        cmdline = "--excluded-tag test --owner xxx --output-file %s --show error " % file_name
+        cmdline = (
+            "--excluded-tag test --owner xxx --output-file %s --show error " % file_name
+        )
         cmdline += "tests.sampletest.hellotest tests.sampletest.tagtest tests.sampletest.loaderr"
         args = DiscoverTests.parser.parse_args(cmdline.split())
         DiscoverTests().execute(args)
@@ -190,11 +206,12 @@ class DiscoverTest(unittest.TestCase):
         self.assertTrue(content.find("filtered test") == -1)
         self.assertTrue(content.find("normal test") == -1)
         self.assertTrue(content.find("error test") >= 0)
-        self.assertTrue(content.find("cannot load test \"tests.sampletest.loaderr\"") >= 0)
+        self.assertTrue(
+            content.find('cannot load test "tests.sampletest.loaderr"') >= 0
+        )
 
 
 class RunScriptTest(unittest.TestCase):
-
     def test_invalid_script(self):
         cmdline = "tests/test_tuia"
         args = RunScript.parser.parse_args(cmdline.split())

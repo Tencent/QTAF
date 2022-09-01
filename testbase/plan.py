@@ -17,8 +17,8 @@
 
 
 class TestPlan(object):
-    """测试计划
-    """
+    """测试计划"""
+
     tests = None
     test_target_args = {}
 
@@ -39,33 +39,31 @@ class TestPlan(object):
         """
         if isinstance(self.test_target_args, dict):
             return self.test_target_args
-        raise ValueError("`test_target_args` is not a dictionary, please overwrite `get_test_target` for your custom implenmentation")
+        raise ValueError(
+            "`test_target_args` is not a dictionary, please overwrite `get_test_target` for your custom implenmentation"
+        )
 
     def test_setup(self, report):
-        """测试初始化步骤
-        """
+        """测试初始化步骤"""
         pass
 
     def test_teardown(self, report):
-        """测试清理步骤
-        """
+        """测试清理步骤"""
         pass
 
     def resource_setup(self, report, restype, resource):
-        """测试资源初始化
-        """
+        """测试资源初始化"""
         pass
 
     def resource_teardown(self, report, restype, resource):
-        """测试资源清理
-        """
+        """测试资源清理"""
         pass
 
     def debug_run(self, report=None, resmgr_backend=None):
-        """调试执行
-        """
+        """调试执行"""
         from testbase.runner import TestRunner
         from testbase.report import StreamTestReport
+
         if report is None:
             report = StreamTestReport()
         return TestRunner(report, resmgr_backend=resmgr_backend).run(self)

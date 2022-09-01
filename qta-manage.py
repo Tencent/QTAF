@@ -14,5 +14,5 @@
 #
 from testbase.management import qta_manage_main
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     qta_manage_main()

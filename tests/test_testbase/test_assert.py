@@ -23,8 +23,8 @@ from testbase.test import modify_settings
 
 
 class AssertionFailureTest(TestCase):
-    """dummy class for asserts test
-    """
+    """dummy class for asserts test"""
+
     owner = "dummy"
     timeout = 10
     priority = TestCase.EnumPriority.High
@@ -42,9 +42,10 @@ class AssertionFailureTest(TestCase):
     def bar(self, b):
         return b + 1
 
+
 class AssertionInnerInvokeTest(AssertionFailureTest):
-    """xxxx
-    """
+    """xxxx"""
+
     def run_test(self):
         self.assert_foo_bar()
 
@@ -57,8 +58,8 @@ class AssertionInnerInvokeTest(AssertionFailureTest):
 
 
 class AssertionInnerInvokeForTest(AssertionFailureTest):
-    """xxxx
-    """
+    """xxxx"""
+
     def run_test(self):
         self.assert_foo_bar()
 
@@ -67,17 +68,17 @@ class AssertionInnerInvokeForTest(AssertionFailureTest):
             self.assert_("assert", self.foo(self.bar(1)) in [2, 4])
 
 
-@DataDrive([1,2])
+@DataDrive([1, 2])
 class AssertionDatadriveTest(AssertionFailureTest):
-    """dummy class for asserts test
-    """
+    """dummy class for asserts test"""
+
     def run_test(self):
         self.assert_("assert", self.foo(self.bar(1)) in [2, 4])
 
 
 class AssertionTest(unittest.TestCase):
-    """unit test for assertion
-    """
+    """unit test for assertion"""
+
     def is_func_rewritten(self, new_func, old_code):
         new_code = new_func.__func__.__code__
         return new_code != old_code
@@ -87,8 +88,14 @@ class AssertionTest(unittest.TestCase):
         old_run_test_code = case.run_test.__func__.__code__
         case.debug_run()
         self.assertEqual(case.test_result.passed, False, "断言失败，用例没有失败")
-        self.assertEqual(len(case.test_result._step_results), 2, "设置了断言失败继续执行，但是用例没有继续执行")
-        self.assertEqual(self.is_func_rewritten(case.run_test, old_run_test_code), True, "重写assert失败，code对象没有改变")
+        self.assertEqual(
+            len(case.test_result._step_results), 2, "设置了断言失败继续执行，但是用例没有继续执行"
+        )
+        self.assertEqual(
+            self.is_func_rewritten(case.run_test, old_run_test_code),
+            True,
+            "重写assert失败，code对象没有改变",
+        )
 
     def test_assert_inner_invoke(self):
         case = AssertionInnerInvokeTest()
@@ -96,15 +103,27 @@ class AssertionTest(unittest.TestCase):
         case.debug_run()
 
         self.assertEqual(case.test_result.passed, False, "断言失败，用例没有失败")
-        self.assertEqual(self.is_func_rewritten(case.assert_foo_bar, old_assert_foo_bar_code), True, "重写assert失败，code对象没有改变")
+        self.assertEqual(
+            self.is_func_rewritten(case.assert_foo_bar, old_assert_foo_bar_code),
+            True,
+            "重写assert失败，code对象没有改变",
+        )
 
     def test_assert_inner_invoke_with_for(self):
         case = AssertionInnerInvokeForTest()
-        old_assert_foo_bar_with_for_code = case.assert_foo_bar_with_for.__func__.__code__
+        old_assert_foo_bar_with_for_code = (
+            case.assert_foo_bar_with_for.__func__.__code__
+        )
         case.debug_run()
 
         self.assertEqual(case.test_result.passed, False, "断言失败，用例没有失败")
-        self.assertEqual(self.is_func_rewritten(case.assert_foo_bar_with_for, old_assert_foo_bar_with_for_code), True, "重写assert失败，code对象没有改变")
+        self.assertEqual(
+            self.is_func_rewritten(
+                case.assert_foo_bar_with_for, old_assert_foo_bar_with_for_code
+            ),
+            True,
+            "重写assert失败，code对象没有改变",
+        )
 
     def test_assert_datadrive(self):
         case = AssertionDatadriveTest()
@@ -116,7 +135,11 @@ class AssertionTest(unittest.TestCase):
         report = case.debug_run_one(1)
         self.assertEqual(report.is_passed(), False, "数据驱动断言失败，用例没有失败")
 
-        self.assertEqual(self.is_func_rewritten(case.run_test, old_run_test_code), True, "重写assert失败，code对象没有改变")
+        self.assertEqual(
+            self.is_func_rewritten(case.run_test, old_run_test_code),
+            True,
+            "重写assert失败，code对象没有改变",
+        )
 
     def test_disable_rewrite_assert(self):
         with modify_settings(QTAF_REWRITE_ASSERT=False):
@@ -124,14 +147,20 @@ class AssertionTest(unittest.TestCase):
             old_run_test_code = case.run_test.__func__.__code__
             case.debug_run()
             self.assertEqual(case.test_result.passed, False, "禁用重写assert，用例没有失败")
-            self.assertEqual(self.is_func_rewritten(case.run_test, old_run_test_code), False, "禁用重写assert，assert_被重写了")
+            self.assertEqual(
+                self.is_func_rewritten(case.run_test, old_run_test_code),
+                False,
+                "禁用重写assert，assert_被重写了",
+            )
 
     def test_disable_assert_failed_continue(self):
         with modify_settings(QTAF_ASSERT_CONTINUE=False):
             case = AssertionFailureTest()
             case.debug_run()
             self.assertEqual(case.test_result.passed, False, "断言失败退出执行，用例没有失败")
-            self.assertEqual(len(case.test_result._step_results), 1, u"设置了断言失败退出执行，但是用例仍继续执行")
+            self.assertEqual(
+                len(case.test_result._step_results), 1, "设置了断言失败退出执行，但是用例仍继续执行"
+            )
 
 
 if __name__ == "__main__":

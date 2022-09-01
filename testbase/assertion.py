@@ -65,6 +65,7 @@ else:
     def ast_Call(a, b, c):
         return ast.Call(a, b, c, None, None)
 
+
 if hasattr(ast, "NameConstant"):
     _NameConstant = ast.NameConstant
 else:
@@ -108,8 +109,7 @@ def hook_function(func):
 
 
 class AssertionRewriter(ast.NodeVisitor):
-    """assert rewriter
-    """
+    """assert rewriter"""
 
     def rewrite(self, item):
         try:
@@ -144,9 +144,18 @@ class AssertionRewriter(ast.NodeVisitor):
         col_offset = func_node.col_offset
 
         imports = [
-            ast.Import([alias], lineno=lineno, col_offset=col_offset) for alias in aliases
+            ast.Import([alias], lineno=lineno, col_offset=col_offset)
+            for alias in aliases
         ]
-        imports.append(ast.ImportFrom(module="testbase.testresult", names=[ast.alias('EnumLogLevel', None)], level=0, lineno=lineno, col_offset=col_offset))
+        imports.append(
+            ast.ImportFrom(
+                module="testbase.testresult",
+                names=[ast.alias("EnumLogLevel", None)],
+                level=0,
+                lineno=lineno,
+                col_offset=col_offset,
+            )
+        )
         func_node.body[pos:pos] = imports
         nodes = [func_node]
         self.rewrite_code = False
@@ -188,8 +197,7 @@ class AssertionRewriter(ast.NodeVisitor):
         return [expr]
 
     def rewrite_assert_(self, elem):
-        """rewrite the assert_ expression
-        """
+        """rewrite the assert_ expression"""
         self.rewrite_code = True
         self.statements = []
         self.variables = []
@@ -218,9 +226,10 @@ class AssertionRewriter(ast.NodeVisitor):
         msg = self.pop_format_context(template)
         fmt = self.helper("format_explanation", msg)
         log_record = ast.Attribute(
-                                value=ast.Name(id=caller_id, ctx=ast.Load()),
-                                attr='_log_assert_failed',
-                                ctx=ast.Load())
+            value=ast.Name(id=caller_id, ctx=ast.Load()),
+            attr="_log_assert_failed",
+            ctx=ast.Load(),
+        )
         args = [fmt]
         exc = ast_Call(log_record, args, [])
         log_record_expr = ast.Expr(value=exc)
@@ -544,7 +553,7 @@ def _format_assertmsg(obj):
     # contains a newline it gets escaped, however if an object has a
     # .__repr__() which contains newlines it does not get escaped.
     # However in either case we want to preserve the newline.
-#     if isinstance(obj, six.text_type) or isinstance(obj, six.binary_type):
+    #     if isinstance(obj, six.text_type) or isinstance(obj, six.binary_type):
     if isinstance(obj, six.string_types):
         s = smart_text(obj)
         is_repr = False
@@ -568,40 +577,40 @@ def _format_explanation(explanation):
     for when one explanation needs to span multiple lines, e.g. when
     displaying diffs.
     """
-    raw_lines = (explanation or '').split('\n')
+    raw_lines = (explanation or "").split("\n")
     # escape newlines not followed by {, } and ~
     msg = raw_lines[0]
     raw_lines = raw_lines[1:]
     lines = raw_lines[:1]
     for l in raw_lines[1:]:
-        if l.startswith('{') or l.startswith('}') or l.startswith('~'):
+        if l.startswith("{") or l.startswith("}") or l.startswith("~"):
             lines.append(l)
         else:
-            lines[-1] += '\\n' + l
+            lines[-1] += "\\n" + l
 
     result = lines[:1]
     stack = [0]
     stackcnt = [0]
     for line in lines[1:]:
-        if line.startswith('{'):
+        if line.startswith("{"):
             if stackcnt[-1]:
-                s = 'and   '
+                s = "and   "
             else:
-                s = 'where '
+                s = "where "
             stack.append(len(result))
             stackcnt[-1] += 1
             stackcnt.append(0)
-            result.append(' +' + '  ' * (len(stack) - 1) + s + line[1:])
-        elif line.startswith('}'):
+            result.append(" +" + "  " * (len(stack) - 1) + s + line[1:])
+        elif line.startswith("}"):
             stack.pop()
             stackcnt.pop()
             result[stack[-1]] += line[1:]
         else:
-            assert line.startswith('~')
-            result.append('  ' * len(stack) + line[1:])
+            assert line.startswith("~")
+            result.append("  " * len(stack) + line[1:])
     assert len(stack) == 1
     result[0] = " [%s] assert " % msg + result[0]
-    return '\n'.join(result)
+    return "\n".join(result)
 
 
 def get_func_name(func):
@@ -660,7 +669,10 @@ def get_func_compiled_code(func, new_code):
         for item in new_code.co_consts:
             if isinstance(item, types.CodeType):
                 for sub_item in item.co_consts:
-                    if isinstance(sub_item, types.CodeType) and sub_item.co_name == func_name:
+                    if (
+                        isinstance(sub_item, types.CodeType)
+                        and sub_item.co_name == func_name
+                    ):
                         return sub_item
     elif isinstance(func, types.FunctionType):
         for item in new_code.co_consts:
@@ -682,7 +694,6 @@ def set_func_code(func, new_code):
 
 
 class _AssertHookedCache(six.with_metaclass(Singleton, object)):
-
     def __init__(self):
         self._lock = threading.Lock()
         self.__cache = set()

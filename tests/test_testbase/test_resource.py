@@ -12,8 +12,8 @@
 # OF ANY KIND, either express or implied. See the License for the specific language
 # governing permissions and limitations under the License.
 #
-'''resource test
-'''
+"""resource test
+"""
 
 import os
 import shutil
@@ -27,8 +27,8 @@ from testbase.test import modify_environ
 from testbase.util import codecs_open
 
 suffix = "%s%s" % (sys.version_info[0], sys.version_info[1])
-root_dir = os.path.join(settings.PROJECT_ROOT, 'resources')
-test_dir_name = 'test_dir_%s' % suffix
+root_dir = os.path.join(settings.PROJECT_ROOT, "resources")
+test_dir_name = "test_dir_%s" % suffix
 test_file_name = "a_%s.txt" % suffix
 
 
@@ -38,16 +38,14 @@ def _create_local_testfile():
         os.makedirs(test_dir)
     with codecs_open(os.path.join(test_dir, "foo.txt"), mode="w") as fd:
         fd.write("foo")
-    local_file = os.path.join(root_dir, 'a_%s.txt' % suffix)
-    with codecs_open(local_file, 'w', encoding="utf-8") as fd:
-        fd.write('abc')
+    local_file = os.path.join(root_dir, "a_%s.txt" % suffix)
+    with codecs_open(local_file, "w", encoding="utf-8") as fd:
+        fd.write("abc")
 
     with codecs_open(os.path.join(test_dir, "bar.md.link"), mode="w") as fd:
         fd.write("bar.md")
 
     return local_file, root_dir
-
-
 
 
 dup_test_dir = "base_test_%s" % sys.version_info[0]
@@ -57,7 +55,7 @@ def _copy_testfile(src):
     base_dir = os.path.join(settings.PROJECT_ROOT, dup_test_dir)
     if not os.path.isdir(base_dir):
         os.mkdir(base_dir)
-    res_dir = os.path.join(base_dir, 'resources')
+    res_dir = os.path.join(base_dir, "resources")
     if os.path.isdir(res_dir):
         shutil.rmtree(res_dir)
     shutil.copytree(src, res_dir)
@@ -65,7 +63,6 @@ def _copy_testfile(src):
 
 
 class TestResManager(unittest.TestCase):
-
     @classmethod
     def setUpClass(cls):
         if six.PY2:
@@ -79,7 +76,9 @@ class TestResManager(unittest.TestCase):
         os.remove(cls.local_file)
 
     def test_get_local_file(self):
-        fm = resource.TestResourceManager(resource.LocalResourceManagerBackend()).create_session()
+        fm = resource.TestResourceManager(
+            resource.LocalResourceManagerBackend()
+        ).create_session()
         self.assertEqual(self.local_file, fm.get_file(test_file_name))
         self.assertEqual(self.local_file, resource.get_file(test_file_name))
 
@@ -92,26 +91,39 @@ class TestResManager(unittest.TestCase):
         list_result = resource.list_dir(test_dir_name)
         self.assertEqual(paths, list_result)
 
-
     def test_nofile_raise(self):
-        fm = resource.TestResourceManager(resource.LocalResourceManagerBackend()).create_session()
-        self.assertRaisesRegex(Exception, "not found", fm.get_file, 'a_xxx.txt')
-        self.assertRaisesRegex(Exception, "not found", resource.get_file, 'a_xxx.txt')
-        self.assertRaisesRegex(Exception, "not found", fm.list_dir, 'xxx_xxx')
-        self.assertRaisesRegex(Exception, "not found", resource.list_dir, 'xxx_xxx')
+        fm = resource.TestResourceManager(
+            resource.LocalResourceManagerBackend()
+        ).create_session()
+        self.assertRaisesRegex(Exception, "not found", fm.get_file, "a_xxx.txt")
+        self.assertRaisesRegex(Exception, "not found", resource.get_file, "a_xxx.txt")
+        self.assertRaisesRegex(Exception, "not found", fm.list_dir, "xxx_xxx")
+        self.assertRaisesRegex(Exception, "not found", resource.list_dir, "xxx_xxx")
 
     def test_duplicated_raise(self):
         _, local_dir = _create_local_testfile()
         dup_dir = _copy_testfile(local_dir)
         self.addCleanup(shutil.rmtree, dup_dir, True)
-        fm = resource.TestResourceManager(resource.LocalResourceManagerBackend()).create_session()
-        self.assertRaisesRegex(Exception, "multiple results", fm.get_file, test_file_name)
-        self.assertRaisesRegex(Exception, "multiple results", fm.list_dir, test_dir_name)
-        self.assertRaisesRegex(Exception, "multiple results", resource.get_file, test_file_name)
-        self.assertRaisesRegex(Exception, "multiple results", resource.list_dir, test_dir_name)
+        fm = resource.TestResourceManager(
+            resource.LocalResourceManagerBackend()
+        ).create_session()
+        self.assertRaisesRegex(
+            Exception, "multiple results", fm.get_file, test_file_name
+        )
+        self.assertRaisesRegex(
+            Exception, "multiple results", fm.list_dir, test_dir_name
+        )
+        self.assertRaisesRegex(
+            Exception, "multiple results", resource.get_file, test_file_name
+        )
+        self.assertRaisesRegex(
+            Exception, "multiple results", resource.list_dir, test_dir_name
+        )
 
     def test_unregisted_restype(self):
-        rm = resource.TestResourceManager(resource.LocalResourceManagerBackend()).create_session()
+        rm = resource.TestResourceManager(
+            resource.LocalResourceManagerBackend()
+        ).create_session()
         with self.assertRaises(ValueError):
             rm.acquire_resource("xxx")
         with self.assertRaises(ValueError):
@@ -134,9 +146,10 @@ class TestResManager(unittest.TestCase):
 
     def test_testcase_resources(self):
         from tests.sampletest.hellotest import ResmgrTest
+
         result = ResmgrTest().debug_run()
         self.assertTrue(result.is_passed())
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()
