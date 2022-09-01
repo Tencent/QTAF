@@ -1011,7 +1011,7 @@ class TestCaseRunner(ITestCaseRunner):
                                         "postTest",
                                     ]:
                                         self._subtasks.popleft()
-                    except Exception as ex: # pylint: disable=broad-except
+                    except Exception: # pylint: disable=broad-except
                         self._testresult.exception("%s执行失败" % it)
                         if settings.get("QTAF_FAILED_SKIP_RUNTEST", False) and it in [
                             "pre_test",
@@ -1046,11 +1046,11 @@ class TestCaseRunner(ITestCaseRunner):
                 if isinstance(it, str):
                     try:
                         getattr(self._testcase, it)()
-                    except Exception as ex: # pylint: disable=broad-except
+                    except Exception: # pylint: disable=broad-except
                         self._testresult.exception("用例超时时%s执行失败" % it)
                 else:
                     it()
-        except Exception as ex: # pylint: disable=broad-except
+        except Exception: # pylint: disable=broad-except
             self._error = traceback.format_exc()
 
     def setup(self, testcase, testresult):
@@ -1116,7 +1116,7 @@ class TestCaseRunner(ITestCaseRunner):
                 self._stop_run = True
                 try:
                     thread_traceback = self._get_current_traceback(test_thread)
-                except Exception as ex: # pylint: disable=broad-except
+                except Exception: # pylint: disable=broad-except
                     self._testresult.log_record(EnumLogLevel.TESTTIMEOUT, "测试用例执行超时")
                 else:
                     self._testresult.log_record(
@@ -1133,7 +1133,7 @@ class TestCaseRunner(ITestCaseRunner):
                 if cleanup_thread.is_alive():
                     try:
                         thread_traceback = self._get_current_traceback(cleanup_thread)
-                    except Exception as ex: # pylint: disable=broad-except
+                    except Exception: # pylint: disable=broad-except
                         self._testresult.log_record(
                             EnumLogLevel.TESTTIMEOUT, "测试用例执行超时时清理超时"
                         )

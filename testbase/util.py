@@ -748,7 +748,7 @@ def getmembers(object, predicate=None):
             for k, v in base.__dict__.items():
                 if isinstance(v, types.DynamicClassAttribute):
                     names.append(k)
-    except Exception as ex: # pylint: disable=broad-except
+    except Exception: # pylint: disable=broad-except
         pass
     for key in names:
         # First try to get the value via getattr.  Some descriptors don't
@@ -768,7 +768,7 @@ def getmembers(object, predicate=None):
                 # could be a (currently) missing slot member, or a buggy
                 # __dir__; discard and move on
                 continue
-        except Exception as ex: # pylint: disable=broad-except
+        except Exception: # pylint: disable=broad-except
             continue
         if not predicate or predicate(value):
             results.append((key, value))

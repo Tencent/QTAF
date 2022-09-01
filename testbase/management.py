@@ -976,7 +976,7 @@ class ManagementToolsConsole(object):
                 subcmd.execute(ns)
             except SystemExit:
                 logger.info("command exit")
-            except Exception as ex:  # pylint: disable=broad-except
+            except Exception:  # pylint: disable=broad-except
                 traceback.print_exc()
 
 

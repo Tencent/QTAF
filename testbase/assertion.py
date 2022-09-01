@@ -114,7 +114,7 @@ class AssertionRewriter(ast.NodeVisitor):
     def rewrite(self, item):
         try:
             self.rewrite_(item)
-        except Exception as ex:  # pylint: disable=broad-except
+        except Exception:  # pylint: disable=broad-except
             stack = traceback.format_exc()
             msg = "[WARN]rewrite item %s failed: %s" % (item, stack)
             print(msg, file=sys.stderr)
@@ -507,7 +507,7 @@ def _call_reprcompare(ops, results, expls, each_obj):
     for _, res, expl in zip(range(len(ops)), results, expls):
         try:
             done = not res
-        except Exception as ex:  # pylint: disable=broad-except
+        except Exception:  # pylint: disable=broad-except
             done = True
         if done:
             break

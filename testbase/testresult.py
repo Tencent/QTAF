@@ -279,7 +279,7 @@ class TestResultBase(object):
         def _run(outputs, errors):
             try:
                 outputs.append(context.current_testcase().get_extra_fail_record())
-            except Exception as ex: # pylint: disable=broad-except
+            except Exception: # pylint: disable=broad-except
                 errors.append(traceback.format_exc())
 
         errors = []
