@@ -291,7 +291,7 @@ class TestCaseTest(unittest.TestCase):
             priority = TestCase.EnumPriority.BVT
             status = TestCase.EnumStatus.Design
 
-            def runTest(self):
+            def runTest(self): # pylint: disable=invalid-name
                 self.steps.append("runTest")
 
             def run_test(self):
@@ -323,7 +323,7 @@ class TestCaseTest(unittest.TestCase):
             priority = TestCase.EnumPriority.BVT
             status = TestCase.EnumStatus.Design
 
-            def runTest(self):
+            def runTest(self): # pylint: disable=invalid-name
                 self.steps.append("runTest")
 
         hello = Hello()

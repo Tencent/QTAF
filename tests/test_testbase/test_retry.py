@@ -118,6 +118,6 @@ class TestRetry(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    defaultTest = "TestRetry.test_retry_with_count"
-    defaultTest = None
-    unittest.main(defaultTest=defaultTest)
+    default_test = "TestRetry.test_retry_with_count"
+    default_test = None
+    unittest.main(defaultTest=default_test)

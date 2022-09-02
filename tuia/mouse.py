@@ -19,4 +19,4 @@ warnings.warn(
     "`tuia.keyboard` is depressed, please use `qt4c.keyboard` instead",
     DeprecationWarning,
 )
-from qt4c.mouse import Mouse, MouseClickType, MouseCursorType, MouseFlag  # pylint: disable=unused-wildcard-import
+from qt4c.mouse import Mouse, MouseClickType, MouseCursorType, MouseFlag  # pylint: disable=unused-import

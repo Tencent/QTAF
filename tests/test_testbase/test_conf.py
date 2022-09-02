@@ -15,9 +15,10 @@
 """conf test
 """
 
+import unittest
+
 from testbase.conf import settings, SettingsMixin
 from testbase.test import modify_settings
-import unittest
 
 
 class SettingTest(unittest.TestCase):

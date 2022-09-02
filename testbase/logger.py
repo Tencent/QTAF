@@ -98,11 +98,11 @@ def log(level, msg, *args, **kwargs):
     _logger.log(level, msg, *args, **kwargs)
 
 
-def addHandler(hdlr):
+def addHandler(hdlr): # pylint: disable=invalid-name
     """Add the specified handler to this logger."""
     _logger.addHandler(hdlr)
 
 
-def removeHandler(hdlr):
+def removeHandler(hdlr): # pylint: disable=invalid-name
     """Remove the specified handler from this logger."""
     _logger.removeHandler(hdlr)

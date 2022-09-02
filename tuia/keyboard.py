@@ -19,4 +19,4 @@ warnings.warn(
     "`tuia.keyboard` is depressed, please use `qt4c.keyboard` instead",
     DeprecationWarning,
 )
-from qt4c.keyboard import Key, Keyboard, KeyInputError # pylint: disable=unused-wildcard-import
+from qt4c.keyboard import Key, Keyboard, KeyInputError # pylint: disable=unused-import

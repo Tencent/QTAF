@@ -23,7 +23,7 @@ class DataTest(testbase.TestCase):
     timeout = 0.1
     priority = testbase.TestCase.EnumPriority.Normal
 
-    def runTest(self):
+    def runTest(self): # pylint: disable=invalid-name
         self.logInfo(str(self.casedata))
 
 
@@ -36,7 +36,7 @@ class SingleDataTest(testbase.TestCase):
     timeout = 0.1
     priority = testbase.TestCase.EnumPriority.Normal
 
-    def runTest(self):
+    def runTest(self): # pylint: disable=invalid-name
         self.logInfo(str(self.casedata))
 
 
@@ -49,7 +49,7 @@ class EmptyDataTest(testbase.TestCase):
     timeout = 0.1
     priority = testbase.TestCase.EnumPriority.Normal
 
-    def runTest(self):
+    def runTest(self): # pylint: disable=invalid-name
         self.logInfo(str(self.casedata))
 
 
@@ -62,7 +62,7 @@ class ArrayDataTest(testbase.TestCase):
     timeout = 0.1
     priority = testbase.TestCase.EnumPriority.Normal
 
-    def runTest(self):
+    def runTest(self): # pylint: disable=invalid-name
         self.logInfo(str(self.casedata))
 
 
@@ -74,7 +74,7 @@ class ProjDataTest(testbase.TestCase):
     timeout = 0.1
     priority = testbase.TestCase.EnumPriority.Normal
 
-    def runTest(self):
+    def runTest(self): # pylint: disable=invalid-name
         self.logInfo(str(context.current_testcase().casedata))
         self.logInfo(str(self.casedata))
 

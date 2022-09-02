@@ -24,9 +24,10 @@ import sys
 import traceback
 import types
 
+from collections import OrderedDict
+
 import six
 
-from collections import OrderedDict
 from testbase import datadrive
 from testbase.testcase import TestCase, SeqTestSuite
 from testbase.conf import settings

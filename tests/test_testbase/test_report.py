@@ -37,7 +37,7 @@ class TestReportBase(unittest.TestCase):
 
     def setUp(self):
         if six.PY3:
-            self.assertRegexpMatches = self.assertRegex
+            self.assertRegexpMatches = self.assertRegex # pylint: disable=invalid-name
 
 
 class StreamReportTest(TestReportBase):

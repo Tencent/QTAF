@@ -23,7 +23,7 @@ try:
     )
 except ImportError:
     try:
-        from qt4a.qpath import QPath, QPathError # pylint: disable=unused-wildcard-import
+        from qt4a.qpath import QPath, QPathError # pylint: disable=unused-import
 
         warnings.warn(
             "`tuia.qpath` is depressed, please use `qt4a.qpath` instead",

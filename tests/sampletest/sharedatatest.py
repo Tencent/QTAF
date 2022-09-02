@@ -3,9 +3,9 @@
 参数测试用例
 """
 
-import testbase
 import time
 
+import testbase
 
 class AddShareDataTest(testbase.TestCase):
     """参数测试用例"""
@@ -15,7 +15,7 @@ class AddShareDataTest(testbase.TestCase):
     timeout = 0.1
     priority = testbase.TestCase.EnumPriority.Normal
 
-    def runTest(self):
+    def runTest(self): # pylint: disable=invalid-name
         self.add_share_data("test1", 100),
         self.add_share_data("test2", {"a": "b", "b": 123, "c": [1, 2, 3]})
 
@@ -28,7 +28,7 @@ class GetShareDataTest(testbase.TestCase):
     timeout = 1
     priority = testbase.TestCase.EnumPriority.Normal
 
-    def runTest(self):
+    def runTest(self): # pylint: disable=invalid-name
         time.sleep(0.5)
         test1 = self.get_share_data("test1")
         test2 = self.get_share_data("test2")
@@ -44,5 +44,5 @@ class RemoveShareDataTest(testbase.TestCase):
     timeout = 0.1
     priority = testbase.TestCase.EnumPriority.Normal
 
-    def runTest(self):
+    def runTest(self): # pylint: disable=invalid-name
         self.remove_share_data("test1")

@@ -19,4 +19,4 @@ warnings.warn(
     "`tuia.gfcontrols` is depressed, please use `qt4c.gfcontrols` instead",
     DeprecationWarning,
 )
-from qt4c.gfcontrols import * # pylint: disable=unused-wildcard-import
+from qt4c.gfcontrols import * # pylint: disable=wildcard-import
