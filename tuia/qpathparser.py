@@ -148,7 +148,7 @@ class QPathLexer(object):
     # bad_string_literal = '('+bad_string_literal_1+')|('+bad_string_literal_2+')'
 
     @TOKEN(boolean_constant)
-    def t_BOOL_CONST(self, t):
+    def t_BOOL_CONST(self, t): # pylint: disable=invalid-name
         if t.value.lower() == "true":
             t.value = True
         else:
@@ -156,22 +156,22 @@ class QPathLexer(object):
         return t
 
     @TOKEN(hex_constant)
-    def t_INT_CONST_HEX(self, t):
+    def t_INT_CONST_HEX(self, t): # pylint: disable=invalid-name
         t.value = int(t.value, 16)
         return t
 
     @TOKEN(octal_constant)
-    def t_INT_CONST_OCT(self, t):
+    def t_INT_CONST_OCT(self, t): # pylint: disable=invalid-name
         t.value = int(t.value, 8)
         return t
 
     @TOKEN(decimal_constant)
-    def t_INT_CONST_DEC(self, t):
+    def t_INT_CONST_DEC(self, t): # pylint: disable=invalid-name
         t.value = int(t.value)
         return t
 
     @TOKEN(string_literal)
-    def t_STRING_LITERAL(self, t):
+    def t_STRING_LITERAL(self, t): # pylint: disable=invalid-name
         col = t.value[0]
         value = t.value[1:-1].replace("\\%s" % col, col)
         t.value = value
@@ -182,7 +182,7 @@ class QPathLexer(object):
     #         self._error("字符串包含非法的转移字符", t)
 
     @TOKEN(bad_match)
-    def t_BAD_MATCH(self, t):
+    def t_BAD_MATCH(self, t): # pylint: disable=invalid-name
         self._error("'~'后只能连接'='", t)
 
     def t_error(self, t):
@@ -367,7 +367,7 @@ class QPathParser(object):
 
     比如以下的QPath::
 
-        / ClassName="TxGuiFoundation" && Caption1~='QQ\d+' && Instance=-1 / UIType='GF' && name='mainpanel' && MaxDepth=10
+        /ClassName="TxGuiFoundation" && Caption1~='QQ\d+' && Instance=-1 /UIType='GF' && name='main' && MaxDepth=10
 
     解析后得到的结构列表为::
 
@@ -389,7 +389,7 @@ class QPathParser(object):
 
     使用方法示例::
 
-        qp ="""/ ClassName="TxGuiFoundation" && Caption1~='QQ\d+' && Instance='-1' / UIType='GF' && name='mainpanel' && MaxDepth='10'"""
+        qp = """/ClassName="TxGuiFoundation" && Instance='-1' /UIType='GF' && MaxDepth='10'"""
         parser = QPathParser()
         qpath_struct, lex_info = parser.parse(qp)
     '''

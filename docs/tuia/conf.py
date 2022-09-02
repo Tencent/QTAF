@@ -43,17 +43,22 @@ templates_path = ["_templates"]
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:
 # source_suffix = ['.rst', '.md']
+# pylint: disable=invalid-name
 source_suffix = ".rst"
 
 # The encoding of source files.
 # source_encoding = 'utf-8-sig'
 
 # The master toctree document.
+# pylint: disable=invalid-name
 master_doc = "index"
 
 # General information about the project.
+# pylint: disable=invalid-name
 project = "TUIA"
-copyright = "2016, Tencent"
+# pylint: disable=invalid-name
+copyright = "2016-2022, Tencent"
+# pylint: disable=invalid-name
 author = "tencent"
 
 # The version info for the project you're documenting, acts as replacement for
@@ -61,8 +66,10 @@ author = "tencent"
 # built documents.
 #
 # The short X.Y version.
+# pylint: disable=invalid-name
 version = "5.0.0"
 # The full version, including alpha/beta/rc tags.
+# pylint: disable=invalid-name
 release = "5.0.0"
 
 doc_version = os.environ.get("EASYDO_BUILD_DOC_VERSION")
@@ -75,6 +82,7 @@ if doc_version:
 #
 # This is also used if you do content translation via gettext catalogs.
 # Usually you set "language" from the command line for these cases.
+# pylint: disable=invalid-name
 language = "zh_CN"
 
 # There are two options for replacing |today|: either, you set today to some
@@ -103,6 +111,7 @@ exclude_patterns = ["_build"]
 # show_authors = False
 
 # The name of the Pygments (syntax highlighting) style to use.
+# pylint: disable=invalid-name
 pygments_style = "sphinx"
 
 # A list of ignored prefixes for module index sorting.
@@ -112,6 +121,7 @@ pygments_style = "sphinx"
 # keep_warnings = False
 
 # If true, `todo` and `todoList` produce output, else they produce nothing.
+# pylint: disable=invalid-name
 todo_include_todos = False
 
 
@@ -119,6 +129,7 @@ todo_include_todos = False
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
+# pylint: disable=invalid-name
 html_theme = "sphinx_rtd_theme"
 
 # Theme options are theme-specific and customize the look and feel of a theme
@@ -212,6 +223,7 @@ html_static_path = ["_static"]
 # html_search_scorer = 'scorer.js'
 
 # Output file base name for HTML help builder.
+# pylint: disable=invalid-name
 htmlhelp_basename = "TUIAdoc"
 
 # -- Options for LaTeX output ---------------------------------------------

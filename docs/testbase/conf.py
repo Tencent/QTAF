@@ -43,20 +43,26 @@ templates_path = ["_templates"]
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:
 # source_suffix = ['.rst', '.md']
+# pylint: disable=invalid-name
 source_suffix = ".rst"
 
 # The encoding of source files.
 # source_encoding = 'utf-8-sig'
 
 # The master toctree document.
+# pylint: disable=invalid-name
 master_doc = "index"
 
 # convert quotes and dashes to typographically correct entities
+# pylint: disable=invalid-name
 smartquotes = False
 
 # General information about the project.
+# pylint: disable=invalid-name
 project = "Testbase"
-copyright = "2016, QTA"
+# pylint: disable=invalid-name
+copyright = "2016-2022, QTA"
+# pylint: disable=invalid-name
 author = "QTA"
 
 # The version info for the project you're documenting, acts as replacement for
@@ -64,8 +70,10 @@ author = "QTA"
 # built documents.
 #
 # The short X.Y version.
+# pylint: disable=invalid-name
 version = "5.0.0"
 # The full version, including alpha/beta/rc tags.
+# pylint: disable=invalid-name
 release = "5.0.0"
 
 doc_version = os.environ.get("EASYDO_BUILD_DOC_VERSION")
@@ -215,6 +223,7 @@ html_static_path = ["_static"]
 # html_search_scorer = 'scorer.js'
 
 # Output file base name for HTML help builder.
+# pylint: disable=invalid-name
 htmlhelp_basename = "Testbasedoc"
 
 # -- Options for LaTeX output ---------------------------------------------
