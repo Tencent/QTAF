@@ -40,7 +40,7 @@ class TestCaseTest(unittest.TestCase):
     def test_forbidden_overload_init(self):
         with self.assertRaises(RuntimeError):
 
-            class _(TestCase):
+            class _(TestCase): # pylint: disable=invalid-name
                 def __init__(self):
                     pass
 

@@ -31,7 +31,7 @@ resmgr_backend_types = {}
 
 
 def __init_runner_types():
-    global runner_types
+    global runner_types # pylint: disable=invalid-name
     if runner_types:
         return
     runner_types["basic"] = runner.TestRunner
@@ -49,7 +49,7 @@ def __init_runner_types():
 
 
 def __init_report_types():
-    global report_types
+    global report_types # pylint: disable=invalid-name
     if report_types:
         return
     report_types.update(
@@ -75,7 +75,7 @@ def __init_report_types():
 
 
 def __init_resmgr_backend_types():
-    global resmgr_backend_types
+    global resmgr_backend_types # pylint: disable=invalid-name
     if resmgr_backend_types:
         return
     resmgr_backend_types["local"] = resource.LocalResourceManagerBackend

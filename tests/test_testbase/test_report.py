@@ -22,9 +22,10 @@ import shutil
 import sys
 import unittest
 
+from xml.dom import minidom
+
 import six
 
-from xml.dom import minidom
 from testbase.test import modify_attributes
 from testbase.types import runner_types, report_types
 from testbase.util import smart_text, codecs_open, get_time_str

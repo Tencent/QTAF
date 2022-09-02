@@ -547,7 +547,6 @@ if __name__ == "__main__":
     q = QPathParser().parse(
         "/classname='UIATableCell' && label~='XXX.*群，\\d，ZZZ.*\:.+，.*\\d\:\\d' && visible=true"
     )
-    x = "/classname='UIATableCell' && label~='XXX.*群，\\d.*\\,' && visible=true"
 
     QPathParser().parse('/class="\\d\\""')
 

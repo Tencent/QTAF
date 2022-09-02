@@ -115,9 +115,3 @@ class TestRetry(unittest.TestCase):
         self.assertGreaterEqual(
             time_cost + 0.1, (limit - 1) * 0.5, "interval has no effect."
         )
-
-
-if __name__ == "__main__":
-    default_test = "TestRetry.test_retry_with_count"
-    default_test = None
-    unittest.main(defaultTest=default_test)

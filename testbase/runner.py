@@ -58,7 +58,7 @@ from testbase.util import ShareDataManager
 
 runner_usage = (
     'runtest <test ...> --runner-type <runner-type> [--runner-args "<runner-args>"]'
-)
+) # pylint: disable=invalid-name
 
 
 class TestCaseSettings(object):

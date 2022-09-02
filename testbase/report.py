@@ -20,7 +20,6 @@ import socket
 import os
 import shutil
 import json
-import getpass
 import locale
 import argparse
 import xml.dom.minidom as dom
@@ -45,7 +44,7 @@ from testbase.version import version
 os_encoding = locale.getdefaultlocale()[1]
 report_usage = (
     'runtest <test ...> --report-type <report-type> [--report-args "<report-args>"]'
-)
+) # pylint: disable=invalid-name
 
 
 class ITestReport(object):
@@ -649,10 +648,10 @@ class XMLTestReport(TestReportBase):
             casemark,
         )
         doc2 = dom.parseString(smart_binary(nodestr))
-        resultNode = doc2.childNodes[0]
-        resultNode.setAttribute("name", smart_text(saxutils.escape(testcase.test_name)))
-        resultNode.setAttribute("owner", smart_text(saxutils.escape(testcase.owner)))
-        self._runrstnode.appendChild(resultNode)
+        result_node = doc2.childNodes[0]
+        result_node.setAttribute("name", smart_text(saxutils.escape(testcase.test_name)))
+        result_node.setAttribute("owner", smart_text(saxutils.escape(testcase.owner)))
+        self._runrstnode.appendChild(result_node)
 
     def log_record(self, level, tag, msg, record=None):
         """增加一个记录
@@ -692,8 +691,8 @@ class XMLTestReport(TestReportBase):
             smart_text(saxutils.escape(reason)),
         )
         doc2 = dom.parseString(nodestr)
-        filterNode = doc2.childNodes[0]
-        self._runrstnode.appendChild(filterNode)
+        filter_node = doc2.childNodes[0]
+        self._runrstnode.appendChild(filter_node)
 
     def log_load_error(self, loader, name, error):
         """记录一个加载失败的用例或用例集
@@ -711,8 +710,8 @@ class XMLTestReport(TestReportBase):
             log_file,
         )
         doc2 = dom.parseString(nodestr)
-        errNode = doc2.childNodes[0]
-        self._runrstnode.appendChild(errNode)
+        err_node = doc2.childNodes[0]
+        self._runrstnode.appendChild(err_node)
         with codecs_open(log_file, "wb") as fd:
             fd.write(smart_binary(error))
 
