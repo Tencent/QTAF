@@ -41,7 +41,7 @@ def __init_runner_types():
         if ep.name not in runner_types:
             try:
                 runner_types[ep.name] = ep.load()
-            except: # pylint: disable=broad-except
+            except Exception: # pylint: disable=broad-except
                 stack = traceback.format_exc()
                 logger.warn(
                     "load TestRunner type for %s failed:\n%s" % (ep.name, stack)
