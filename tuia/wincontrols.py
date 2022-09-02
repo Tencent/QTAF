@@ -19,4 +19,4 @@ warnings.warn(
     "`tuia.wincontrols` is depressed, please use `qt4c.wincontrols` instead",
     DeprecationWarning,
 )
-from qt4c.wincontrols import *
+from qt4c.wincontrols import * # pylint: disable=wildcard-import

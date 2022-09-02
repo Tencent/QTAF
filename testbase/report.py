@@ -42,9 +42,10 @@ from testbase.util import (
 from testbase.version import version
 
 os_encoding = locale.getdefaultlocale()[1]
+# pylint: disable=invalid-name
 report_usage = (
     'runtest <test ...> --report-type <report-type> [--report-args "<report-args>"]'
-) # pylint: disable=invalid-name
+)
 
 
 class ITestReport(object):

@@ -56,9 +56,10 @@ from testbase.resource import TestResourceManager, LocalResourceManagerBackend
 from testbase.plan import TestPlan
 from testbase.util import ShareDataManager
 
+# pylint: disable=invalid-name
 runner_usage = (
     'runtest <test ...> --runner-type <runner-type> [--runner-args "<runner-args>"]'
-) # pylint: disable=invalid-name
+)
 
 
 class TestCaseSettings(object):

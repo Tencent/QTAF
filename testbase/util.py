@@ -394,7 +394,7 @@ def _thread_start_func(self, *args, **kwargs):
 threading.Thread.start = _thread_start_func
 
 
-def ForbidOverloadMethods(func_name_list): # pylint: disable=invalid-names
+def ForbidOverloadMethods(func_name_list): # pylint: disable=invalid-name
     """生成metaclass用于指定基类禁止子类重载函数"""
 
     class _metaclass(type):

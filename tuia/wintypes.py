@@ -19,4 +19,4 @@ warnings.warn(
     "`tuia.wintypes` is depressed, please use `qt4c.wintypes` instead",
     DeprecationWarning,
 )
-from qt4c.wintypes import *
+from qt4c.wintypes import * # pylint: disable=wildcard-import
