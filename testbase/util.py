@@ -252,7 +252,9 @@ class LazyInit(object):
 
 class ShareDataManager(object):
     def __init__(self, lock=threading.Lock(), data=None):
-        self._data = data or {}
+        self._data = data
+        if self._data is None:
+            self._data = {}
         self._lock = lock
 
     @property
