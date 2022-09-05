@@ -160,16 +160,14 @@ PYDEV_CONF_CONTENT_STANDARD = """<?xml version="1.0" encoding="UTF-8" standalone
 
 
 class EnumProjectMode(object):
-    """测试项目运行模式
-    """
+    """测试项目运行模式"""
 
     Standard = "standard"  # Python标准模式，QTAF和扩展库安装到Python Libs中
     Standalone = "standalone"  # 独立模式，QTAF和扩展库安装到测试项目的exlib目录中
 
 
 def _create_initpy(dir_path, doc):
-    """创建一个__init__.py
-        """
+    """创建一个__init__.py"""
     with codecs_open(os.path.join(dir_path, "__init__.py"), "wb") as fd:
         fd.write(
             (
@@ -180,8 +178,7 @@ def _create_initpy(dir_path, doc):
 
 
 def _create_settingspy(proj_path, proj_name, mode):
-    """创建settings.py文件
-    """
+    """创建settings.py文件"""
     if mode == EnumProjectMode.Standalone:
         content = SETTINGS_CONTENT_STANDALONE
     else:
@@ -199,8 +196,7 @@ def _create_settingspy(proj_path, proj_name, mode):
 
 
 def _create_managepy(proj_path):
-    """创建manage.py文件
-    """
+    """创建manage.py文件"""
     with codecs_open(os.path.join(proj_path, "manage.py"), "wb") as fd:
         fd.write(
             (
@@ -210,8 +206,7 @@ def _create_managepy(proj_path):
 
 
 def _create_sample_test(dir_path, proj_name):
-    """创建示例测试用例
-    """
+    """创建示例测试用例"""
     with codecs_open(os.path.join(dir_path, "hello.py"), "wb") as fd:
         fd.write(
             (
@@ -227,8 +222,7 @@ def _create_sample_test(dir_path, proj_name):
 
 
 def _create_sample_lib(dir_path, proj_name):
-    """创建示例lib
-    """
+    """创建示例lib"""
     with codecs_open(os.path.join(dir_path, "testcase.py"), "wb") as fd:
         fd.write(
             (
@@ -243,8 +237,7 @@ def _create_sample_lib(dir_path, proj_name):
 
 
 def _copy_qtaf_egg(egg_path, dir_path):
-    """拷贝QTAF egg包
-    """
+    """拷贝QTAF egg包"""
     shutil.copy(egg_path, dir_path)
     with zipfile.ZipFile(egg_path) as zfile:
         try:
@@ -257,15 +250,13 @@ def _copy_qtaf_egg(egg_path, dir_path):
 
 
 def _create_eclipse_projfile(proj_path, proj_name):
-    """创建eclispe项目文件
-    """
+    """创建eclispe项目文件"""
     with codecs_open(os.path.join(proj_path, ".project"), "wb") as fd:
         fd.write((ECLIPSE_PROJ_CONTENT % {"ProjectName": proj_name}).encode("utf8"))
 
 
 def _create_pydev_conffile(proj_path, mode):
-    """创建pydev配置文件
-    """
+    """创建pydev配置文件"""
     with codecs_open(os.path.join(proj_path, ".pydevproject"), "wb") as fd:
         if mode == EnumProjectMode.Standalone:
             qtaf_egg_path = os.path.join(
@@ -283,8 +274,7 @@ def _create_pydev_conffile(proj_path, mode):
 
 
 def _update_pydev_conffile(proj_path, egg_name):
-    """更新pydev配置文件中的Egg名称
-    """
+    """更新pydev配置文件中的Egg名称"""
     with codecs_open(
         os.path.join(proj_path, ".pydevproject"), "r", encoding="utf-8"
     ) as fd:
@@ -315,8 +305,7 @@ def _update_pydev_conffile(proj_path, egg_name):
 
 
 def create_project(dest_path, proj_name, mode):
-    """创建项目
-    """
+    """创建项目"""
     if not os.path.isdir(dest_path):
         os.makedirs(dest_path)
 
@@ -353,8 +342,7 @@ def create_project(dest_path, proj_name, mode):
 
 
 def update_project_qtaf(proj_path, qtaf_egg_path):
-    """升级项目的QTAF
-    """
+    """升级项目的QTAF"""
     exlib_dir = os.path.join(proj_path, "exlib")
     for name in os.listdir(exlib_dir):
         if name.startswith("qtaf-") and name.endswith(".egg"):
@@ -364,8 +352,7 @@ def update_project_qtaf(proj_path, qtaf_egg_path):
 
 
 class Project(object):
-    """一个项目（废弃接口，存在是为了兼容）
-    """
+    """一个项目（废弃接口，存在是为了兼容）"""
 
     def __init__(self, root):
         self._root = root
@@ -376,8 +363,7 @@ class Project(object):
 
 
 def current_project():
-    """获取当前项目（废弃接口，存在是为了兼容）
-    """
+    """获取当前项目（废弃接口，存在是为了兼容）"""
     from testbase.conf import settings
 
     return Project(settings.PROJECT_ROOT)

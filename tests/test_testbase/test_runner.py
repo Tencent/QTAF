@@ -12,8 +12,8 @@
 # OF ANY KIND, either express or implied. See the License for the specific language
 # governing permissions and limitations under the License.
 #
-'''runner test
-'''
+"""runner test
+"""
 import unittest
 
 from testbase import runner
@@ -98,14 +98,13 @@ class TestReport(report.ITestReport):
 
 
 class RunnerTest(unittest.TestCase):
-
     def _run_runner_test(self, report, r):
         r.run("tests.sampletest.runnertest")
         self.assertEqual(report.logs[0][0], "begin_report")
         self.assertEqual(report.logs[-1][0], "end_report")
         testresults = {}
         for it in report.logs:
-            if it[0] == 'log_test_result':
+            if it[0] == "log_test_result":
                 testresults[it[1]] = it[2]
 
         for tc, testresult in testresults.items():
@@ -128,7 +127,7 @@ class RunnerTest(unittest.TestCase):
         r.run("tests.sampletest.runnertest")
         testresults = {}
         for it in report.logs:
-            if it[0] == 'log_test_result':
+            if it[0] == "log_test_result":
                 testresults.setdefault(it[1], [])
                 testresults[it[1]].append(it[2])
         for tc, testresult in testresults.items():
@@ -143,7 +142,7 @@ class RunnerTest(unittest.TestCase):
         r.run("tests.sampletest.seqtest")
         results = []
         for it in report.logs:
-            if it[0] == 'log_test_result':
+            if it[0] == "log_test_result":
                 results.append(type(it[1]).__name__)
         self.assertEqual(results, ["TestA"] + ["TestB"] * 4 + ["TestC"])
 
@@ -152,12 +151,13 @@ class RunnerTest(unittest.TestCase):
         # the module we want to execute in the forked process
         # https://stackoverflow.com/questions/33128681/how-to-unit-test-code-that-uses-python-multiprocessing
         import sys
+
         old_main = sys.modules["__main__"]
         old_main_file = sys.modules["__main__"].__file__
         sys.modules["__main__"] = sys.modules[__name__]
         sys.modules["__main__"].__file__ = sys.modules[__name__].__file__
 
-        #-----------------
+        # -----------------
         # real test logic begin
 
         report = TestReport()
@@ -165,7 +165,7 @@ class RunnerTest(unittest.TestCase):
         self._run_runner_test(report, r)
 
         # real test logic end
-        #------------------
+        # ------------------
 
         sys.modules["__main__"] = old_main
         sys.modules["__main__"].__file__ = old_main_file
@@ -173,6 +173,7 @@ class RunnerTest(unittest.TestCase):
     def test_run_plan(self):
         import uuid
         from tests.sampletestplan.hello import HelloTestPlan
+
         report = TestReport()
         r = runner.TestRunner(report)
         r.run(HelloTestPlan())
@@ -182,9 +183,13 @@ class RunnerTest(unittest.TestCase):
                 ops.append(it[0])
             elif it[0] == "log_loaded_tests":
                 ops.append(it[0])
-            elif it[0] == "log_record" and it[2] == 'plan':
+            elif it[0] == "log_record" and it[2] == "plan":
                 ops.append(it[3])
-        self.assertEqual(ops, [ "test_setup", "log_test_target",
+        self.assertEqual(
+            ops,
+            [
+                "test_setup",
+                "log_test_target",
                 "resource_setup-node-%s" % uuid.getnode(),
                 "resource_setup-hello-1",
                 "resource_setup-hello-2",
@@ -192,68 +197,87 @@ class RunnerTest(unittest.TestCase):
                 "resource_teardown-hello-1",
                 "resource_teardown-hello-2",
                 "resource_teardown-node-%s" % uuid.getnode(),
-                "test_teardown"])
+                "test_teardown",
+            ],
+        )
 
     def test_run_testcasesettings(self):
         report = TestReport()
         r = runner.TestRunner(report)
-        r.run(runner.TestCaseSettings(["tests.sampletest"], tags=["mod"], excluded_tags=["test2"]))
+        r.run(
+            runner.TestCaseSettings(
+                ["tests.sampletest"], tags=["mod"], excluded_tags=["test2"]
+            )
+        )
         tcs = []
         for it in report.logs:
-            if it[0] == 'log_test_result':
+            if it[0] == "log_test_result":
                 tcs.append(it[1])
         self.assertEqual(len(tcs), 1)
         tc = tcs[0]
         from tests.sampletest.tagtest import TagTest
+
         self.assertIsInstance(tc, TagTest)
 
     def test_add_share_data(self):
-        runner_types = [runner.TestRunner, runner.ThreadingTestRunner, runner.MultiProcessTestRunner]
+        runner_types = [
+            runner.TestRunner,
+            runner.ThreadingTestRunner,
+            runner.MultiProcessTestRunner,
+        ]
         for runner_type in runner_types:
             if runner_type == runner.MultiProcessTestRunner:
                 import sys
+
                 old_main = sys.modules["__main__"]
                 old_main_file = sys.modules["__main__"].__file__
                 sys.modules["__main__"] = sys.modules[__name__]
                 sys.modules["__main__"].__file__ = sys.modules[__name__].__file__
 
-            share_data = {
-                'test1': 100,
-                'test2': {'a': 'b', 'b': 123, 'c': [1, 2, 3]}
-            }
+            share_data = {"test1": 100, "test2": {"a": "b", "b": 123, "c": [1, 2, 3]}}
             report = TestReport()
             r = runner_type(report)
-            r.run(runner.TestCaseSettings(["tests.sampletest.sharedatatest.AddShareDataTest"]))
-            test1 = r.get_share_data('test1')
-            self.assertEqual(test1, share_data['test1'])
-            test2 = r.get_share_data('test2')
-            self.assertEqual(test2, share_data['test2'])
+            r.run(
+                runner.TestCaseSettings(
+                    ["tests.sampletest.sharedatatest.AddShareDataTest"]
+                )
+            )
+            test1 = r.get_share_data("test1")
+            self.assertEqual(test1, share_data["test1"])
+            test2 = r.get_share_data("test2")
+            self.assertEqual(test2, share_data["test2"])
 
             if runner_type == runner.MultiProcessTestRunner:
                 sys.modules["__main__"] = old_main
                 sys.modules["__main__"].__file__ = old_main_file
 
     def test_get_share_data(self):
-        runner_types = [runner.TestRunner, runner.ThreadingTestRunner, runner.MultiProcessTestRunner]
+        runner_types = [
+            runner.TestRunner,
+            runner.ThreadingTestRunner,
+            runner.MultiProcessTestRunner,
+        ]
         for runner_type in runner_types:
             if runner_type == runner.MultiProcessTestRunner:
                 import sys
+
                 old_main = sys.modules["__main__"]
                 old_main_file = sys.modules["__main__"].__file__
                 sys.modules["__main__"] = sys.modules[__name__]
                 sys.modules["__main__"].__file__ = sys.modules[__name__].__file__
 
-            share_data = {
-                'test1': 100,
-                'test2': {'a': 'b', 'b': 123, 'c': [1, 2, 3]}
-            }
+            share_data = {"test1": 100, "test2": {"a": "b", "b": 123, "c": [1, 2, 3]}}
             report = TestReport()
             r = runner_type(report)
             r.load_share_data(share_data)
-            r.run(runner.TestCaseSettings(["tests.sampletest.sharedatatest.GetShareDataTest"]))
+            r.run(
+                runner.TestCaseSettings(
+                    ["tests.sampletest.sharedatatest.GetShareDataTest"]
+                )
+            )
             testresults = {}
             for it in report.logs:
-                if it[0] == 'log_test_result':
+                if it[0] == "log_test_result":
                     testresults[it[1]] = it[2]
 
             for tc, testresult in testresults.items():
@@ -264,37 +288,47 @@ class RunnerTest(unittest.TestCase):
                 sys.modules["__main__"].__file__ = old_main_file
 
     def test_remove_share_data(self):
-        runner_types = [runner.TestRunner, runner.ThreadingTestRunner, runner.MultiProcessTestRunner]
+        runner_types = [
+            runner.TestRunner,
+            runner.ThreadingTestRunner,
+            runner.MultiProcessTestRunner,
+        ]
         for runner_type in runner_types:
             if runner_type == runner.MultiProcessTestRunner:
                 import sys
+
                 old_main = sys.modules["__main__"]
                 old_main_file = sys.modules["__main__"].__file__
                 sys.modules["__main__"] = sys.modules[__name__]
                 sys.modules["__main__"].__file__ = sys.modules[__name__].__file__
 
-            share_data = {
-                'test1': 100,
-                'test2': {'a': 'b', 'b': 123, 'c': [1, 2, 3]}
-            }
+            share_data = {"test1": 100, "test2": {"a": "b", "b": 123, "c": [1, 2, 3]}}
             report = TestReport()
             r = runner_type(report)
             r.load_share_data(share_data)
-            r.run(runner.TestCaseSettings(["tests.sampletest.sharedatatest.RemoveShareDataTest"]))
+            r.run(
+                runner.TestCaseSettings(
+                    ["tests.sampletest.sharedatatest.RemoveShareDataTest"]
+                )
+            )
             share_data_mgr = r._share_data_mgr
-            self.assertNotIn('test1', share_data_mgr.data)
-            self.assertIn('test2', share_data_mgr.data)
+            self.assertNotIn("test1", share_data_mgr.data)
+            self.assertIn("test2", share_data_mgr.data)
 
             if runner_type == runner.MultiProcessTestRunner:
                 sys.modules["__main__"] = old_main
                 sys.modules["__main__"].__file__ = old_main_file
 
-
     def test_execute_type(self):
-        runner_types = [runner.TestRunner, runner.ThreadingTestRunner, runner.MultiProcessTestRunner]
+        runner_types = [
+            runner.TestRunner,
+            runner.ThreadingTestRunner,
+            runner.MultiProcessTestRunner,
+        ]
         for runner_type in runner_types:
             if runner_type == runner.MultiProcessTestRunner:
                 import sys
+
                 old_main = sys.modules["__main__"]
                 old_main_file = sys.modules["__main__"].__file__
                 sys.modules["__main__"] = sys.modules[__name__]
@@ -302,10 +336,17 @@ class RunnerTest(unittest.TestCase):
 
             report = TestReport()
             r = runner_type(report, execute_type="sequential")
-            r.run(runner.TestCaseSettings(["tests.sampletest.sharedatatest.AddShareDataTest", "tests.sampletest.sharedatatest.GetShareDataTest"]))
+            r.run(
+                runner.TestCaseSettings(
+                    [
+                        "tests.sampletest.sharedatatest.AddShareDataTest",
+                        "tests.sampletest.sharedatatest.GetShareDataTest",
+                    ]
+                )
+            )
             testresults = {}
             for it in report.logs:
-                if it[0] == 'log_test_result':
+                if it[0] == "log_test_result":
                     testresults[it[1]] = it[2]
 
             for tc, testresult in testresults.items():

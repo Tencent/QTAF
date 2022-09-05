@@ -12,9 +12,9 @@
 # OF ANY KIND, either express or implied. See the License for the specific language
 # governing permissions and limitations under the License.
 #
-'''
+"""
 共用类模块
-'''
+"""
 
 import binascii
 import codecs
@@ -23,9 +23,7 @@ import inspect
 import io
 import locale
 import os
-import pkg_resources
 import re
-import six
 import sys
 import threading
 import time
@@ -35,42 +33,39 @@ from inspect import isclass, getmro, types
 from xml.dom.minidom import Node
 from datetime import datetime
 
+import pkg_resources
+import six
+
 from tuia.exceptions import TimeoutError
 
 default_locale = locale.getdefaultlocale()
 if default_locale:
     default_encoding = default_locale[1] or "utf-8"
 else:
-    default_encoding = "utf-8"
+    default_encoding = "utf-8" # pylint: disable=invalid-name
 
 file_encoding = sys.getfilesystemencoding()
 file_encoding_lower = file_encoding.lower()
 for special_encoding in ["ansi", "ascii"]:
     if file_encoding_lower.find(special_encoding) >= 0:
-        file_encoding = "utf-8"
+        file_encoding = "utf-8" # pylint: disable=invalid-name
         break
 file_encoding = file_encoding or "utf-8"
 
 
 class Timeout(object):
-    '''TimeOut类，实现超时重试逻辑
-    '''
+    """TimeOut类，实现超时重试逻辑"""
 
     def __init__(self, timeout=10, interval=0.5):
-        '''Constructor
+        """Constructor
 
         :param timeout: 超时秒数，默认是10
         :param interval: 重试时间间隔秒数，默认是0.5
-        '''
+        """
         self.timeout = float(timeout)
         self.interval = float(interval)
 
-    def retry(self,
-        func,
-        args,
-        exceptions=(),
-        resultmatcher=None,
-        nothrow=False):
+    def retry(self, func, args, exceptions=(), resultmatcher=None, nothrow=False):
         """多次尝试调用函数，成功则并返回调用结果，超时则根据选项决定抛出TimeOutError异常。
 
         :param func: 尝试调用的函数
@@ -106,7 +101,7 @@ class Timeout(object):
                 else:
                     raise TypeError("args type %s is not a dict or tuple" % type(args))
 
-                if resultmatcher == None or resultmatcher(ret) == True:
+                if resultmatcher is None or resultmatcher(ret):
                     return ret
             except exceptions:
                 pass
@@ -114,7 +109,7 @@ class Timeout(object):
             waited = time.time() - start
             if waited < self.timeout:
                 time.sleep(min(self.interval, self.timeout - waited))
-            elif try_count == 1 :
+            elif try_count == 1:
                 continue
             else:
                 if nothrow:
@@ -122,8 +117,8 @@ class Timeout(object):
                 else:
                     raise TimeoutError("在%d秒里尝试了%d次" % (self.timeout, try_count))
 
-    def waitObjectProperty(self, obj, property_name, waited_value, regularMatch=False):
-        '''通过比较obj.property_name和waited_value，等待属性值出现。
+    def waitObjectProperty(self, obj, property_name, waited_value, regularMatch=False): # pylint: disable=invalid-name
+        """通过比较obj.property_name和waited_value，等待属性值出现。
                              如果属性值obj.property_name是字符类型则waited_value做为正则表达式进行比较。
                              比较成功则返回，超时则抛出TimeoutError异常。
 
@@ -132,14 +127,14 @@ class Timeout(object):
         :param waited_value: 要比较的的属性值，支持多层属性
         :param regularMatch: 参数 property_name和waited_value是否采用正则表达式的比较。
                                                                             默认为不采用（False）正则，而是采用恒等比较
-        '''
+        """
         start = time.time()
         waited = 0.0
         try_count = 0
         isstr = isinstance(waited_value, six.string_types)
         while True:
             objtmp = obj  # 增加多层属性支持
-            pro_names = property_name.split('.')
+            pro_names = property_name.split(".")
             for i in range(len(pro_names)):
                 propvalue = getattr(objtmp, pro_names[i])
                 objtmp = propvalue
@@ -155,17 +150,19 @@ class Timeout(object):
             if waited < self.timeout:
                 time.sleep(min(self.interval, self.timeout - waited))
             else:
-                raise TimeoutError("对象属性值比较超时（%d秒%d次）：期望值:%s，实际值:%s，"
-                                   % (self.timeout, try_count, waited_value, propvalue))
+                raise TimeoutError(
+                    "对象属性值比较超时（%d秒%d次）：期望值:%s，实际值:%s，"
+                    % (self.timeout, try_count, waited_value, propvalue)
+                )
 
     def check(self, func, expect):
-        '''多次检查func的返回值是否符合expect设定的期望值，如果设定时间内满足，则返回True，否则返回False
+        """多次检查func的返回值是否符合expect设定的期望值，如果设定时间内满足，则返回True，否则返回False
 
         :param func: 尝试调用的函数
         :param expect: 设定的期望值
 
         :returns bool - 检查是否符合预期
-        '''
+        """
         start = time.time()
         waited = 0.0
         while True:
@@ -180,13 +177,14 @@ class Timeout(object):
 
 class Singleton(type):
     """单实例元类，用于某个类需要实现单例模式。
-            使用方式示例如下::
-          import six
-          class MyClass(with_metaclass(Singleton, object)):
-              def __init__(self, *args, **kwargs):
-                  pass
+      使用方式示例如下::
+    import six
+    class MyClass(with_metaclass(Singleton, object)):
+        def __init__(self, *args, **kwargs):
+            pass
 
     """
+
     _instances = {}
 
     def __init__(cls, name, bases, dic):
@@ -200,7 +198,7 @@ class Singleton(type):
 
 
 class LazyInit(object):
-    '''实现延迟初始化
+    """实现延迟初始化
 
     使用方式示例::
 
@@ -220,11 +218,10 @@ class LazyInit(object):
         ctrl.click()  # <-- call _init_window
         ctrl.click()
 
-    '''
+    """
 
     def __init__(self, obj, propname, init_func):
-        '''构造函数
-        '''
+        """构造函数"""
         self.__obj = obj
         self.__propname = propname
         self.__init_func = init_func
@@ -239,7 +236,11 @@ class LazyInit(object):
         return attr
 
     def __setattr__(self, attrname, value):
-        if attrname in ['_LazyInit__obj', '_LazyInit__propname', '_LazyInit__init_func']:
+        if attrname in [
+            "_LazyInit__obj",
+            "_LazyInit__propname",
+            "_LazyInit__init_func",
+        ]:
             return super(LazyInit, self).__setattr__(attrname, value)
         obj = self.__init_func()
         setattr(self.__obj, self.__propname, obj)
@@ -250,8 +251,10 @@ class LazyInit(object):
 
 
 class ShareDataManager(object):
-    def __init__(self, lock=threading.Lock(), data={}):
+    def __init__(self, lock=threading.Lock(), data=None):
         self._data = data
+        if self._data is None:
+            self._data = {}
         self._lock = lock
 
     @property
@@ -264,14 +267,11 @@ class ShareDataManager(object):
         self._lock.release()
         if not data:
             raise KeyError("No such key %s exists" % key)
-        return data.get('value', None)
+        return data.get("value", None)
 
     def set(self, key, value, level=0):
         self._lock.acquire()
-        self._data[key] = {
-            "value": value,
-            "level": level
-        }
+        self._data[key] = {"value": value, "level": level}
         self._lock.release()
 
     def pop(self, key):
@@ -295,45 +295,47 @@ class ShareDataManager(object):
 
 
 class ThreadGroupLocal(object):
-    '''使用线程组本地存储的元类
+    """使用线程组本地存储的元类
 
     - 当配合ThreadGroupScope使用，类似threading.local()提供的TLS变种，一个线程和其子孙线程共享一个存储
     详细使用方式请参考ThreadGroupScope类
 
     - 当不在ThreadGroupScope中使用时，行为和threading.local()一致
 
-    '''
+    """
 
     def __init__(self):
         curr_thread = threading.current_thread()
-#         if not hasattr(curr_thread, 'qtaf_group'):
-#             raise RuntimeError("current thread is not in any QTAF thread group scope")
-#         self.__data = curr_thread.qtaf_local
-        if hasattr(curr_thread, 'qtaf_group'):
+        #         if not hasattr(curr_thread, 'qtaf_group'):
+        #             raise RuntimeError("current thread is not in any QTAF thread group scope")
+        #         self.__data = curr_thread.qtaf_local
+        if hasattr(curr_thread, "qtaf_group"):
             self.__data = curr_thread.qtaf_local
         else:
-            if not hasattr(curr_thread, 'qtaf_local_outofscope'):
+            if not hasattr(curr_thread, "qtaf_local_outofscope"):
                 curr_thread.qtaf_local_outofscope = {}
             self.__data = curr_thread.qtaf_local_outofscope
 
     def __setattr__(self, name, value):
-        if name.startswith('_ThreadGroupLocal__'):
+        if name.startswith("_ThreadGroupLocal__"):
             super(ThreadGroupLocal, self).__setattr__(name, value)
         else:
             self.__data[name] = value
 
     def __getattr__(self, name):
-        if name.startswith('_ThreadGroupLocal__'):
+        if name.startswith("_ThreadGroupLocal__"):
             return super(ThreadGroupLocal, self).__getattr__(name)
         else:
             try:
                 return self.__data[name]
             except KeyError:
-                raise AttributeError("'ThreadGroupLocal' object has no attribute '%s'" % (name))
+                raise AttributeError(
+                    "'ThreadGroupLocal' object has no attribute '%s'" % (name)
+                )
 
 
 class ThreadGroupScope(object):
-    '''指定线程组作用域，进入这个作用域的线程，以及在其作用域内创建的线程都同属于一个线程组
+    """指定线程组作用域，进入这个作用域的线程，以及在其作用域内创建的线程都同属于一个线程组
 
     使用示例如下::
 
@@ -350,19 +352,19 @@ class ThreadGroupScope(object):
             t.join()
             assert ThreadGroupLocal().counter == 2
 
-    '''
+    """
 
     def __init__(self, name):
-        '''构造函数
+        """构造函数
 
         :param name: 线程组名称，全局唯一
         :type name: string
-        '''
+        """
         self._name = name
 
     def __enter__(self):
         curr_thread = threading.current_thread()
-        if hasattr(curr_thread, 'qtaf_local'):
+        if hasattr(curr_thread, "qtaf_local"):
             raise RuntimeError("ThreadGroupScope cannot be nested")
         curr_thread.qtaf_local = {}
         curr_thread.qtaf_group = self._name
@@ -373,10 +375,9 @@ class ThreadGroupScope(object):
 
     @staticmethod
     def current_scope():
-        '''返回当前线程所在的线程组作用域，如果不存在于任务线程组作用域，则返回None
-        '''
+        """返回当前线程所在的线程组作用域，如果不存在于任务线程组作用域，则返回None"""
         curr_thread = threading.current_thread()
-        if hasattr(curr_thread, 'qtaf_group'):
+        if hasattr(curr_thread, "qtaf_group"):
             return curr_thread.qtaf_group
 
 
@@ -384,10 +385,9 @@ _origin_thread_start_func = threading.Thread.start
 
 
 def _thread_start_func(self, *args, **kwargs):
-    '''用于劫持threading.Thread.start函数
-    '''
+    """用于劫持threading.Thread.start函数"""
     curr_thread = threading.current_thread()
-    if hasattr(curr_thread, 'qtaf_group'):
+    if hasattr(curr_thread, "qtaf_group"):
         self.qtaf_group = curr_thread.qtaf_group
         self.qtaf_local = curr_thread.qtaf_local
     return _origin_thread_start_func(self, *args, **kwargs)
@@ -396,12 +396,10 @@ def _thread_start_func(self, *args, **kwargs):
 threading.Thread.start = _thread_start_func
 
 
-def ForbidOverloadMethods(func_name_list):
-    '''生成metaclass用于指定基类禁止子类重载函数
-    '''
+def ForbidOverloadMethods(func_name_list): # pylint: disable=invalid-name
+    """生成metaclass用于指定基类禁止子类重载函数"""
 
     class _metaclass(type):
-
         def __init__(cls, name, bases, dic):
             if len(bases) == 1 and bases[0] == object:
                 super(_metaclass, cls).__init__(name, bases, dic)
@@ -414,9 +412,8 @@ def ForbidOverloadMethods(func_name_list):
     return _metaclass
 
 
-class classproperty(object):
-    '''类属性修饰器
-    '''
+class classproperty(object): # pylint: disable=invalid-name
+    """类属性修饰器"""
 
     def __init__(self, getter):
         self.getter = getter
@@ -426,10 +423,10 @@ class classproperty(object):
 
 
 def smart_text(s, decoding=None):
-    '''convert any text or binary to text
+    """convert any text or binary to text
     py2 text: utf-8 bytes
     py3 text: unicode
-    '''
+    """
     if not isinstance(s, (six.string_types, six.binary_type)):
         raise RuntimeError("string or binary type didn't match with %r" % s)
     if six.PY3:
@@ -437,7 +434,7 @@ def smart_text(s, decoding=None):
             return s
         else:
             try:
-                return s.decode('utf8')
+                return s.decode("utf8")
             except UnicodeDecodeError:  # other encoding
                 try:
                     if decoding is None:
@@ -449,9 +446,8 @@ def smart_text(s, decoding=None):
         return smart_binary(s, decoding=decoding)  # py2
 
 
-def  smart_binary(s, encoding="utf8", decoding=None):
-    '''convert any text or binary to binary of specified encoding
-    '''
+def smart_binary(s, encoding="utf8", decoding=None):
+    """convert any text or binary to binary of specified encoding"""
     if not isinstance(s, (six.string_types, six.binary_type)):
         raise RuntimeError("string or binary type didn't match with %r" % s)
     if isinstance(s, six.text_type):
@@ -500,12 +496,13 @@ def smart_from_hex(s):
 
 
 def smart_bytify(obj, encoding="utf-8", decoding=None):
-    """recursively convert objects from string types to binary
-    """
+    """recursively convert objects from string types to binary"""
     if isinstance(obj, dict):
         dic = {}
         for key, value in obj.items():
-            dic[smart_bytify(key, encoding, decoding)] = smart_bytify(value, encoding, decoding)
+            dic[smart_bytify(key, encoding, decoding)] = smart_bytify(
+                value, encoding, decoding
+            )
         return dic
     elif isinstance(obj, list):
         ls = []
@@ -519,8 +516,7 @@ def smart_bytify(obj, encoding="utf-8", decoding=None):
 
 
 def smart_strfy(obj, decoding=None):
-    """recursively convert objects from binary to text
-    """
+    """recursively convert objects from binary to text"""
     if isinstance(obj, dict):
         dic = {}
         for key, value in obj.items():
@@ -538,11 +534,11 @@ def smart_strfy(obj, decoding=None):
 
 
 def get_thread_traceback(thread):
-    '''获取用例线程的当前的堆栈
+    """获取用例线程的当前的堆栈
 
     :param thread: 要获取堆栈的线程
     :type thread: Thread
-    '''
+    """
     for thread_id, stack in sys._current_frames().items():
         if thread_id != thread.ident:
             continue
@@ -595,12 +591,10 @@ def get_last_frame_stack(back_count=2):
 
 
 def to_pretty_xml(doc, encoding="utf-8"):
-    """we need to ensure each line to be binary type
-    """
+    """we need to ensure each line to be binary type"""
 
     class _XMLWriter(codecs.StreamWriter):
-        """an inner writer to give writer a chance to handle each line
-        """
+        """an inner writer to give writer a chance to handle each line"""
 
         def write(self, data):
             data = smart_binary(data)
@@ -640,7 +634,7 @@ def ensure_binary_stream(stream, encoding="utf-8"):
             new_stream = stream
     else:
         if getattr(stream, "encoding", None):
-            if not stream.encoding.lower().startswith('ansi'):  # linux ascii
+            if not stream.encoding.lower().startswith("ansi"):  # linux ascii
                 encoding = stream.encoding
         new_stream = stream
     return new_stream, encoding
@@ -648,7 +642,9 @@ def ensure_binary_stream(stream, encoding="utf-8"):
 
 def codecs_open(filename, mode="rb", encoding=None, errors="strict", buffering=1):
     filename = smart_binary(filename, encoding=file_encoding)
-    return codecs.open(filename, mode=mode, encoding=encoding, errors=errors, buffering=buffering)
+    return codecs.open(
+        filename, mode=mode, encoding=encoding, errors=errors, buffering=buffering
+    )
 
 
 def path_exists(filename):
@@ -657,7 +653,7 @@ def path_exists(filename):
 
 
 def get_os_version():
-    if sys.platform == 'win32':
+    if sys.platform == "win32":
         with os.popen("ver") as pipe:
             osver = smart_text(pipe.read())
     else:
@@ -669,18 +665,21 @@ if six.PY3:
     maketrans_func = str.maketrans
 else:
     import string
+
     maketrans_func = string.maketrans
 
 BAD_FILE_CHARS = r'\/*?:<>"|~#'
-BAD_VAR_CHAR = BAD_FILE_CHARS + '()[]+-=& '
-TRANS = maketrans_func(BAD_VAR_CHAR, '_' * len(BAD_VAR_CHAR))
+BAD_VAR_CHAR = BAD_FILE_CHARS + "()[]+-=& "
+TRANS = maketrans_func(BAD_VAR_CHAR, "_" * len(BAD_VAR_CHAR))
 BAD_VAR_CHAR_SET = set(BAD_VAR_CHAR)
 
 
 def translate_bad_char(input_string):
     if six.PY2:
         translated_string = smart_binary(input_string).translate(TRANS)
-        translated_string = re.sub(r'[^\x00-\x7f]', '', translated_string) # Replace non-ascii chars
+        translated_string = re.sub(
+            r"[^\x00-\x7f]", "", translated_string
+        )  # Replace non-ascii chars
     else:
         translated_string = smart_text(input_string).translate(TRANS)
     return translated_string
@@ -716,7 +715,7 @@ def get_attribute_from_string(object_path):
     parts_len = len(parts)
     mod = None
     for index in range(parts_len):
-        mod_path = ".".join(parts[:index + 1])
+        mod_path = ".".join(parts[: index + 1])
         try:
             mod = importlib.import_module(mod_path)
         except ImportError:
@@ -726,7 +725,10 @@ def get_attribute_from_string(object_path):
         try:
             value = getattr(value, parts[new_index])
         except AttributeError:
-            raise AttributeError("%s has no attribute or submodule named \"%s\"" % (value, parts[new_index]))
+            raise AttributeError(
+                '%s has no attribute or submodule named "%s"'
+                % (value, parts[new_index])
+            )
     return value
 
 
@@ -748,7 +750,7 @@ def getmembers(object, predicate=None):
             for k, v in base.__dict__.items():
                 if isinstance(v, types.DynamicClassAttribute):
                     names.append(k)
-    except:
+    except Exception: # pylint: disable=broad-except
         pass
     for key in names:
         # First try to get the value via getattr.  Some descriptors don't
@@ -768,7 +770,7 @@ def getmembers(object, predicate=None):
                 # could be a (currently) missing slot member, or a buggy
                 # __dir__; discard and move on
                 continue
-        except:
+        except Exception: # pylint: disable=broad-except
             continue
         if not predicate or predicate(value):
             results.append((key, value))

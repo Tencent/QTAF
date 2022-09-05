@@ -12,40 +12,42 @@
 # OF ANY KIND, either express or implied. See the License for the specific language
 # governing permissions and limitations under the License.
 #
-'''conf test
-'''
+"""conf test
+"""
+
+import unittest
 
 from testbase.conf import settings, SettingsMixin
 from testbase.test import modify_settings
-import unittest
 
 
 class SettingTest(unittest.TestCase):
-
     def test_get(self):
-        '''get settings
-        '''
+        """get settings"""
         self.assertEqual(settings.DEBUG, False)
-        self.assertEqual(settings.get('DEBUG'), False)
-        self.assertEqual(settings.get('NOT_EXIST', False), False)
+        self.assertEqual(settings.get("DEBUG"), False)
+        self.assertEqual(settings.get("NOT_EXIST", False), False)
 
     def test_set(self):
-        '''set settings failed
-        '''
-        self.assertRaises(RuntimeError, setattr, settings, 'DEBUG', False)
+        """set settings failed"""
+        self.assertRaises(RuntimeError, setattr, settings, "DEBUG", False)
 
     def test_contain(self):
-        '''test settings in op
-        '''
-        self.assertEqual("DEBUG" in settings, True, "DEBUG should have been in settings")
-        self.assertEqual("IMPOSSIBLE" in settings, False, "IMPOSSIBLE is unexpected in settings")
+        """test settings in op"""
+        self.assertEqual(
+            "DEBUG" in settings, True, "DEBUG should have been in settings"
+        )
+        self.assertEqual(
+            "IMPOSSIBLE" in settings, False, "IMPOSSIBLE is unexpected in settings"
+        )
 
     def test_iteration(self):
-        self.assertEqual("DEBUG" in list(settings), True, "DEBUG should have been in list(settings)")
+        self.assertEqual(
+            "DEBUG" in list(settings), True, "DEBUG should have been in list(settings)"
+        )
 
 
 class Dummy(SettingsMixin):
-
     class Settings(object):
         DUMMY_A = 0
 
@@ -54,13 +56,11 @@ class Dummy(SettingsMixin):
 
 
 class Dummy2(SettingsMixin):
-
     class Settings(object):
         B = 1
 
 
 class Dummy3(SettingsMixin):
-
     class Settings(object):
         Dummy3_A = 4
 
@@ -70,26 +70,22 @@ class DummyChild0(Dummy):
 
 
 class DummyChild1(Dummy):
-
     class Settings(object):
         DUMMYCHILD1_A = 2
 
 
 class DummyChild2(Dummy):
-
     class Settings(object):
         DUMMY_A = 1
 
 
 class DummyChild3(Dummy):
-
     class Settings(object):
         DUMMYCHILD3_B = -1
 
 
 class SettingsMixinTest(unittest.TestCase):
-    """test case for settings mixin class
-    """
+    """test case for settings mixin class"""
 
     def test_get(self):
         self.reset_class_settings(Dummy)

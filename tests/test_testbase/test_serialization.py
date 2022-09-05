@@ -6,18 +6,27 @@ import unittest
 
 from testbase.testcase import TestCase, SeqTestSuite
 from testbase import serialization, datadrive
-drive_data = [0, {"data" : 1, "__attrs__" : {"owner" : "bar",
-                                             "timeout" : 5,
-                                             "priority" : TestCase.EnumPriority.BVT,
-                                             "status" : TestCase.EnumStatus.Implement,
-                                             "tags" : ("a", "b", "c"),
-                                             "__doc__" : "demo"}}]
+
+drive_data = [
+    0,
+    {
+        "data": 1,
+        "__attrs__": {
+            "owner": "bar",
+            "timeout": 5,
+            "priority": TestCase.EnumPriority.BVT,
+            "status": TestCase.EnumStatus.Implement,
+            "tags": ("a", "b", "c"),
+            "__doc__": "demo",
+        },
+    },
+]
 
 
 @datadrive.DataDrive(drive_data)
 class FooTest(TestCase):
-    """foo test
-    """
+    """foo test"""
+
     owner = "foo"
     timeout = 1
     priority = TestCase.EnumPriority.High
@@ -28,9 +37,9 @@ class FooTest(TestCase):
 
 
 class SerializationTest(unittest.TestCase):
-
     def test_normal_serialization(self):
         from tests.sampletest.hellotest import HelloTest
+
         hello = HelloTest()
         data = serialization.dumps(hello)
         deserialized_case = serialization.loads(data)
@@ -52,6 +61,7 @@ class SerializationTest(unittest.TestCase):
 
     def test_serialize_testsuite(self):
         from tests.sampletest.hellotest import HelloTest, TimeoutTest
+
         foo_test = datadrive.load_datadrive_tests(FooTest, 1)[0]
         testsuite = SeqTestSuite([HelloTest(), TimeoutTest(), foo_test])
         data = serialization.dumps(testsuite)

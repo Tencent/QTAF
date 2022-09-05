@@ -12,8 +12,8 @@
 # OF ANY KIND, either express or implied. See the License for the specific language
 # governing permissions and limitations under the License.
 #
-'''util test
-'''
+"""util test
+"""
 
 import unittest
 
@@ -23,11 +23,10 @@ from testbase import util
 
 
 class UtilTest(unittest.TestCase):
-
     def test_smart_binary(self):
-        s = u'11111\udce444444'
+        s = u"11111\udce444444"
         result = util.smart_binary(s)
         if six.PY3:
             self.assertEqual(result, b"'11111\\udce444444'")
         else:
-            self.assertEqual(result, '11111\xed\xb3\xa444444')
+            self.assertEqual(result, "11111\xed\xb3\xa444444")

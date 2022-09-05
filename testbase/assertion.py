@@ -22,14 +22,14 @@ import copy
 import inspect
 import itertools
 import pprint
-import six
 import sys
 import threading
 import traceback
 import types
 
+import six
+
 from testbase.util import Singleton, get_method_defined_class, smart_text
-from testbase.conf import settings
 
 unary_map = {ast.Not: "not %s", ast.Invert: "~%s", ast.USub: "-%s", ast.UAdd: "+%s"}
 
@@ -59,17 +59,18 @@ binop_map = {
 }
 
 if sys.version_info >= (3, 5):
-    ast_Call = ast.Call
+    ast_Call = ast.Call # pylint: disable=invalid-name
 else:
 
-    def ast_Call(a, b, c):
+    def ast_Call(a, b, c): # pylint: disable=invalid-name
         return ast.Call(a, b, c, None, None)
 
+
 if hasattr(ast, "NameConstant"):
-    _NameConstant = ast.NameConstant
+    _NameConstant = ast.NameConstant # pylint: disable=invalid-name
 else:
 
-    def _NameConstant(c):
+    def _NameConstant(c): # pylint: disable=invalid-name
         return ast.Name(str(c), ast.Load())
 
 
@@ -108,13 +109,12 @@ def hook_function(func):
 
 
 class AssertionRewriter(ast.NodeVisitor):
-    """assert rewriter
-    """
+    """assert rewriter"""
 
     def rewrite(self, item):
         try:
             self.rewrite_(item)
-        except:
+        except Exception:  # pylint: disable=broad-except
             stack = traceback.format_exc()
             msg = "[WARN]rewrite item %s failed: %s" % (item, stack)
             print(msg, file=sys.stderr)
@@ -144,9 +144,18 @@ class AssertionRewriter(ast.NodeVisitor):
         col_offset = func_node.col_offset
 
         imports = [
-            ast.Import([alias], lineno=lineno, col_offset=col_offset) for alias in aliases
+            ast.Import([alias], lineno=lineno, col_offset=col_offset)
+            for alias in aliases
         ]
-        imports.append(ast.ImportFrom(module="testbase.testresult", names=[ast.alias('EnumLogLevel', None)], level=0, lineno=lineno, col_offset=col_offset))
+        imports.append(
+            ast.ImportFrom(
+                module="testbase.testresult",
+                names=[ast.alias("EnumLogLevel", None)],
+                level=0,
+                lineno=lineno,
+                col_offset=col_offset,
+            )
+        )
         func_node.body[pos:pos] = imports
         nodes = [func_node]
         self.rewrite_code = False
@@ -175,7 +184,7 @@ class AssertionRewriter(ast.NodeVisitor):
             if isinstance(value, ast.Expr):
                 self.visit(value)
 
-    def visit_Expr(self, expr):
+    def visit_Expr(self, expr): # pylint: disable=invalid-name
         value = expr.value
         if isinstance(value, ast.Call):
             if isinstance(value.func, ast.Attribute):
@@ -188,8 +197,7 @@ class AssertionRewriter(ast.NodeVisitor):
         return [expr]
 
     def rewrite_assert_(self, elem):
-        """rewrite the assert_ expression
-        """
+        """rewrite the assert_ expression"""
         self.rewrite_code = True
         self.statements = []
         self.variables = []
@@ -218,9 +226,10 @@ class AssertionRewriter(ast.NodeVisitor):
         msg = self.pop_format_context(template)
         fmt = self.helper("format_explanation", msg)
         log_record = ast.Attribute(
-                                value=ast.Name(id=caller_id, ctx=ast.Load()),
-                                attr='_log_assert_failed',
-                                ctx=ast.Load())
+            value=ast.Name(id=caller_id, ctx=ast.Load()),
+            attr="_log_assert_failed",
+            ctx=ast.Load(),
+        )
         args = [fmt]
         exc = ast_Call(log_record, args, [])
         log_record_expr = ast.Expr(value=exc)
@@ -315,7 +324,7 @@ class AssertionRewriter(ast.NodeVisitor):
         res = self.assign(node)
         return res, self.explanation_param(self.display(res))
 
-    def visit_Name(self, name):
+    def visit_Name(self, name): # pylint: disable=invalid-name
         # Display the repr of the name if it's a local variable or
         # _should_repr_global_name() thinks it's acceptable.
         locs = ast_Call(self.builtin("locals"), [], [])
@@ -325,7 +334,7 @@ class AssertionRewriter(ast.NodeVisitor):
         expr = ast.IfExp(test, self.display(name), ast.Str(name.id))
         return name, self.explanation_param(expr)
 
-    def visit_BoolOp(self, boolop):
+    def visit_BoolOp(self, boolop): # pylint: disable=invalid-name
         res_var = self.variable()
         expl_list = self.assign(ast.List([], ast.Load()))
         app = ast.Attribute(expl_list, "append", ast.Load())
@@ -361,13 +370,13 @@ class AssertionRewriter(ast.NodeVisitor):
         expl = self.pop_format_context(expl_template)
         return ast.Name(res_var, ast.Load()), self.explanation_param(expl)
 
-    def visit_UnaryOp(self, unary):
+    def visit_UnaryOp(self, unary): # pylint: disable=invalid-name
         pattern = unary_map[unary.op.__class__]
         operand_res, operand_expl = self.visit(unary.operand)
         res = self.assign(ast.UnaryOp(unary.op, operand_res))
         return res, pattern % (operand_expl,)
 
-    def visit_BinOp(self, binop):
+    def visit_BinOp(self, binop): # pylint: disable=invalid-name
         symbol = binop_map[binop.op.__class__]
         left_expr, left_expl = self.visit(binop.left)
         right_expr, right_expl = self.visit(binop.right)
@@ -375,7 +384,7 @@ class AssertionRewriter(ast.NodeVisitor):
         res = self.assign(ast.BinOp(left_expr, binop.op, right_expr))
         return res, explanation
 
-    def visit_Call_35(self, call):
+    def visit_Call_35(self, call): # pylint: disable=invalid-name
         """
         visit `ast.Call` nodes on Python3.5 and after
         """
@@ -402,12 +411,12 @@ class AssertionRewriter(ast.NodeVisitor):
         outer_expl = "%s\n{%s = %s\n}" % (res_expl, res_expl, expl)
         return res, outer_expl
 
-    def visit_Starred(self, starred):
+    def visit_Starred(self, starred): # pylint: disable=invalid-name
         # From Python 3.5, a Starred node can appear in a function call
         _, expl = self.visit(starred.value)
         return starred, "*" + expl
 
-    def visit_Call_legacy(self, call):
+    def visit_Call_legacy(self, call): # pylint: disable=invalid-name
         """
         visit `ast.Call nodes on 3.4 and below`
         """
@@ -441,11 +450,11 @@ class AssertionRewriter(ast.NodeVisitor):
     # conditionally change  which methods is named
     # visit_Call depending on Python version
     if sys.version_info >= (3, 5):
-        visit_Call = visit_Call_35
+        visit_Call = visit_Call_35 # pylint: disable=invalid-name
     else:
-        visit_Call = visit_Call_legacy
+        visit_Call = visit_Call_legacy # pylint: disable=invalid-name
 
-    def visit_Attribute(self, attr):
+    def visit_Attribute(self, attr): # pylint: disable=invalid-name
         if not isinstance(attr.ctx, ast.Load):
             return self.generic_visit(attr)
         value, value_expl = self.visit(attr.value)
@@ -455,7 +464,7 @@ class AssertionRewriter(ast.NodeVisitor):
         expl = pat % (res_expl, res_expl, value_expl, attr.attr)
         return res, expl
 
-    def visit_Compare(self, comp):
+    def visit_Compare(self, comp): # pylint: disable=invalid-name
         self.push_format_context()
         left_res, left_expl = self.visit(comp.left)
         if isinstance(comp.left, (ast.Compare, ast.BoolOp)):
@@ -498,7 +507,7 @@ def _call_reprcompare(ops, results, expls, each_obj):
     for _, res, expl in zip(range(len(ops)), results, expls):
         try:
             done = not res
-        except Exception:
+        except Exception:  # pylint: disable=broad-except
             done = True
         if done:
             break
@@ -544,7 +553,7 @@ def _format_assertmsg(obj):
     # contains a newline it gets escaped, however if an object has a
     # .__repr__() which contains newlines it does not get escaped.
     # However in either case we want to preserve the newline.
-#     if isinstance(obj, six.text_type) or isinstance(obj, six.binary_type):
+    #     if isinstance(obj, six.text_type) or isinstance(obj, six.binary_type):
     if isinstance(obj, six.string_types):
         s = smart_text(obj)
         is_repr = False
@@ -568,40 +577,40 @@ def _format_explanation(explanation):
     for when one explanation needs to span multiple lines, e.g. when
     displaying diffs.
     """
-    raw_lines = (explanation or '').split('\n')
+    raw_lines = (explanation or "").split("\n")
     # escape newlines not followed by {, } and ~
     msg = raw_lines[0]
     raw_lines = raw_lines[1:]
     lines = raw_lines[:1]
     for l in raw_lines[1:]:
-        if l.startswith('{') or l.startswith('}') or l.startswith('~'):
+        if l.startswith("{") or l.startswith("}") or l.startswith("~"):
             lines.append(l)
         else:
-            lines[-1] += '\\n' + l
+            lines[-1] += "\\n" + l
 
     result = lines[:1]
     stack = [0]
     stackcnt = [0]
     for line in lines[1:]:
-        if line.startswith('{'):
+        if line.startswith("{"):
             if stackcnt[-1]:
-                s = 'and   '
+                s = "and   "
             else:
-                s = 'where '
+                s = "where "
             stack.append(len(result))
             stackcnt[-1] += 1
             stackcnt.append(0)
-            result.append(' +' + '  ' * (len(stack) - 1) + s + line[1:])
-        elif line.startswith('}'):
+            result.append(" +" + "  " * (len(stack) - 1) + s + line[1:])
+        elif line.startswith("}"):
             stack.pop()
             stackcnt.pop()
             result[stack[-1]] += line[1:]
         else:
-            assert line.startswith('~')
-            result.append('  ' * len(stack) + line[1:])
+            assert line.startswith("~")
+            result.append("  " * len(stack) + line[1:])
     assert len(stack) == 1
     result[0] = " [%s] assert " % msg + result[0]
-    return '\n'.join(result)
+    return "\n".join(result)
 
 
 def get_func_name(func):
@@ -660,7 +669,10 @@ def get_func_compiled_code(func, new_code):
         for item in new_code.co_consts:
             if isinstance(item, types.CodeType):
                 for sub_item in item.co_consts:
-                    if isinstance(sub_item, types.CodeType) and sub_item.co_name == func_name:
+                    if (
+                        isinstance(sub_item, types.CodeType)
+                        and sub_item.co_name == func_name
+                    ):
                         return sub_item
     elif isinstance(func, types.FunctionType):
         for item in new_code.co_consts:
@@ -682,7 +694,6 @@ def set_func_code(func, new_code):
 
 
 class _AssertHookedCache(six.with_metaclass(Singleton, object)):
-
     def __init__(self):
         self._lock = threading.Lock()
         self.__cache = set()
