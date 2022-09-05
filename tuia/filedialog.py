@@ -19,4 +19,4 @@ warnings.warn(
     "`tuia.filedialog` is depressed, please use `qt4c.filedialog` instead",
     DeprecationWarning,
 )
-from qt4c.filedialog import * # pylint: disable=wildcard-import
+from qt4c.filedialog import *  # pylint: disable=wildcard-import

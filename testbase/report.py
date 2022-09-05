@@ -650,7 +650,9 @@ class XMLTestReport(TestReportBase):
         )
         doc2 = dom.parseString(smart_binary(nodestr))
         result_node = doc2.childNodes[0]
-        result_node.setAttribute("name", smart_text(saxutils.escape(testcase.test_name)))
+        result_node.setAttribute(
+            "name", smart_text(saxutils.escape(testcase.test_name))
+        )
         result_node.setAttribute("owner", smart_text(saxutils.escape(testcase.owner)))
         self._runrstnode.appendChild(result_node)
 

@@ -59,18 +59,18 @@ binop_map = {
 }
 
 if sys.version_info >= (3, 5):
-    ast_Call = ast.Call # pylint: disable=invalid-name
+    ast_Call = ast.Call  # pylint: disable=invalid-name
 else:
 
-    def ast_Call(a, b, c): # pylint: disable=invalid-name
+    def ast_Call(a, b, c):  # pylint: disable=invalid-name
         return ast.Call(a, b, c, None, None)
 
 
 if hasattr(ast, "NameConstant"):
-    _NameConstant = ast.NameConstant # pylint: disable=invalid-name
+    _NameConstant = ast.NameConstant  # pylint: disable=invalid-name
 else:
 
-    def _NameConstant(c): # pylint: disable=invalid-name
+    def _NameConstant(c):  # pylint: disable=invalid-name
         return ast.Name(str(c), ast.Load())
 
 
@@ -184,7 +184,7 @@ class AssertionRewriter(ast.NodeVisitor):
             if isinstance(value, ast.Expr):
                 self.visit(value)
 
-    def visit_Expr(self, expr): # pylint: disable=invalid-name
+    def visit_Expr(self, expr):  # pylint: disable=invalid-name
         value = expr.value
         if isinstance(value, ast.Call):
             if isinstance(value.func, ast.Attribute):
@@ -324,7 +324,7 @@ class AssertionRewriter(ast.NodeVisitor):
         res = self.assign(node)
         return res, self.explanation_param(self.display(res))
 
-    def visit_Name(self, name): # pylint: disable=invalid-name
+    def visit_Name(self, name):  # pylint: disable=invalid-name
         # Display the repr of the name if it's a local variable or
         # _should_repr_global_name() thinks it's acceptable.
         locs = ast_Call(self.builtin("locals"), [], [])
@@ -334,7 +334,7 @@ class AssertionRewriter(ast.NodeVisitor):
         expr = ast.IfExp(test, self.display(name), ast.Str(name.id))
         return name, self.explanation_param(expr)
 
-    def visit_BoolOp(self, boolop): # pylint: disable=invalid-name
+    def visit_BoolOp(self, boolop):  # pylint: disable=invalid-name
         res_var = self.variable()
         expl_list = self.assign(ast.List([], ast.Load()))
         app = ast.Attribute(expl_list, "append", ast.Load())
@@ -370,13 +370,13 @@ class AssertionRewriter(ast.NodeVisitor):
         expl = self.pop_format_context(expl_template)
         return ast.Name(res_var, ast.Load()), self.explanation_param(expl)
 
-    def visit_UnaryOp(self, unary): # pylint: disable=invalid-name
+    def visit_UnaryOp(self, unary):  # pylint: disable=invalid-name
         pattern = unary_map[unary.op.__class__]
         operand_res, operand_expl = self.visit(unary.operand)
         res = self.assign(ast.UnaryOp(unary.op, operand_res))
         return res, pattern % (operand_expl,)
 
-    def visit_BinOp(self, binop): # pylint: disable=invalid-name
+    def visit_BinOp(self, binop):  # pylint: disable=invalid-name
         symbol = binop_map[binop.op.__class__]
         left_expr, left_expl = self.visit(binop.left)
         right_expr, right_expl = self.visit(binop.right)
@@ -384,7 +384,7 @@ class AssertionRewriter(ast.NodeVisitor):
         res = self.assign(ast.BinOp(left_expr, binop.op, right_expr))
         return res, explanation
 
-    def visit_Call_35(self, call): # pylint: disable=invalid-name
+    def visit_Call_35(self, call):  # pylint: disable=invalid-name
         """
         visit `ast.Call` nodes on Python3.5 and after
         """
@@ -411,12 +411,12 @@ class AssertionRewriter(ast.NodeVisitor):
         outer_expl = "%s\n{%s = %s\n}" % (res_expl, res_expl, expl)
         return res, outer_expl
 
-    def visit_Starred(self, starred): # pylint: disable=invalid-name
+    def visit_Starred(self, starred):  # pylint: disable=invalid-name
         # From Python 3.5, a Starred node can appear in a function call
         _, expl = self.visit(starred.value)
         return starred, "*" + expl
 
-    def visit_Call_legacy(self, call): # pylint: disable=invalid-name
+    def visit_Call_legacy(self, call):  # pylint: disable=invalid-name
         """
         visit `ast.Call nodes on 3.4 and below`
         """
@@ -450,11 +450,11 @@ class AssertionRewriter(ast.NodeVisitor):
     # conditionally change  which methods is named
     # visit_Call depending on Python version
     if sys.version_info >= (3, 5):
-        visit_Call = visit_Call_35 # pylint: disable=invalid-name
+        visit_Call = visit_Call_35  # pylint: disable=invalid-name
     else:
-        visit_Call = visit_Call_legacy # pylint: disable=invalid-name
+        visit_Call = visit_Call_legacy  # pylint: disable=invalid-name
 
-    def visit_Attribute(self, attr): # pylint: disable=invalid-name
+    def visit_Attribute(self, attr):  # pylint: disable=invalid-name
         if not isinstance(attr.ctx, ast.Load):
             return self.generic_visit(attr)
         value, value_expl = self.visit(attr.value)
@@ -464,7 +464,7 @@ class AssertionRewriter(ast.NodeVisitor):
         expl = pat % (res_expl, res_expl, value_expl, attr.attr)
         return res, expl
 
-    def visit_Compare(self, comp): # pylint: disable=invalid-name
+    def visit_Compare(self, comp):  # pylint: disable=invalid-name
         self.push_format_context()
         left_res, left_expl = self.visit(comp.left)
         if isinstance(comp.left, (ast.Compare, ast.BoolOp)):

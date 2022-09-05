@@ -42,13 +42,13 @@ default_locale = locale.getdefaultlocale()
 if default_locale:
     default_encoding = default_locale[1] or "utf-8"
 else:
-    default_encoding = "utf-8" # pylint: disable=invalid-name
+    default_encoding = "utf-8"  # pylint: disable=invalid-name
 
 file_encoding = sys.getfilesystemencoding()
 file_encoding_lower = file_encoding.lower()
 for special_encoding in ["ansi", "ascii"]:
     if file_encoding_lower.find(special_encoding) >= 0:
-        file_encoding = "utf-8" # pylint: disable=invalid-name
+        file_encoding = "utf-8"  # pylint: disable=invalid-name
         break
 file_encoding = file_encoding or "utf-8"
 
@@ -117,7 +117,9 @@ class Timeout(object):
                 else:
                     raise TimeoutError("在%d秒里尝试了%d次" % (self.timeout, try_count))
 
-    def waitObjectProperty(self, obj, property_name, waited_value, regularMatch=False): # pylint: disable=invalid-name
+    def waitObjectProperty(
+        self, obj, property_name, waited_value, regularMatch=False
+    ):  # pylint: disable=invalid-name
         """通过比较obj.property_name和waited_value，等待属性值出现。
                              如果属性值obj.property_name是字符类型则waited_value做为正则表达式进行比较。
                              比较成功则返回，超时则抛出TimeoutError异常。
@@ -396,7 +398,7 @@ def _thread_start_func(self, *args, **kwargs):
 threading.Thread.start = _thread_start_func
 
 
-def ForbidOverloadMethods(func_name_list): # pylint: disable=invalid-name
+def ForbidOverloadMethods(func_name_list):  # pylint: disable=invalid-name
     """生成metaclass用于指定基类禁止子类重载函数"""
 
     class _metaclass(type):
@@ -412,7 +414,7 @@ def ForbidOverloadMethods(func_name_list): # pylint: disable=invalid-name
     return _metaclass
 
 
-class classproperty(object): # pylint: disable=invalid-name
+class classproperty(object):  # pylint: disable=invalid-name
     """类属性修饰器"""
 
     def __init__(self, getter):
@@ -750,7 +752,7 @@ def getmembers(object, predicate=None):
             for k, v in base.__dict__.items():
                 if isinstance(v, types.DynamicClassAttribute):
                     names.append(k)
-    except Exception: # pylint: disable=broad-except
+    except Exception:  # pylint: disable=broad-except
         pass
     for key in names:
         # First try to get the value via getattr.  Some descriptors don't
@@ -770,7 +772,7 @@ def getmembers(object, predicate=None):
                 # could be a (currently) missing slot member, or a buggy
                 # __dir__; discard and move on
                 continue
-        except Exception: # pylint: disable=broad-except
+        except Exception:  # pylint: disable=broad-except
             continue
         if not predicate or predicate(value):
             results.append((key, value))

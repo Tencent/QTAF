@@ -15,7 +15,7 @@ class TagTest(testbase.TestCase):
     priority = testbase.TestCase.EnumPriority.Normal
     tags = "test"
 
-    def runTest(self): # pylint: disable=invalid-name
+    def runTest(self):  # pylint: disable=invalid-name
         # -----------------------------
         self.startStep("测试")
         # -----------------------------
@@ -31,7 +31,7 @@ class TagTest2(testbase.TestCase):
     priority = testbase.TestCase.EnumPriority.Normal
     tags = "test2"
 
-    def runTest(self): # pylint: disable=invalid-name
+    def runTest(self):  # pylint: disable=invalid-name
         # -----------------------------
         self.startStep("测试")
         # -----------------------------

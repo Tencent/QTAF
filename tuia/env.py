@@ -29,4 +29,4 @@ class EnumEnvType(object):
     Local, Lab = ("Local", "Lab")
 
 
-run_env = EnumEnvType.Local # pylint: disable=invalid-name
+run_env = EnumEnvType.Local  # pylint: disable=invalid-name

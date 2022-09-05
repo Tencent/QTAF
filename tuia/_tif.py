@@ -18,4 +18,4 @@ import warnings
 warnings.warn(
     "`tuia._tif` is depressed, please use `qt4c._tif` instead", DeprecationWarning
 )
-from qt4c._tif import * # pylint: disable=wildcard-import
+from qt4c._tif import *  # pylint: disable=wildcard-import

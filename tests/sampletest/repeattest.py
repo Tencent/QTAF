@@ -17,7 +17,7 @@ class RepeatTest(TestCase):
     case_runner = RepeatTestCaseRunner()
     repeat = 5
 
-    def runTest(self): # pylint: disable=invalid-name
+    def runTest(self):  # pylint: disable=invalid-name
         self.logInfo("第%s次测试执行" % self.iteration)
 
 

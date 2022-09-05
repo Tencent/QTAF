@@ -32,7 +32,7 @@ from testbase.testresult import EnumLogLevel
 
 os_encoding = locale.getdefaultlocale()[1]
 if not os_encoding:
-    os_encoding = "utf8" # pylint: disable=invalid-name
+    os_encoding = "utf8"  # pylint: disable=invalid-name
 
 
 class ResourceNotAvailable(Exception):

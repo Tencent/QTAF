@@ -40,7 +40,7 @@ class TestCaseTest(unittest.TestCase):
     def test_forbidden_overload_init(self):
         with self.assertRaises(RuntimeError):
 
-            class _(TestCase): # pylint: disable=invalid-name
+            class _(TestCase):  # pylint: disable=invalid-name
                 def __init__(self):
                     pass
 
@@ -291,7 +291,7 @@ class TestCaseTest(unittest.TestCase):
             priority = TestCase.EnumPriority.BVT
             status = TestCase.EnumStatus.Design
 
-            def runTest(self): # pylint: disable=invalid-name
+            def runTest(self):  # pylint: disable=invalid-name
                 self.steps.append("runTest")
 
             def run_test(self):
@@ -323,7 +323,7 @@ class TestCaseTest(unittest.TestCase):
             priority = TestCase.EnumPriority.BVT
             status = TestCase.EnumStatus.Design
 
-            def runTest(self): # pylint: disable=invalid-name
+            def runTest(self):  # pylint: disable=invalid-name
                 self.steps.append("runTest")
 
         hello = Hello()
