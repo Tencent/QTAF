@@ -20,4 +20,4 @@ warnings.warn(
     DeprecationWarning,
 )
 
-from qt4c.accessible import * # pylint: disable=wildcard-import
+from qt4c.accessible import *  # pylint: disable=wildcard-import

@@ -486,7 +486,7 @@ class TestCase(object):
                         try:
                             value = json.loads(self.dynamic_params[c_name])
                             self.__params[c_name] = value
-                        except Exception: # pylint: disable=broad-except
+                        except Exception:  # pylint: disable=broad-except
                             errors.append(
                                 "Parameter:{}, value:{}, is not json type.".format(
                                     c_name, value
@@ -553,7 +553,7 @@ class TestCase(object):
             if validation is not None and callable(validation):
                 try:
                     validation(value, self.qtaf_params, **kwargs)
-                except Exception as exe: # pylint: disable=broad-except
+                except Exception as exe:  # pylint: disable=broad-except
                     errors.append(
                         "Parameter:{}, value:{}, validation error, detail: {}.".format(
                             d_name, value, str(exe)
@@ -1011,7 +1011,7 @@ class TestCaseRunner(ITestCaseRunner):
                                         "postTest",
                                     ]:
                                         self._subtasks.popleft()
-                    except Exception: # pylint: disable=broad-except
+                    except Exception:  # pylint: disable=broad-except
                         self._testresult.exception("%s执行失败" % it)
                         if settings.get("QTAF_FAILED_SKIP_RUNTEST", False) and it in [
                             "pre_test",
@@ -1022,7 +1022,7 @@ class TestCaseRunner(ITestCaseRunner):
                 else:
                     it()
 
-        except Exception: # pylint: disable=broad-except
+        except Exception:  # pylint: disable=broad-except
             self._error = traceback.format_exc()
 
     def _thread_cleanup(self):
@@ -1046,11 +1046,11 @@ class TestCaseRunner(ITestCaseRunner):
                 if isinstance(it, str):
                     try:
                         getattr(self._testcase, it)()
-                    except Exception: # pylint: disable=broad-except
+                    except Exception:  # pylint: disable=broad-except
                         self._testresult.exception("用例超时时%s执行失败" % it)
                 else:
                     it()
-        except Exception: # pylint: disable=broad-except
+        except Exception:  # pylint: disable=broad-except
             self._error = traceback.format_exc()
 
     def setup(self, testcase, testresult):
@@ -1116,7 +1116,7 @@ class TestCaseRunner(ITestCaseRunner):
                 self._stop_run = True
                 try:
                     thread_traceback = self._get_current_traceback(test_thread)
-                except Exception: # pylint: disable=broad-except
+                except Exception:  # pylint: disable=broad-except
                     self._testresult.log_record(EnumLogLevel.TESTTIMEOUT, "测试用例执行超时")
                 else:
                     self._testresult.log_record(
@@ -1133,7 +1133,7 @@ class TestCaseRunner(ITestCaseRunner):
                 if cleanup_thread.is_alive():
                     try:
                         thread_traceback = self._get_current_traceback(cleanup_thread)
-                    except Exception: # pylint: disable=broad-except
+                    except Exception:  # pylint: disable=broad-except
                         self._testresult.log_record(
                             EnumLogLevel.TESTTIMEOUT, "测试用例执行超时时清理超时"
                         )

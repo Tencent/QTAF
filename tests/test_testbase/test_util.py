@@ -24,7 +24,7 @@ from testbase import util
 
 class UtilTest(unittest.TestCase):
     def test_smart_binary(self):
-        s = u"11111\udce444444"
+        s = "11111\udce444444"
         result = util.smart_binary(s)
         if six.PY3:
             self.assertEqual(result, b"'11111\\udce444444'")

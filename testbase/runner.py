@@ -176,12 +176,12 @@ class TestCaseSettings(object):
         try:
             __import__(name)
             return False  # 为模块
-        except ImportError: # pylint: disable=broad-except
+        except ImportError:  # pylint: disable=broad-except
             modname, clsname = name.rsplit(".", 1)
             try:
                 __import__(modname)
                 mod = sys.modules[modname]
-            except Exception: # pylint: disable=broad-except
+            except Exception:  # pylint: disable=broad-except
                 return False  # 不存在的模块
             else:
                 return hasattr(mod, clsname)
@@ -879,7 +879,7 @@ class TestResultStubManager(object):
             else:
                 rsp = (EnumProcessMsgType.Result_Func,)
             self._rsp_queue.put(rsp)
-        except Exception: # pylint: disable=broad-except
+        except Exception:  # pylint: disable=broad-except
             self._rsp_queue.put(
                 (
                     EnumProcessMsgType.Result_AttrError,
@@ -905,7 +905,7 @@ class TestResultStubManager(object):
             rsp = EnumProcessMsgType.Result_Return, getattr(result, funcname)(
                 *args, **kwargs
             )
-        except Exception: # pylint: disable=broad-except
+        except Exception:  # pylint: disable=broad-except
             rsp = EnumProcessMsgType.Result_Raise, traceback.format_exc()
         self._rsp_queue.put(rsp)
 
@@ -953,7 +953,7 @@ def _run_test_thread(
                 result.passed,
             )
         )
-    except Exception: # pylint: disable=broad-except
+    except Exception:  # pylint: disable=broad-except
         ctrl_msg_queue.put(
             (EnumProcessMsgType.Worker_Error, worker_id, traceback.format_exc())
         )
@@ -1025,7 +1025,7 @@ def _worker_process(
             elif msg_type == EnumProcessMsgType.Result_CallFunc:
                 objid, func, args, kwargs = msg_data
                 result_manager.call_result_func(objid, func, args, kwargs)
-    except Exception: # pylint: disable=broad-except
+    except Exception:  # pylint: disable=broad-except
         ctrl_msg_queue.put(
             (EnumProcessMsgType.Worker_Error, worker_id, traceback.format_exc())
         )

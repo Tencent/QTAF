@@ -19,9 +19,9 @@ warnings.warn(
     "`tuia.util` is depressed, please use `qt4c.util` instead", DeprecationWarning
 )
 try:
-    from qt4c.util import * # pylint: disable=wildcard-import
+    from qt4c.util import *  # pylint: disable=wildcard-import
 except ImportError:
     pass
 
-from testbase.util import Timeout # pylint: disable=unused-import
-from tuia.exceptions import TimeoutError # pylint: disable=unused-import
+from testbase.util import Timeout  # pylint: disable=unused-import
+from tuia.exceptions import TimeoutError  # pylint: disable=unused-import

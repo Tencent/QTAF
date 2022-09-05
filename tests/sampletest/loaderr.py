@@ -16,7 +16,7 @@ class HelloTest(testbase.TestCase):
     def __init__(self):
         pass
 
-    def runTest(self): # pylint: disable=invalid-name
+    def runTest(self):  # pylint: disable=invalid-name
         # -----------------------------
         self.startStep("测试webcontrols.WebElement构造函数")
         # -----------------------------
