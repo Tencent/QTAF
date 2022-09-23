@@ -15,7 +15,10 @@
 """util test
 """
 
+import threading
+import time
 import unittest
+import sys
 
 import six
 
@@ -30,3 +33,54 @@ class UtilTest(unittest.TestCase):
             self.assertEqual(result, b"'11111\\udce444444'")
         else:
             self.assertEqual(result, "11111\xed\xb3\xa444444")
+
+    def test_timeout_lock(self):
+        if sys.version_info[0] == 2:
+            return
+        timeout = 5
+        lock1 = util.TimeoutLock(timeout)
+        time0 = time.time()
+        with lock1:
+            pass
+        time_cost = time.time() - time0
+        self.assertLess(time_cost, 0.1)
+        def lock_thread():
+            with lock1:
+                print('lock1 acquired in thread')
+                time.sleep(2)
+
+        t = threading.Thread(target=lock_thread)
+        t.daemon = True
+        t.start()
+        time.sleep(0.1)
+        time0 = time.time()
+        with lock1:
+            print('lock1 acquired')
+            time_cost = time.time() - time0
+            self.assertGreater(time_cost, 1.5)
+
+    def test_timeout_lock_deadlock(self):
+        if sys.version_info[0] == 2:
+            return
+        timeout = 5
+        lock1 = util.TimeoutLock(timeout)
+        lock2 = threading.RLock()
+        def lock_thread():
+            with lock1:
+                print('lock1 acquired in thread')
+                time.sleep(1)
+                with lock2:
+                    print('lock2 acquired in thread')
+        t = threading.Thread(target=lock_thread)
+        t.daemon = True
+        t.start()
+        time.sleep(0.1)
+        time0 = time.time()
+        with lock2:
+            print('lock2 acquired')
+            time.sleep(1)
+            with lock1:
+                print('lock1 acquired')
+        time_cost = time.time() - time0
+        self.assertGreater(time_cost, timeout + 1)
+        self.assertLess(time_cost, timeout + 1.5)

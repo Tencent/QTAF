@@ -383,6 +383,32 @@ class ThreadGroupScope(object):
             return curr_thread.qtaf_group
 
 
+class TimeoutLock(object):
+    """Lock with timeout"""
+
+    def __init__(self, timeout=None):
+        self._timeout = timeout
+        self._lock = threading.RLock()
+
+    def acquire(self, blocking=True, timeout=-1):
+        if timeout <= 0:
+            timeout = self._timeout
+        return self._lock.acquire(blocking, timeout)
+
+    def release(self):
+        try:
+            self._lock.release()
+        except RuntimeError:
+            pass
+
+    def __enter__(self):
+        acquired = self.acquire()
+        return acquired
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.release()
+
+
 _origin_thread_start_func = threading.Thread.start
 
 
