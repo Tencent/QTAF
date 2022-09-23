@@ -48,6 +48,7 @@ import six
 
 from testbase import context
 from testbase.util import (
+    TimeoutLock,
     smart_text,
     get_thread_traceback,
     get_method_defined_class,
@@ -125,6 +126,9 @@ class TestResultBase(object):
     def __init__(self):
         """构造函数"""
         self.__lock = threading.RLock()
+        if sys.version_info[0] >= 3:
+            # Support timeout lock on python3
+            self.__lock = TimeoutLock(30)
         self.__steps_passed = [True]  # 预设置一个，以防用例中没调用startStep
         self.__curr_step = 0
         self.__accept_result = False
