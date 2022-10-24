@@ -17,6 +17,7 @@
 """
 from __future__ import absolute_import
 
+import inspect
 import os
 import sys
 import json
@@ -905,7 +906,10 @@ class TestCaseRunner(ITestCaseRunner):
         for key in dir(cls):
             item = getattr(cls, key)
             if isinstance(item, (types.MethodType, types.FunctionType)):
-                rewriter.rewrite(item)
+                item_source_file = inspect.getsourcefile(item)
+                cls_source_file = inspect.getsourcefile(cls)
+                if item_source_file == cls_source_file:
+                    rewriter.rewrite(item)
 
     def _walk_bases(self, test_case):
         """遍历所有基类，进行相应的处理"""
@@ -917,7 +921,7 @@ class TestCaseRunner(ITestCaseRunner):
             new_bases = set()
             for base_cls in bases:
                 self._single_methods_mapping(base_cls)
-                self._rewrite_assert(cur_cls)
+                self._rewrite_assert(base_cls)
                 new_bases = new_bases.union(set(base_cls.__bases__))
             bases = new_bases
 
