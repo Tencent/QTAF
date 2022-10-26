@@ -130,6 +130,7 @@ class TestResultBase(object):
         self.__failed_info = ""
         self.__failed_priority = 0
         self._custom_result = None
+        self.__last_failed_stage = None
 
     @property
     def testcase(self):
@@ -180,6 +181,22 @@ class TestResultBase(object):
         :returns: float
         '''
         return self.__end_time
+
+    @property
+    def last_failed_stage(self):
+        '''测试用例最后失败的阶段
+
+        :returns: str
+        '''
+        return self.__last_failed_stage
+
+    def set_last_failed_stage(self, value):
+        '''更新测试用例最后失败的阶段
+
+        :param value: 阶段名
+        :type value: str
+        '''
+        self.__last_failed_stage = value
 
     def begin_test(self, testcase):
         '''开始执行测试用例
