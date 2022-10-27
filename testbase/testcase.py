@@ -12,13 +12,14 @@
 # OF ANY KIND, either express or implied. See the License for the specific language
 # governing permissions and limitations under the License.
 #
-'''
+"""
 测试用例基类模块
-'''
+"""
 from __future__ import absolute_import
 
 import os
 import sys
+import json
 import re
 import threading
 import traceback
@@ -27,73 +28,90 @@ import types
 import six
 
 from testbase.assertion import AssertionRewriter
-from testbase.util import Singleton, ThreadGroupLocal, ThreadGroupScope, smart_text, get_last_frame_stack
+from testbase.util import (
+    Singleton,
+    ThreadGroupLocal,
+    ThreadGroupScope,
+    smart_text,
+    get_last_frame_stack,
+    getmembers,
+)
 from testbase.testresult import EnumLogLevel, TestResultCollection, TestResultType
 from testbase.conf import settings
 from testbase.retry import Retry
 
 
+class BaseTestCaseException(Exception):
+    pass
+
+
 # 后续需专门花时间去除TestCaseStatus和TestCasePriority这两个类
 class TestCaseStatus(object):
-    '''测试用例状态
+    """测试用例状态
 
     :attention: 此类将会被移除，请使用TestCase.EnumStatus
-    '''
-    Design, Implement, Review, Ready, Suspend = ('Design', 'Implement', 'Review', 'Ready', 'Suspend')
+    """
+
+    Design, Implement, Review, Ready, Suspend = (
+        "Design",
+        "Implement",
+        "Review",
+        "Ready",
+        "Suspend",
+    )
 
 
 class TestCasePriority(object):
-    '''测试用例优先级
+    """测试用例优先级
 
     :attention: 此类将会被移除，请使用TestCase.EnumPriority
-    '''
-    BVT, High, Normal, Low = ('BVT', 'High', 'Normal', 'Low')
+    """
+
+    BVT, High, Normal, Low = ("BVT", "High", "Normal", "Low")
 
 
 class Environ(six.with_metaclass(Singleton, dict)):
     """测试环境类
 
-用法说明：
-它是一个继承了字典类型的单实例类。使用时，需先实例化该类，如：
-from testbase.testcase import Environ
-env = Environ()
-env保存了用例运行时的一些测试环境变量。
-
-测试环境变量分为3个部分：
-
-1、在测试执行时，env则存储了由测试计划定义的用例环境变量，使用方法如下::
-
+    用法说明：
+    它是一个继承了字典类型的单实例类。使用时，需先实例化该类，如：
     from testbase.testcase import Environ
     env = Environ()
-    print(env_
-    # 输出
-    env = {
-        'ASSERTTEST':'True',  #注意：这里key是全字母大写
-    }
+    env保存了用例运行时的一些测试环境变量。
 
-2、测试用例基类testbase.testcase.TestCase的构造函数中也实例化了Environ类（变量名为environ)，
-并且，保存了当时执行用例类的类名和类说明，使用方法如下::
+    测试环境变量分为3个部分：
 
-    #todo: 执行用例中使用evniron，用于打印用例名称和用例说明
-    from testbase.testcase import TestCase
-    class YourTest(TestCase):
-        def runTest(self):
-            print(self.environ['TestName'])
-            print(self.environ['TestDoc'])
+    1、在测试执行时，env则存储了由测试计划定义的用例环境变量，使用方法如下::
 
-3、Environ还可以用于设置自定义的环境变量，使用方法如下::
+        from testbase.testcase import Environ
+        env = Environ()
+        print(env_
+        # 输出
+        env = {
+            'ASSERTTEST':'True',  #注意：这里key是全字母大写
+        }
 
-    from testbase.testcase import Environ
-    env = Environ()
-    env['YourEnvKey'] = "EnvValue"
-    print(env['YourEnvKey'])
+    2、测试用例基类testbase.testcase.TestCase的构造函数中也实例化了Environ类（变量名为environ)，
+    并且，保存了当时执行用例类的类名和类说明，使用方法如下::
+
+        #todo: 执行用例中使用evniron，用于打印用例名称和用例说明
+        from testbase.testcase import TestCase
+        class YourTest(TestCase):
+            def runTest(self):
+                print(self.environ['TestName'])
+                print(self.environ['TestDoc'])
+
+    3、Environ还可以用于设置自定义的环境变量，使用方法如下::
+
+        from testbase.testcase import Environ
+        env = Environ()
+        env['YourEnvKey'] = "EnvValue"
+        print(env['YourEnvKey'])
 
     """
 
     def __init__(self):
-        """构造函数。判断系统环境变量中是否存在由测试计划中传入的环境变量，有则加载。
-
-        """
+        """构造函数。判断系统环境变量中是否存在由测试计划中传入的环境变量，有则加载。"""
         super(Environ, self).__init__()
         for key in os.environ.keys():
             if key.startswith("QTAF_") and key[5:]:
@@ -101,8 +119,8 @@ env保存了用例运行时的一些测试环境变量。
 
 
 class TestCaseType(type):
-    '''测试用例元类型
-    '''
+    """测试用例元类型"""
+
     forbid_overload_methods = ["__init__"]
 
     def __new__(cls, name, bases, attrs):
@@ -140,44 +158,64 @@ class TestCaseType(type):
 
 @six.add_metaclass(TestCaseType)
 class TestCase(object):
-    '''测试用例基类
+    """测试用例基类
 
-            所有测试用例都最终从此基类继承。测试用例的测试脚本主要实现在"runTest()"中，
+     所有测试用例都最终从此基类继承。测试用例的测试脚本主要实现在"runTest()"中，
 
-           而当用例需要初始化和清理测试环境时则分别重写"preTest()"和"postTest()"函数。
-    '''
+    而当用例需要初始化和清理测试环境时则分别重写"preTest()"和"postTest()"函数。
+    """
+
     test_extra_info_def = []  # 自定义字段
 
     class EnumStatus(object):
-        '''测试用例状态枚举类
+        """测试用例状态枚举类
 
         :attention: 如果因为特殊原因需要暂时屏蔽某个用例的任务执行（比如有功能缺陷从而导致执行失败），
                                                      则可以先置为该字段为Suspend,等到可用的时候再将该字段置为Ready
 
-        '''
-        Design, Implement, Review, Ready, Suspend = (TestCaseStatus.Design,
-                                                     TestCaseStatus.Implement,
-                                                     TestCaseStatus.Review,
-                                                     TestCaseStatus.Ready,
-                                                     TestCaseStatus.Suspend)
+        """
+
+        Design, Implement, Review, Ready, Suspend = (
+            TestCaseStatus.Design,
+            TestCaseStatus.Implement,
+            TestCaseStatus.Review,
+            TestCaseStatus.Ready,
+            TestCaseStatus.Suspend,
+        )
 
     class EnumPriority(object):
-        '''测试用例优先级枚举类
-        '''
-        BVT, High, Normal, Low = (TestCasePriority.BVT,
-                                  TestCasePriority.High,
-                                  TestCasePriority.Normal,
-                                  TestCasePriority.Low)
+        """测试用例优先级枚举类"""
+
+        BVT, High, Normal, Low = (
+            TestCasePriority.BVT,
+            TestCasePriority.High,
+            TestCasePriority.Normal,
+            TestCasePriority.Low,
+        )
 
     owner = None
     priority = None
     status = None
     timeout = None
 
-    ATTRIB_OVERWRITE_WHITELIST = ["priority", "status", "owner", "timeout", "tags", "__doc__"]
+    ATTRIB_OVERWRITE_WHITELIST = [
+        "priority",
+        "status",
+        "owner",
+        "timeout",
+        "tags",
+        "__doc__",
+    ]
+    EXTRA_PROPERTY_BLACKLIST = [
+        "start_time",
+        "end_time",
+        "begintime",
+        "endtime",
+        "duration",
+    ]
 
     def __init__(self, testdata=None, testdataname=None, attrs=None):
-        '''构造函数
+        """构造函数
 
         :param testdata: 测试数据
         :type testdata: object
@@ -185,14 +223,20 @@ class TestCase(object):
         :type testdataname: str
         :param attrs: 重载的测试用例属性
         :type attrs: dict
-        '''
+        """
         self.__casedata = testdata
         self.__testdataname = testdataname
         self.__environ = Environ()
         self.__testresult = None
         self.__resmgr_session = None
         self.__resmgr = None
+        self.__share_data_mgr = None
         self.__test_doc = None
+
+        # 参数相关
+        self.__params_definitions = {}  # add_params原始的用例参数数据
+        self.__params = {}  # key，name的用例参数数据
+        self.__dynamic_params = {}  # 外部传入的参数数据
 
         if attrs:
             for k, v in attrs.items():
@@ -205,92 +249,95 @@ class TestCase(object):
                         self.tags = self.base_tags | set(v)
                     else:
                         setattr(self, k, v)
+                else:
+                    self.__dynamic_params[k] = v
+
+        self.handle_params()
 
     @property
     def casedata(self):
-        '''测试数据
+        """测试数据
 
         :rtype: list
-        '''
+        """
         return self.__casedata
 
     @property
     def casedataname(self):
-        '''测试数据标识
+        """测试数据标识
 
         :rtype: str
-        '''
+        """
         return self.__testdataname
 
     @property
     def environ(self):
-        '''环境变量
+        """环境变量
 
         :rtype: Environ
-        '''
+        """
         return self.__environ
 
     @property
     def test_result(self):
-        '''对应的测试结果
+        """对应的测试结果
 
         :rtype: TestResult
-        '''
+        """
         return self.__testresult
 
     @property
     def test_dir(self):
-        '''测试用例执行的临时目录
+        """测试用例执行的临时目录
 
         :rtype: str
-        '''
+        """
         return os.path.abspath(os.getcwd())
 
     @property
     def test_class_name(self):
-        '''返回测试用例名字（不同测试用例的名字不同）
+        """返回测试用例名字（不同测试用例的名字不同）
 
         :rtype: str
-        '''
+        """
         cls = type(self)
-        if cls.__module__ == '__main__':
+        if cls.__module__ == "__main__":
             type_name = smart_text(cls.__name__)
         else:
-            type_name = smart_text(cls.__module__ + '.' + cls.__name__)
+            type_name = smart_text(cls.__module__ + "." + cls.__name__)
         return type_name
 
     @property
     def test_name(self):
-        '''返回测试用例实例的名字
+        """返回测试用例实例的名字
 
         :rtype: str
-        '''
+        """
         if self.casedataname is not None:
             casedataname = smart_text(self.casedataname)
-            return '%s/%s' % (self.test_class_name, casedataname)
+            return "%s/%s" % (self.test_class_name, casedataname)
         else:
             return self.test_class_name
 
     @property
     def test_doc(self):
-        '''测试用例说明
+        """测试用例说明
 
         :rtype: str
-        '''
+        """
         if self.__test_doc:
             return self.__test_doc
         desc = self.__class__.__doc__
-#        if desc:
-#            desc = cgi.escape(desc)
+        #        if desc:
+        #            desc = cgi.escape(desc)
         if isinstance(desc, six.text_type):
-            desc = re.sub('^\s*', '', desc)
-            desc = re.sub('\s*$', '', desc)
+            desc = re.sub("^\s*", "", desc)
+            desc = re.sub("\s*$", "", desc)
         return desc
 
     @property
     def test_extra_info(self):
-        '''测试用例额外信息
-        '''
+        """测试用例额外信息"""
         info = {}
         for name, _ in self.test_extra_info_def:
             info[name] = getattr(self, name, None)
@@ -298,8 +345,7 @@ class TestCase(object):
 
     @property
     def test_resmgr(self):
-        '''资源管理器
-        '''
+        """资源管理器"""
         return self.__resmgr
 
     @test_resmgr.setter
@@ -308,74 +354,306 @@ class TestCase(object):
 
     @property
     def test_resources(self):
-        '''资源管理使用接口
-        '''
+        """资源管理使用接口"""
         if not self.__resmgr_session:
             self.__resmgr_session = self.__resmgr.create_session(self)
         return self.__resmgr_session
 
+    @property
+    def share_data_mgr(self):
+        """共享数据管理器"""
+        return self.__share_data_mgr
+
+    @share_data_mgr.setter
+    def share_data_mgr(self, share_data_mgr):
+        self.__share_data_mgr = share_data_mgr
+
+    @property
+    def params_definitions(self):
+        return self.__params_definitions
+
+    @property
+    def qtaf_params(self):
+        return self.__params
+
+    @property
+    def dynamic_params(self):
+        return self.__dynamic_params
+
+    def get_test_extra_properties(self):
+        var_dicts = {}
+        for k, v in getmembers(self):
+            if k in self.ATTRIB_OVERWRITE_WHITELIST:
+                continue
+            if k in self.EXTRA_PROPERTY_BLACKLIST:
+                continue
+            if not (
+                isinstance(v, bool)
+                or isinstance(v, int)
+                or isinstance(v, float)
+                or isinstance(v, (six.string_types, six.binary_type))
+            ):
+                continue
+            if k.islower() and not k.startswith("_") and not k.startswith("test_"):
+                if isinstance(v, (six.string_types, six.binary_type)):
+                    v = smart_text(v)
+                var_dicts[k] = v
+        return var_dicts
+
+    def add_share_data(self, name, value, level=0):
+        """添加共享数据
+
+        :type name: string
+        :param name: 需要共享的数据名称
+        :param value: 需要共享的数据内容
+        """
+        if self.share_data_mgr:
+            self.share_data_mgr.set(name, value, level)
+
+    def get_share_data(self, name):
+        """从内存中获取存储的全局数据，给当前用例使用"""
+        if self.share_data_mgr:
+            return self.share_data_mgr.get(name)
+
+    def remove_share_data(self, name):
+        """从内存中移除存储的共享数据"""
+        if self.share_data_mgr:
+            return self.share_data_mgr.remove(name)
+
+    def add_parameters(self):
+        # 用例重写或者不重写
+        self.add_params()
+
+    def add_parameter(
+        self,
+        name,
+        type=str,
+        optional=False,
+        default=None,
+        description="",
+        validation=None,
+        rewrite=False,
+        **kwargs
+    ):
+        if type not in (bool, list, str, int, float, dict, "json"):
+            raise BaseTestCaseException("Unsupported type of parameter.")
+
+        if rewrite is False:  # 如果不能重写，需要判断是否存在
+            assert (
+                name not in self.params_definitions
+            ), 'Parameters with the same name "{}" were found.'.format(name)
+
+        if not optional and default is None:
+            raise BaseTestCaseException(
+                "Parameter {} must define default value".format(name)
+            )
+
+        self.__params_definitions[name] = {
+            "name": name,
+            "type": type,
+            "optional": optional,
+            "default": default,
+            "description": description,
+            "validation": validation,
+            "kwargs": kwargs,
+        }
+
+    def add_params(self):
+        # 用例重写
+        pass
+
+    add_param = add_parameter
+
+    def assert_types(self):
+        """参数校验并设置self.qtaf_params"""
+        errors = []
+        for d_name in self.params_definitions:
+            default = self.params_definitions[d_name]["default"]
+            define_type = self.params_definitions[d_name]["type"]
+            optional = self.params_definitions[d_name]["optional"]
+            for c_name in self.dynamic_params:
+                c_name = smart_text(c_name)
+                if c_name == d_name:
+                    # 如果有外部传入，直接进行参数类型检查，检查正确设置参数否则记录异常
+                    value = self.dynamic_params[c_name]
+                    if optional and value is None and default is None:
+                        self.__params[c_name] = value
+                        break
+                    if isinstance(value, six.text_type):
+                        value = smart_text(value)
+                    if self.params_definitions[d_name]["type"] == "json":
+                        # json单独处理
+                        try:
+                            value = json.loads(self.dynamic_params[c_name])
+                            self.__params[c_name] = value
+                        except Exception:  # pylint: disable=broad-except
+                            errors.append(
+                                "Parameter:{}, value:{}, is not json type.".format(
+                                    c_name, value
+                                )
+                            )
+                    else:
+                        if not isinstance(value, define_type):
+                            # 如果期望类型是float，int型的数据, 转换为字符串，判断是否是数值型数据，如果是强制转换为数值型数据
+                            ret = self.translate2type(define_type, value)
+                            if ret is not None:
+                                self.__params[c_name] = ret
+                            else:
+                                errors.append(
+                                    "Parameter:{}, value:{}, type {} is not:{} type.".format(
+                                        c_name, value, type(value), str(define_type)
+                                    )
+                                )
+                        else:
+                            self.__params[c_name] = value
+                    break
+            else:
+                # 如果外部未传入使用默认参数
+                if default is not None:
+                    if define_type == "json":
+                        # json单独处理
+                        try:
+                            value = json.loads(default)
+                            default = value
+                        except Exception:
+                            raise BaseTestCaseException(
+                                "Parameter {}, value {}, is not json type.".format(
+                                    d_name, default
+                                )
+                            )
+                    else:
+                        if not isinstance(default, define_type):
+                            raise BaseTestCaseException(
+                                "Parameter {}, value {}, is not {} type.".format(
+                                    d_name, default, repr(define_type.__name__)
+                                )
+                            )
+                self.__params[d_name] = default
+
+        # validation检查
+        for d_name in self.params_definitions:
+            validation = self.params_definitions[d_name]["validation"]
+            kwargs = self.params_definitions[d_name]["kwargs"]
+            default = self.params_definitions[d_name]["default"]
+            if kwargs is None:
+                kwargs = {}
+            if not isinstance(kwargs, dict):
+                errors.append(
+                    "Parameter:{}, param(kwargs) must be dict.".format(d_name)
+                )
+            if d_name not in self.qtaf_params:
+                value = default
+                # 如果是default就不进行校验
+            else:
+                value = self.qtaf_params[d_name]
+
+            if value == default:  # 如果值与default相等就不进行校验
+                continue
+            # 否则进行校验
+            if validation is not None and callable(validation):
+                try:
+                    validation(value, self.qtaf_params, **kwargs)
+                except Exception as exe:  # pylint: disable=broad-except
+                    errors.append(
+                        "Parameter:{}, value:{}, validation error, detail: {}.".format(
+                            d_name, value, str(exe)
+                        )
+                    )
+        if errors:  # 如果参数校验失败抛出异常
+            raise BaseTestCaseException("\n".join(errors))
+
+    def handle_params(self):
+        """
+        加载并设置参数,用例中可重写加载方法方式; 并显示的调用以适配不支持参数传递的方式
+        正常模式：不设置参数
+        设置数据驱动参数：只设置数据驱动参数
+        设置全部参数：如果传入参数，以传入参数为准，否则设置数据驱动参数
+        """
+        # 通过参数控制是否进行参数传递
+        param_mode = settings.get("QTAF_PARAM_MODE", False)
+        if not param_mode:
+            param_mode = settings.get("QC_PARAM_MODE", False)
+
+        if not param_mode:  # 正常模式
+            return
+
+        self.add_params()  # 添加参数定义
+        self.assert_types()  # 参数校验
+
+        temp_data = self.qtaf_params
+
+        if param_mode == "DATADRIVE":
+            if isinstance(self.casedata, dict):
+                temp_data.update(self.casedata)
+        elif param_mode == "PARAM" or param_mode is True:
+            if isinstance(self.casedata, dict):
+                temp_data.update(self.casedata)
+
+        if not temp_data or not isinstance(temp_data, dict):
+            return
+        for key, value in temp_data.items():
+            if not isinstance(key, six.string_types):
+                continue
+            setattr(self, str(key), value)
+
     def init_test(self, testresult):
-        '''初始化测试用例。慎用此函数，尽量将初始化放到preTest里。
+        """初始化测试用例。慎用此函数，尽量将初始化放到preTest里。
 
         :param testresult: 测试结果
         :type testresult: TestResult
-        '''
+        """
         self.__testresult = testresult
 
     def pre_test(self):
-        '''测试环境初始化
-        '''
+        """测试环境初始化"""
         pass
 
     def run_test(self):
-        '''运行测试用例
-        '''
+        """运行测试用例"""
         raise NotImplementedError("请在%s类中实现runTest方法" % type(self))
 
     def post_test(self):
-        '''测试环境清理
-        '''
+        """测试环境清理"""
         pass
 
     def clean_test(self):
-        '''测试用例反初始化。慎用此函数，尽量将清理放到postTest里。
-        '''
+        """测试用例反初始化。慎用此函数，尽量将清理放到postTest里。"""
         if self.__resmgr_session:
             self.test_resources.destroy()
             self.__resmgr_session = None
 
     def start_step(self, stepinfo):
-        '''开始执行一个测试步骤
+        """开始执行一个测试步骤
 
         :param stepinfo: 步骤描述
         :type stepinfo: str
-        '''
+        """
         if not isinstance(stepinfo, six.text_type):
             stepinfo = str(stepinfo)
         self.__testresult.begin_step(stepinfo)
 
     def log_info(self, info):
-        '''Log一条信息
+        """Log一条信息
 
         :type info: string
         :param info: 要Log的信息
-        '''
+        """
         if not isinstance(info, six.text_type):
             info = str(info)
         self.__testresult.info(info)
 
     def fail(self, message):
-        '''测试用例失败
+        """测试用例失败
 
         :type message: string
         :param message: 要Log的信息
-        '''
+        """
         if not isinstance(message, six.text_type):
             message = str(message)
         self.__testresult.error(message)
 
     def __record_assert_failed(self, message, actual, expect):
-        '''记录Assert失败信息
+        """记录Assert失败信息
 
         :param message: 提示信息
         :type message: string
@@ -383,17 +661,23 @@ class TestCase(object):
         :type actual: string
         :param expect: 期望值
         :type expect: string
-        '''
+        """
         # 得到上一个函数调用帧所在的文件路径，行号，函数名
         stack = get_last_frame_stack(3)
-        msg = "检查点不通过\n%s%s\n期望值：%s%s\n实际值：%s%s" % (smart_text(stack), smart_text(message),
-                                                    expect.__class__, expect,
-                                                    actual.__class__, actual)
+        msg = "检查点不通过\n%s%s\n期望值：%s%s\n实际值：%s%s" % (
+            smart_text(stack),
+            smart_text(message),
+            expect.__class__,
+            expect,
+            actual.__class__,
+            actual,
+        )
         self.__testresult.log_record(EnumLogLevel.ASSERT, msg)
+        if not settings.get("QTAF_ASSERT_CONTINUE", True):
+            raise RuntimeError("testcase assert failed:%s" % message)
 
     def _log_assert_failed(self, message, back_count=2):
-        """记录断言失败的信息
-        """
+        """记录断言失败的信息"""
         stack = get_last_frame_stack(back_count)
         msg = "检查点不通过\n%s%s\n" % (smart_text(stack), smart_text(message))
         self.__testresult.log_record(EnumLogLevel.ASSERT, msg)
@@ -412,13 +696,13 @@ class TestCase(object):
             self._log_assert_failed(message, 3)
 
     def assert_equal(self, message, actual, expect=True):
-        '''检查实际值和期望值是否相等，不能则测试用例失败
+        """检查实际值和期望值是否相等，不能则测试用例失败
 
-       :param message: 检查信息
-       :param actual: 实际值
-       :param expect: 期望值(默认：True)
-       :return: True or False
-        '''
+        :param message: 检查信息
+        :param actual: 实际值
+        :param expect: 期望值(默认：True)
+        :return: True or False
+        """
         if isinstance(actual, six.string_types):
             actual = smart_text(actual)
         if isinstance(expect, six.string_types):
@@ -430,7 +714,7 @@ class TestCase(object):
             return True
 
     def assert_match(self, message, actual, expect):
-        '''检查actual和expect是否模式匹配，不匹配则记录一个检查失败
+        """检查actual和expect是否模式匹配，不匹配则记录一个检查失败
 
         :type message: string
         :param message: 失败时记录的消息
@@ -439,7 +723,7 @@ class TestCase(object):
         :type expect: string
         :param expect: 要匹配的正则表达式
         :return: 匹配成果
-        '''
+        """
         if isinstance(actual, six.string_types):
             actual = smart_text(actual)
         if isinstance(expect, six.string_types):
@@ -450,8 +734,10 @@ class TestCase(object):
             self.__record_assert_failed(message, actual, expect)
             return False
 
-    def wait_for_equal(self, message, obj, prop_name, expected, timeout=10, interval=0.5):
-        '''每隔interval检查obj.prop_name是否和expected相等，如果在timeout时间内都不相等，则测试用例失败
+    def wait_for_equal(
+        self, message, obj, prop_name, expected, timeout=10, interval=0.5
+    ):
+        """每隔interval检查obj.prop_name是否和expected相等，如果在timeout时间内都不相等，则测试用例失败
 
         :param message: 失败时的输出信息
         :param obj: 需要检查的对象
@@ -461,7 +747,7 @@ class TestCase(object):
         :param timeout: 超时秒数
         :param interval: 重试间隔秒数
         :return: True or False
-        '''
+        """
         for _ in Retry(timeout=timeout, interval=interval, raise_error=False):
             actual = getattr(obj, prop_name)
             if actual == expected:
@@ -470,8 +756,10 @@ class TestCase(object):
             self.__record_assert_failed(message, getattr(obj, prop_name), expected)
             return False
 
-    def wait_for_match(self, message, obj, prop_name, expected, timeout=10, interval=0.5):
-        '''每隔interval检查obj.prop_name是否和正则表达式expected是否匹配，如果在timeout时间内都不相等，则测试用例失败
+    def wait_for_match(
+        self, message, obj, prop_name, expected, timeout=10, interval=0.5
+    ):
+        """每隔interval检查obj.prop_name是否和正则表达式expected是否匹配，如果在timeout时间内都不相等，则测试用例失败
 
         :param message: 失败时的输出信息
         :param obj: 需要检查的对象
@@ -481,7 +769,7 @@ class TestCase(object):
         :param timeout: 超时秒数
         :param interval: 重试间隔秒数
         :return: True or False
-        '''
+        """
         for _ in Retry(timeout=timeout, interval=interval, raise_error=False):
             actual = getattr(obj, prop_name)
             if re.match(expected, actual, re.I):
@@ -491,15 +779,14 @@ class TestCase(object):
             return False
 
     def get_extra_fail_record(self):
-        '''当错误发生时，获取需要额外添加的日志记录和附件信息
+        """当错误发生时，获取需要额外添加的日志记录和附件信息
 
         :rtype: dict,dict - 日志记录，附件信息
-        '''
+        """
         return {}, {}
 
     def debug_run(self):
-        '''本地调试测试用例
-        '''
+        """本地调试测试用例"""
         from testbase import datadrive
         from testbase.runner import TestRunner
         from testbase.report import StreamTestReport, EmptyTestReport
@@ -520,17 +807,19 @@ class TestCase(object):
         return runner.run(tests)
 
     def debug_run_one(self, name=None):
-        '''本地调试测试用例，给数据驱动的用例使用，只执行一个用例
+        """本地调试测试用例，给数据驱动的用例使用，只执行一个用例
 
         :param name: 测试数据名称，如果不指定，执行第一个数据的用例
-        '''
+        """
         from testbase import datadrive
         from testbase.runner import TestRunner
         from testbase.report import EmptyTestReport
         from testbase.testresult import StreamResult
 
         test_cls = type(self)
-        if not datadrive.is_datadrive(test_cls) and not settings.DATA_DRIVE:  # non-datadrive
+        if (
+            not datadrive.is_datadrive(test_cls) and not settings.DATA_DRIVE
+        ):  # non-datadrive
             raise RuntimeError("非数据驱动用例，请使用debug_run进行调试")
         if name:
             tests = datadrive.load_datadrive_tests(test_cls, name)
@@ -540,20 +829,23 @@ class TestCase(object):
         runner = TestRunner(EmptyTestReport(lambda tc: StreamResult()))
         return runner.run(tests)
 
-    #----------------------------------------------------
+    # ----------------------------------------------------
     #    以下为兼容老的代码风格的接口，新代码请勿再使用
-    #----------------------------------------------------
+    # ----------------------------------------------------
 
     def run(self):
-        '''本地调试测试用例
-        '''
+        """本地调试测试用例"""
         self.debug_run()
 
-        sys.stderr.write('============================================================\n')
-        sys.stderr.write('注意：TestCase.run接口准备废弃，建议改用为.debug_run接口，例如：\n')
-        sys.stderr.write('if __name__ == \'__main__\'\n')
-        sys.stderr.write('    %s().debug_run()\n' % type(self).__name__)
-        sys.stderr.write('============================================================\n')
+        sys.stderr.write(
+            "============================================================\n"
+        )
+        sys.stderr.write("注意：TestCase.run接口准备废弃，建议改用为.debug_run接口，例如：\n")
+        sys.stderr.write("if __name__ == '__main__'\n")
+        sys.stderr.write("    %s().debug_run()\n" % type(self).__name__)
+        sys.stderr.write(
+            "============================================================\n"
+        )
 
     initTest = init_test
     preTest = pre_test
@@ -575,11 +867,10 @@ class TestCase(object):
 
 
 class ITestCaseRunner(object):
-    '''测试用例执行器接口定义
-    '''
+    """测试用例执行器接口定义"""
 
     def run(self, testcase, testresult_factory):
-        '''执行一个测试用例
+        """执行一个测试用例
 
         :param testcase: 执行的测试用例
         :type testcase: TestCase
@@ -587,23 +878,22 @@ class ITestCaseRunner(object):
         :type testresult_factory: ITestResultFactory
 
         :return TestResult/TestResultCollection - 测试结果
-        '''
+        """
         raise NotImplementedError()
 
 
 class TestCaseRunner(ITestCaseRunner):
-    '''负责执行一个测试用例
+    """负责执行一个测试用例
 
     如果一个测试用例没有指定case_runner类变量，则默认都使用TestCaseRunner来执行这个用例。
     测试用例可以自定义和TestCaseRunner接口兼容的runner类，并设置case_runner类变量来实现
     自定义一个测试用例的执行逻辑，以下是TestCaseRunner的接口定义
-    '''
+    """
 
     CLEANUP_TIMEOUT = 300
 
     def __init__(self):
-        '''构造函数
-        '''
+        """构造函数"""
         self._lock = threading.Lock()
         self._stop_run = False
         self._error = None
@@ -618,8 +908,7 @@ class TestCaseRunner(ITestCaseRunner):
                 rewriter.rewrite(item)
 
     def _walk_bases(self, test_case):
-        '''遍历所有基类，进行相应的处理
-        '''
+        """遍历所有基类，进行相应的处理"""
         cur_cls = type(test_case)
         self._single_methods_mapping(cur_cls)
         self._rewrite_assert(cur_cls)
@@ -633,8 +922,7 @@ class TestCaseRunner(ITestCaseRunner):
             bases = new_bases
 
     def _single_methods_mapping(self, cls_type):
-        '''针对单个类进行方法映射
-        '''
+        """针对单个类进行方法映射"""
         if object == cls_type:
             return
         case_mothods = [
@@ -642,27 +930,32 @@ class TestCaseRunner(ITestCaseRunner):
             ("preTest", "pre_test"),
             ("runTest", "run_test"),
             ("postTest", "post_test"),
-            ("cleanTest", "clean_test")
+            ("cleanTest", "clean_test"),
         ]
         cls_dict = cls_type.__dict__
         for pairs in case_mothods:
             if pairs[0] in cls_dict and not pairs[1] in cls_dict:
                 setattr(cls_type, pairs[1], cls_dict[pairs[0]])
-                self._testresult.warning("严重警告：类型%s应当定义方法%s，方法%s已被废弃，请勿使用" % (cls_type.__name__, pairs[1], pairs[0]))
+                self._testresult.warning(
+                    "严重警告：类型%s应当定义方法%s，方法%s已被废弃，请勿使用"
+                    % (cls_type.__name__, pairs[1], pairs[0])
+                )
             elif pairs[0] not in cls_dict and pairs[1] in cls_dict:
                 setattr(cls_type, pairs[0], cls_dict[pairs[1]])
             elif pairs[0] in cls_dict and pairs[1] in cls_dict:
                 if cls_dict[pairs[0]] != cls_dict[pairs[1]]:
-                    raise RuntimeError('类型%s不允许同时独立定义"%s"和"%s"' % (cls_type, pairs[0], pairs[1]))
+                    raise RuntimeError(
+                        '类型%s不允许同时独立定义"%s"和"%s"' % (cls_type, pairs[0], pairs[1])
+                    )
 
     def _check_testcase(self, testcase):
-        '''检查测试用例
+        """检查测试用例
 
         :param testcase: 测试用例
         :type testcase: TestCase
         :returns boolean, string - 检测是否通过，错误消息
-        '''
-        attrnames = ['owner', 'priority', 'status', 'timeout']
+        """
+        attrnames = ["owner", "priority", "status", "timeout"]
         tcattrs = {}
         for attr in attrnames:
             attrvalue = getattr(self._testcase, attr)
@@ -670,7 +963,7 @@ class TestCaseRunner(ITestCaseRunner):
                 if attrvalue.strip(" ") == "":
                     attrvalue = None
             tcattrs[attr] = attrvalue
-        tcattrs['testname'] = self._testcase.test_name
+        tcattrs["testname"] = self._testcase.test_name
         if None in tcattrs.values():
             raise RuntimeError("测试用例需要设置以下类属性：%s" % attrnames)
         if not self._testcase.test_doc:
@@ -679,8 +972,7 @@ class TestCaseRunner(ITestCaseRunner):
         self._walk_bases(testcase)
 
     def _thread_run(self):
-        '''测试用例线程过程
-        '''
+        """测试用例线程过程"""
         #                     函数时发生了死锁，故注释掉。观察一段时间，看修改是否会影响测试。
         try:
             try:
@@ -697,11 +989,13 @@ class TestCaseRunner(ITestCaseRunner):
 
                 if isinstance(it, str):
                     try:
-                        if it in ['init_test', 'initTest']:
+                        if it in ["init_test", "initTest"]:
                             getattr(self._testcase, it)(self._testresult)
                         else:
                             task_result = getattr(self._testcase, it)()
-                            if task_result and isinstance(task_result, six.string_types):
+                            if task_result and isinstance(
+                                task_result, six.string_types
+                            ):
                                 valid_task_result = False
                                 for name in TestResultType.__dict__:
                                     value = TestResultType.__dict__[name]
@@ -709,83 +1003,97 @@ class TestCaseRunner(ITestCaseRunner):
                                         valid_task_result = True
                                         break
                                 if not valid_task_result:
-                                    self._testresult.warning('指定的自定义状态不支持，用例将继续执行')
+                                    self._testresult.warning("指定的自定义状态不支持，用例将继续执行")
                                 else:
                                     self._testresult.customize_result(task_result)
-                                    while self._subtasks[0] not in ['post_test', 'postTest']:
+                                    while self._subtasks[0] not in [
+                                        "post_test",
+                                        "postTest",
+                                    ]:
                                         self._subtasks.popleft()
-                    except:
-                        self._testresult.exception('%s执行失败' % it)
+                    except BaseException:  # pylint: disable=broad-except
+                        self._testresult.exception("%s执行失败" % it)
                         self._testresult.set_last_failed_stage(it)
-                        if settings.get("QTAF_FAILED_SKIP_RUNTEST", False) and it in ['pre_test', 'preTest']:
-                            while self._subtasks[0] not in ['post_test', 'postTest']:
+                        if settings.get("QTAF_FAILED_SKIP_RUNTEST", False) and it in [
+                            "pre_test",
+                            "preTest",
+                        ]:
+                            while self._subtasks[0] not in ["post_test", "postTest"]:
                                 self._subtasks.popleft()
                 else:
                     it()
 
-        except:
+        except BaseException:  # pylint: disable=broad-except
             self._error = traceback.format_exc()
 
     def _thread_cleanup(self):
-        '''清理线程
-        '''
+        """清理线程"""
         try:
             while True:
                 with self._lock:
                     if len(self._subtasks) == 0:
                         break
                     it = self._subtasks.popleft()
-                    if it in ['initTest', 'preTest', 'runTest', 'init_test', 'pre_test', 'run_test']:
+                    if it in [
+                        "initTest",
+                        "preTest",
+                        "runTest",
+                        "init_test",
+                        "pre_test",
+                        "run_test",
+                    ]:
                         continue
 
                 if isinstance(it, str):
                     try:
                         getattr(self._testcase, it)()
-                    except:
-                        self._testresult.exception('用例超时时%s执行失败' % it)
+                    except Exception:  # pylint: disable=broad-except
+                        self._testresult.exception("用例超时时%s执行失败" % it)
                 else:
                     it()
-        except:
+        except Exception:  # pylint: disable=broad-except
             self._error = traceback.format_exc()
 
     def setup(self, testcase, testresult):
-        '''测试执行初始化
+        """测试执行初始化
 
         :param testcase: 执行的测试用例
         :type testcase: TestCase
         :param testresult: 测试用例结果
         :type testresult: TestResult
-        '''
+        """
         pass
 
     def teardown(self, testcase, testresult):
-        '''测试执行清理
+        """测试执行清理
 
         :param testcase: 执行的测试用例
         :type testcase: TestCase
         :param testresult: 测试用例结果
         :type testresult: TestResult
-        '''
+        """
         pass
 
     def run(self, testcase, testresult_factory):
-        '''执行一个测试用例
+        """执行一个测试用例
 
         :param testcase: 执行的测试用例
         :type testcase: TestCase
         :param testresult_factory: 测试结果工厂
         :type testresult_factory: ITestResultFactory
         :rtype: TestResult/TestResultCollection - 测试结果
-        '''
+        """
         #                       临时方案是disable gc后kill掉程序，在enable gc。后续这里
         #                        需要重新考虑已独立进程来执行测试用例。
 
         self._stop_run = False
         self._testcase = testcase
         self._testresult = testresult_factory.create(testcase)
-        self._subtasks = collections.deque(['init_test', 'pre_test', 'run_test', 'post_test', 'clean_test'])
+        self._subtasks = collections.deque(
+            ["init_test", "pre_test", "run_test", "post_test", "clean_test"]
+        )
 
-        with ThreadGroupScope('%s:%s' % (self._testcase.test_name, id(self))):
+        with ThreadGroupScope("%s:%s" % (self._testcase.test_name, id(self))):
 
             ThreadGroupLocal().testcase = self._testcase
             ThreadGroupLocal().testresult = self._testresult
@@ -794,7 +1102,9 @@ class TestCaseRunner(ITestCaseRunner):
 
             self.setup(self._testcase, self._testresult)
 
-            if isinstance(self._testcase.timeout, int) or isinstance(self._testcase.timeout, float):
+            if isinstance(self._testcase.timeout, int) or isinstance(
+                self._testcase.timeout, float
+            ):
                 timeout = self._testcase.timeout * 60
             else:
                 timeout = 60
@@ -807,11 +1117,14 @@ class TestCaseRunner(ITestCaseRunner):
                 self._stop_run = True
                 try:
                     thread_traceback = self._get_current_traceback(test_thread)
-                except:
-                    self._testresult.log_record(EnumLogLevel.TESTTIMEOUT, '测试用例执行超时')
+                except Exception:  # pylint: disable=broad-except
+                    self._testresult.log_record(EnumLogLevel.TESTTIMEOUT, "测试用例执行超时")
                 else:
-                    self._testresult.log_record(EnumLogLevel.TESTTIMEOUT, '测试用例执行超时，抓取测试线程当前堆栈',
-                                                dict(traceback=thread_traceback))
+                    self._testresult.log_record(
+                        EnumLogLevel.TESTTIMEOUT,
+                        "测试用例执行超时，抓取测试线程当前堆栈",
+                        dict(traceback=thread_traceback),
+                    )
 
                 # 启动线程执行可能未执行的postTest和cleanTest
                 cleanup_thread = threading.Thread(target=self._thread_cleanup)
@@ -821,11 +1134,16 @@ class TestCaseRunner(ITestCaseRunner):
                 if cleanup_thread.is_alive():
                     try:
                         thread_traceback = self._get_current_traceback(cleanup_thread)
-                    except:
-                        self._testresult.log_record(EnumLogLevel.TESTTIMEOUT, '测试用例执行超时时清理超时')
+                    except Exception:  # pylint: disable=broad-except
+                        self._testresult.log_record(
+                            EnumLogLevel.TESTTIMEOUT, "测试用例执行超时时清理超时"
+                        )
                     else:
-                        self._testresult.log_record(EnumLogLevel.TESTTIMEOUT, '测试用例执行超时时清理超时，抓取清理线程当前堆栈',
-                                                    dict(traceback=thread_traceback))
+                        self._testresult.log_record(
+                            EnumLogLevel.TESTTIMEOUT,
+                            "测试用例执行超时时清理超时，抓取清理线程当前堆栈",
+                            dict(traceback=thread_traceback),
+                        )
                 else:
                     if self._error:
                         raise RuntimeError("用例执行线程异常：\n%s" % smart_text(self._error))
@@ -842,11 +1160,11 @@ class TestCaseRunner(ITestCaseRunner):
         return self._testresult
 
     def _get_current_traceback(self, thread):
-        '''获取用例线程的当前的堆栈
+        """获取用例线程的当前的堆栈
 
         :param thread: 要获取堆栈的线程
         :type thread: Thread
-        '''
+        """
         for thread_id, stack in sys._current_frames().items():
             if thread_id != thread.ident:
                 continue
@@ -861,7 +1179,7 @@ class TestCaseRunner(ITestCaseRunner):
 
 
 class RepeatTestCaseRunner(ITestCaseRunner):
-    '''重复执行的用例执行器
+    """重复执行的用例执行器
 
     可以通过设置测试用例的类属性为此runner实例来实现指定测试用例
     执行多次。测试用例执行时可以访问成员变量iteration来判断当前是
@@ -880,17 +1198,16 @@ class RepeatTestCaseRunner(ITestCaseRunner):
             def run_test(self):
                 self.log_info("第%s次执行测试"%self.iteration)
 
-    '''
+    """
 
     def __init__(self, case_runner_class=None):
-        '''指定执行一个用例的CaseRunner类，不指定则为TestCaseRunner类
-        '''
+        """指定执行一个用例的CaseRunner类，不指定则为TestCaseRunner类"""
         if case_runner_class is None:
             case_runner_class = TestCaseRunner
         self._case_runner_class = case_runner_class
 
     def run(self, testcase, testresult_factory):
-        '''执行一个测试用例
+        """执行一个测试用例
 
         :param testcase: 执行的测试用例
         :type testcase: TestCase
@@ -899,7 +1216,7 @@ class RepeatTestCaseRunner(ITestCaseRunner):
 
         :returns : 测试结果
         :rtype TestResult/TestResultCollection - 测试结果
-        '''
+        """
         passed = True
         if not hasattr(testcase, "repeat"):
             passed = False
@@ -908,7 +1225,7 @@ class RepeatTestCaseRunner(ITestCaseRunner):
             passed = False
             err_msg = "使用RepeatTestCaseRunner的测试用例的类属性'repeat'必须大于0"
         if not passed:
-            with ThreadGroupScope('%s:%s' % (testcase.test_name, id(self))):
+            with ThreadGroupScope("%s:%s" % (testcase.test_name, id(self))):
                 result = testresult_factory.create(testcase)
                 ThreadGroupLocal().testcase = testcase
                 ThreadGroupLocal().testresult = result
@@ -930,11 +1247,10 @@ class RepeatTestCaseRunner(ITestCaseRunner):
 
 
 class SeqTestCaseRunner(ITestCaseRunner):
-    '''顺序执行的用例的执行器
-    '''
+    """顺序执行的用例的执行器"""
 
     def run(self, testsuite, testresult_factory):
-        '''执行一个顺序执行的测试用例套
+        """执行一个顺序执行的测试用例套
 
         :param testsuite: 执行的测试用例套
         :type testsuite: SeqTestSuite
@@ -942,11 +1258,11 @@ class SeqTestCaseRunner(ITestCaseRunner):
         :type testresult_factory: ITestResultFactory
 
         :return TestResult/TestResultCollection - 测试结果
-        '''
+        """
         passed = True
         results = []
         for it in testsuite:
-            runner = getattr(it, 'case_runner', TestCaseRunner())
+            runner = getattr(it, "case_runner", TestCaseRunner())
             case_result = runner.run(it, testresult_factory)
             passed &= case_result.passed
             results.append(case_result)
@@ -956,46 +1272,43 @@ class SeqTestCaseRunner(ITestCaseRunner):
 
 
 class TestSuite(object):
-    '''测试用例套
-    '''
+    """测试用例套"""
 
     @property
     def suite_class_name(self):
-        '''测试套类名称
-        '''
+        """测试套类名称"""
         cls = type(self)
-        if cls.__module__ == '__main__':
+        if cls.__module__ == "__main__":
             type_name = cls.__name__
         else:
-            type_name = (cls.__module__ + '.' + cls.__name__)
+            type_name = cls.__module__ + "." + cls.__name__
         return type_name
 
     def dumps(self):
-        '''序列化
-        '''
+        """序列化"""
         raise NotImplementedError()
 
     def loads(self, buf):
-        '''反序列化
-        '''
+        """反序列化"""
         raise NotImplementedError()
 
 
 class SeqTestSuite(TestSuite):
-    '''顺序执行的测试用例套
-    '''
+    """顺序执行的测试用例套"""
+
     case_runner = SeqTestCaseRunner()
 
     def __init__(self, testcases):
-        '''构造函数
+        """构造函数
 
         :param testcases: 测试用例列表
         :type testcases: list
         :param name: 测试用例名
         :type name: string
-        '''
+        """
         self._testcases = testcases
         self._resmgr = None
+        self.__share_data_mgr = None
 
     def __iter__(self):
         for it in self._testcases:
@@ -1005,43 +1318,42 @@ class SeqTestSuite(TestSuite):
         return len(self._testcases)
 
     def __repr__(self):
-        return '<SeqTestSuite module:%s>' % self.test_class_name
+        return "<SeqTestSuite module:%s>" % self.test_class_name
 
     @property
     def test_class_name(self):
-        '''返回测试用例名字（不同测试用例的名字不同）
+        """返回测试用例名字（不同测试用例的名字不同）
 
         :rtype: str
-        '''
+        """
         cls = type(self._testcases[0])
         return cls.__module__
 
     @property
     def test_name(self):
-        '''返回测试用例实例的名字
+        """返回测试用例实例的名字
 
         :rtype: str
-        '''
+        """
         cls = type(self._testcases[0])
         return cls.__module__
 
     @property
     def test_doc(self):
-        '''测试用例说明
+        """测试用例说明
 
         :rtype: str
-        '''
+        """
         cls = type(self._testcases[0])
         desc = cls.__module__.__doc__
         if isinstance(desc, six.text_type):
-            desc = re.sub('^\s*', '', desc)
-            desc = re.sub('\s*$', '', desc)
+            desc = re.sub("^\s*", "", desc)
+            desc = re.sub("\s*$", "", desc)
         return desc
 
     @property
     def test_result(self):
-        '''将最后一个执行的用例结果，作为Suite的结果
-        '''
+        """将最后一个执行的用例结果，作为Suite的结果"""
         result = None
         for testcae in self._testcases:
             if testcae.test_result:
@@ -1052,8 +1364,7 @@ class SeqTestSuite(TestSuite):
 
     @property
     def test_resmgr(self):
-        '''资源管理器
-        '''
+        """资源管理器"""
         return self._resmgr
 
     @test_resmgr.setter
@@ -1062,25 +1373,36 @@ class SeqTestSuite(TestSuite):
         for it in self._testcases:
             it.test_resmgr = resmgr
 
+    @property
+    def share_data_mgr(self):
+        """共享数据管理器"""
+        return self.__share_data_mgr
+
+    @share_data_mgr.setter
+    def share_data_mgr(self, share_data_mgr):
+        self.__share_data_mgr = share_data_mgr
+        for it in self._testcases:
+            it._share_data_mgr = share_data_mgr
+
     def dumps(self):
-        '''序列化
-        '''
+        """序列化"""
         from testbase import serialization
+
         return [serialization.dumps(it) for it in self._testcases]
 
     def loads(self, buf):
-        '''反序列化
-        '''
+        """反序列化"""
         from testbase import serialization
+
         self._testcases = [serialization.loads(it) for it in buf]
 
 
 def debug_run_all():
-    '''调试执行当前脚本的全部用例
-    '''
+    """调试执行当前脚本的全部用例"""
     from testbase.loader import TestLoader
     from testbase.runner import TestRunner
     from testbase.report import StreamTestReport
+
     tests = TestLoader().load("__main__")
     runner = TestRunner(StreamTestReport(output_testresult=True, output_summary=True))
     runner.run(tests)

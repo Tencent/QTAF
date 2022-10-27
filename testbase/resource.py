@@ -32,18 +32,17 @@ from testbase.testresult import EnumLogLevel
 
 os_encoding = locale.getdefaultlocale()[1]
 if not os_encoding:
-    os_encoding = 'utf8'
+    os_encoding = "utf8"  # pylint: disable=invalid-name
 
 
 class ResourceNotAvailable(Exception):
-    """没有可用的资源
-    """
+    """没有可用的资源"""
+
     pass
 
 
 class DownloadFileError(Exception):
-    """download file failed
-    """
+    """download file failed"""
 
     def __init__(self, url, status_code, msg, headers, data):
         self.url = url
@@ -53,22 +52,20 @@ class DownloadFileError(Exception):
         self.data = data
 
     def __str__(self):
-        return "downloading file failed for: %s %s %s\nheaders=%s\nbody=%s" % (self.url,
-                                                             self.status_code,
-                                                             self.msg,
-                                                             self.headers,
-                                                             smart_text(self.data))
-
-
+        return "downloading file failed for: %s %s %s\nheaders=%s\nbody=%s" % (
+            self.url,
+            self.status_code,
+            self.msg,
+            self.headers,
+            smart_text(self.data),
+        )
 
 
 class Session(object):
-    """会话
-    """
+    """会话"""
 
     def __init__(self, backend, session_id):
-        """构造函数
-        """
+        """构造函数"""
         self._backend = backend
         self._id = session_id
 
@@ -86,10 +83,16 @@ class Session(object):
         """
         tc = context.current_testresult()
         try:
-            resource = self._backend.acquire_resource(self._id, res_type, res_group, condition)
+            resource = self._backend.acquire_resource(
+                self._id, res_type, res_group, condition
+            )
         except ResourceNotAvailable:
             if tc:
-                tc.log_record(EnumLogLevel.RESNOTREADY, "acquire resource (res_type:%s, res_group:%s, condition:%s) failed" % (res_type, res_group, condition))
+                tc.log_record(
+                    EnumLogLevel.RESNOTREADY,
+                    "acquire resource (res_type:%s, res_group:%s, condition:%s) failed"
+                    % (res_type, res_group, condition),
+                )
             raise
         else:
             if tc:
@@ -98,9 +101,16 @@ class Session(object):
                 if not isinstance(resource, dict):
                     raise ValueError("Resource record should be a dictionary")
                 if "id" not in resource:
-                    raise ValueError("Resource record should be a dictionary with key 'id'")
+                    raise ValueError(
+                        "Resource record should be a dictionary with key 'id'"
+                    )
                 extra["resource_id"] = resource["id"]
-                tc.log_record(EnumLogLevel.RESOURCE, "acquire resource (res_type:%s, res_group:%s, condition:%s) successfully" % (res_type, res_group, condition), extra)
+                tc.log_record(
+                    EnumLogLevel.RESOURCE,
+                    "acquire resource (res_type:%s, res_group:%s, condition:%s) successfully"
+                    % (res_type, res_group, condition),
+                    extra,
+                )
             return resource
 
     def release_resource(self, res_type, resource_id):
@@ -114,8 +124,7 @@ class Session(object):
         return self._backend.release_resource(self._id, res_type, resource_id)
 
     def destroy(self):
-        """销毁该会话（全部占用的资源会释放）
-        """
+        """销毁该会话（全部占用的资源会释放）"""
         if not self._id:
             return
         res = self._backend.destroy_session(self._id)
@@ -135,7 +144,7 @@ class Session(object):
         """获取目录下文件列表
 
         :param path: 目录引用路径（相对路径）
-        :returns: 一个包含该目录下所有文件的绝对路径的list 
+        :returns: 一个包含该目录下所有文件的绝对路径的list
         :rtypes: list[str]
         """
         return self._backend.list_dir(path)
@@ -152,8 +161,7 @@ class Session(object):
 
 
 class IResourceManagerBackend(object):
-    """测试资源管理后端接口定义
-    """
+    """测试资源管理后端接口定义"""
 
     def create_session(self, testcase=None):
         """创建会话
@@ -267,8 +275,7 @@ class TestResourceManager(object):
 
 
 class LocalResourceLock(object):
-    """本地资源锁
-    """
+    """本地资源锁"""
 
     _lock_cache = {}
 
@@ -301,8 +308,7 @@ class LocalResourceLock(object):
         return False
 
     def release(self):
-        """释放
-        """
+        """释放"""
         if self._fd is None:
             raise RuntimeError("lock is not acquired")
         del self._lock_cache[self._file_path]
@@ -310,6 +316,7 @@ class LocalResourceLock(object):
 
     def _win_try_acquire(self):
         import msvcrt
+
         try:
             fd = os.open(self._file_path, os.O_RDWR | os.O_CREAT | os.O_TRUNC)
         except OSError:
@@ -326,6 +333,7 @@ class LocalResourceLock(object):
 
     def _win_release(self):
         import msvcrt
+
         msvcrt.locking(self._fd, msvcrt.LK_UNLCK, 1)
         os.close(self._fd)
         try:
@@ -336,6 +344,7 @@ class LocalResourceLock(object):
 
     def _unix_try_acquire(self):
         import fcntl
+
         fd = os.open(self._file_path, os.O_RDWR | os.O_CREAT | os.O_TRUNC)
         try:
             fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
@@ -348,14 +357,14 @@ class LocalResourceLock(object):
 
     def _unix_release(self):
         import fcntl
+
         fcntl.flock(self._fd, fcntl.LOCK_UN)
         os.close(self._fd)
         self._fd = None
 
 
 class LocalResourceHandler(object):
-    """本地资源处理句柄
-    """
+    """本地资源处理句柄"""
 
     def __init__(self, resource_lock_type=LocalResourceLock):
         """构造函数
@@ -368,7 +377,7 @@ class LocalResourceHandler(object):
 
     def acquire_resource(self, session_id, res_type, res_group, condition):
         """申请资源
-    
+
         :param session_id: 会话ID
         :type session_id: str
         :param res_type: 资源类型
@@ -406,7 +415,9 @@ class LocalResourceHandler(object):
         """
         if session_id not in self._res_locks:
             raise ValueError("invalid session")
-        for idx, (_res_type, _resource_id, lock) in enumerate(self._res_locks[session_id]):
+        for idx, (_res_type, _resource_id, lock) in enumerate(
+            self._res_locks[session_id]
+        ):
             if _res_type == res_type and _resource_id == resource_id:
                 lock.release()
             del self._res_locks[session_id][idx]
@@ -461,8 +472,7 @@ class LocalResourceHandler(object):
 
 
 class LocalCSVResourceHandler(LocalResourceHandler):
-    """基于本地CSV文件管理资源
-    """
+    """基于本地CSV文件管理资源"""
 
     def __init__(self, csv_path, resource_lock_type=LocalResourceLock):
         """构造函数
@@ -495,30 +505,29 @@ class LocalCSVResourceHandler(LocalResourceHandler):
 
 
 class LocalResourceManagerBackend(IResourceManagerBackend):
-    """基本本地文件的方式的资源管理
-    """
+    """基本本地文件的方式的资源管理"""
+
     _res_type_map = {}
 
     @classmethod
     def register_resource_type(cls, res_type, handler):
-        """注册一个资源类型
-        """
+        """注册一个资源类型"""
         cls._res_type_map[res_type] = handler
 
     def __init__(self):
         self._resources_dirs = iter_resource_paths()
-        self._session_path = os.path.join(settings.PROJECT_ROOT, 'sessions')
+        self._session_path = os.path.join(settings.PROJECT_ROOT, "sessions")
 
     def _adjust_path(self, path):
-        """根据操作系统转换文件分隔符
-        """
-        if os.sep == '/':
-            return path.replace('\\', os.sep)
+        """根据操作系统转换文件分隔符"""
+        if os.sep == "/":
+            return path.replace("\\", os.sep)
         else:
-            return path.replace('/', os.sep)
+            return path.replace("/", os.sep)
 
     def _download_file(self, url, target_path):
         from six.moves.urllib import request, error
+
         try:
             rsp = request.urlopen(url, timeout=300)
             rspbuf = rsp.read()
@@ -528,8 +537,7 @@ class LocalResourceManagerBackend(IResourceManagerBackend):
             fd.write(rspbuf)
 
     def _resolve_link_file(self, remote_path, prefer_local_path):
-        """获取链接的真正的文件
-        """
+        """获取链接的真正的文件"""
         if os.path.isfile(remote_path):
             return remote_path
         elif remote_path.startswith("http://") or remote_path.startswith("https://"):
@@ -540,9 +548,9 @@ class LocalResourceManagerBackend(IResourceManagerBackend):
 
     def abs_path(self, relative_path):
         """get resource absolute path
-:        type relative_path:string
-        :param relative_path: ，资源文件相对描述符，相对于setting下的资源目录的路径,支持多级目录
-        :return:返回资源文件的绝对路径
+        :        type relative_path:string
+                :param relative_path: ，资源文件相对描述符，相对于setting下的资源目录的路径,支持多级目录
+                :return:返回资源文件的绝对路径
         """
         relative_path = self._adjust_path(relative_path)
         if relative_path.startswith(os.sep):
@@ -552,7 +560,7 @@ class LocalResourceManagerBackend(IResourceManagerBackend):
         for it in self._resources_dirs:
             file_path = self._adjust_path(os.path.join(it, relative_path))
             file_path = smart_text(file_path)
-            file_link = smart_text(file_path + '.link')
+            file_link = smart_text(file_path + ".link")
             if os.path.exists(file_path):
                 found_paths.append(file_path)
             elif os.path.exists(file_link):
@@ -563,7 +571,10 @@ class LocalResourceManagerBackend(IResourceManagerBackend):
         if len(found_paths) == 0:
             raise Exception("relative_path=%s not found" % relative_path)
         if len(found_paths) > 1:
-            raise Exception("relative_path=%s got multiple results:\n%s" % (relative_path, "\n".join(found_paths)))
+            raise Exception(
+                "relative_path=%s got multiple results:\n%s"
+                % (relative_path, "\n".join(found_paths))
+            )
         return os.path.abspath(found_paths[0])
 
     def get_file(self, relative_path):
@@ -612,49 +623,45 @@ class LocalResourceManagerBackend(IResourceManagerBackend):
             yield dir_path[base_len:], dir_names, file_names
 
     def _clean_cache(self):
-        """清理缓存文件
-        """
+        """清理缓存文件"""
         for it in self._resources_dirs:
             self._rm_cachefile_recursively(it)
 
     def _rm_cachefile_recursively(self, path):
-        """递归删除目录下的缓存文件
-        """
+        """递归删除目录下的缓存文件"""
         for root, _, files in os.walk(path):
             for it in files:
-                if it.endswith('.link'):
+                if it.endswith(".link"):
                     try:
                         os.remove(os.path.join(root, it)[0:-5])
                     except OSError:
                         pass
 
     def create_session(self, testcase=None):
-        """创建会话
-        """
+        """创建会话"""
         session_id = str(uuid.uuid4())
-        timeout = 300 if testcase is None else (testcase.timeout * 60 + 300 + 5)  # 300为用例超时时的Cleanup超时时间
+        timeout = (
+            300 if testcase is None else (testcase.timeout * 60 + 300 + 5)
+        )  # 300为用例超时时的Cleanup超时时间
         for handler in self._res_type_map.values():
             handler.session_created(session_id, timeout, testcase)
         return session_id
 
     def destroy_session(self, sessionid):
-        """销毁会话
-        """
+        """销毁会话"""
         self._clean_cache()
         for handler in self._res_type_map.values():
             handler.session_destroyed(sessionid)
 
     def acquire_resource(self, session_id, res_type, res_group, condition):
-        """申请资源
-        """
+        """申请资源"""
         handler = self._res_type_map.get(res_type)
         if handler is None:
             raise ValueError("resource type '%s' it not registered")
         return handler.acquire_resource(session_id, res_type, res_group, condition)
 
     def release_resource(self, session_id, res_type, resource_id):
-        """释放资源
-        """
+        """释放资源"""
         handler = self._res_type_map.get(res_type)
         if handler is None:
             raise ValueError("resource type '%s' it not registered")
@@ -698,7 +705,7 @@ def list_dir(path):
 
 def walk(path):
     """遍历某个路径
-    
+
     :param path: 相对于resources目录的路径，用于遍历文件夹
     :type  path: str
     :return iterators: iterator of (dir_path, dirnames, filenames) tuples
@@ -736,12 +743,11 @@ def release_resource(res_type, resource_id):
 def iter_resource_paths():
     """返回测试项目的全部resources目录
 
-    :return: 
+    :return:
     """
     resource_paths = []
     for dirpath, dirnames, _ in os.walk(settings.PROJECT_ROOT):
         for dirname in dirnames:
-            if dirname == 'resources':
+            if dirname == "resources":
                 resource_paths.append(os.path.join(dirpath, dirname))
     return resource_paths
-

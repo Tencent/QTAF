@@ -20,7 +20,6 @@ import socket
 import os
 import shutil
 import json
-import getpass
 import locale
 import argparse
 import xml.dom.minidom as dom
@@ -43,6 +42,7 @@ from testbase.util import (
 from testbase.version import version
 
 os_encoding = locale.getdefaultlocale()[1]
+# pylint: disable=invalid-name
 report_usage = (
     'runtest <test ...> --report-type <report-type> [--report-args "<report-args>"]'
 )
@@ -488,7 +488,7 @@ class StreamTestReport(TestReportBase):
             "run test case: %s(pass?:%s)\n" % (testcase.test_name, testresult.passed)
         )
 
-    def log_record(self, level, tag, msg, record={}):
+    def log_record(self, level, tag, msg, record=None):
         """增加一个记录
         :param level: 日志级别
         :param msg: 日志消息
@@ -528,6 +528,7 @@ class StreamTestReport(TestReportBase):
             if line.strip():
                 break
         self._write_err("load test failed: %s (error: %s)\n" % (name, line))
+        self._write_err(smart_binary(error))
 
     def get_testresult_factory(self):
         """获取对应的TestResult工厂
@@ -648,12 +649,14 @@ class XMLTestReport(TestReportBase):
             casemark,
         )
         doc2 = dom.parseString(smart_binary(nodestr))
-        resultNode = doc2.childNodes[0]
-        resultNode.setAttribute("name", smart_text(saxutils.escape(testcase.test_name)))
-        resultNode.setAttribute("owner", smart_text(saxutils.escape(testcase.owner)))
-        self._runrstnode.appendChild(resultNode)
+        result_node = doc2.childNodes[0]
+        result_node.setAttribute(
+            "name", smart_text(saxutils.escape(testcase.test_name))
+        )
+        result_node.setAttribute("owner", smart_text(saxutils.escape(testcase.owner)))
+        self._runrstnode.appendChild(result_node)
 
-    def log_record(self, level, tag, msg, record={}):
+    def log_record(self, level, tag, msg, record=None):
         """增加一个记录
         :param level: 日志级别
         :param msg: 日志消息
@@ -664,6 +667,7 @@ class XMLTestReport(TestReportBase):
         :type msg: string
         :type record: dict
         """
+        record = record or {}
         if tag == "LOADER" and level == EnumLogLevel.ERROR:
             if "error_testname" in record and "error" in record:
                 testname = record["error_testname"]
@@ -690,8 +694,8 @@ class XMLTestReport(TestReportBase):
             smart_text(saxutils.escape(reason)),
         )
         doc2 = dom.parseString(nodestr)
-        filterNode = doc2.childNodes[0]
-        self._runrstnode.appendChild(filterNode)
+        filter_node = doc2.childNodes[0]
+        self._runrstnode.appendChild(filter_node)
 
     def log_load_error(self, loader, name, error):
         """记录一个加载失败的用例或用例集
@@ -709,8 +713,8 @@ class XMLTestReport(TestReportBase):
             log_file,
         )
         doc2 = dom.parseString(nodestr)
-        errNode = doc2.childNodes[0]
-        self._runrstnode.appendChild(errNode)
+        err_node = doc2.childNodes[0]
+        self._runrstnode.appendChild(err_node)
         with codecs_open(log_file, "wb") as fd:
             fd.write(smart_binary(error))
 
@@ -933,8 +937,9 @@ class JSONTestReport(JSONTestReportBase):
 class HtmlTestReport(JSONTestReportBase):
     """html test report"""
 
-    def __init__(self, title="调试测试", displays=["failed", "error"]):
+    def __init__(self, title="调试测试", displays=None):
         super(HtmlTestReport, self).__init__(title=title)
+        displays = displays or ["failed", "error"]
         self._data["displays"] = displays
 
     def get_testresult_factory(self):

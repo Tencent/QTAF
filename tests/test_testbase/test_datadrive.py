@@ -12,8 +12,8 @@
 # OF ANY KIND, either express or implied. See the License for the specific language
 # governing permissions and limitations under the License.
 #
-'''testcase test
-'''
+"""testcase test
+"""
 
 import unittest
 
@@ -24,12 +24,11 @@ from testbase.testcase import TestCase
 
 
 class ClassDataDriveTest(unittest.TestCase):
-
     def test_load_dict_data(self):
 
         data = {
-            "x": {"value":"x", "xxx":{"owner": "foo"}},
-            "y": {"value":2, "xxx":{"priority": TestCase.EnumPriority.Low}}
+            "x": {"value": "x", "xxx": {"owner": "foo"}},
+            "y": {"value": 2, "xxx": {"priority": TestCase.EnumPriority.Low}},
         }
 
         @datadrive.DataDrive(data)
@@ -68,8 +67,8 @@ class ClassDataDriveTest(unittest.TestCase):
 
     def test_set_attrs(self):
         data = [
-            {"value":"x", "__attrs__":{"owner": "foo"}},
-            {"value":2, "__attrs__":{"priority": TestCase.EnumPriority.Low}}
+            {"value": "x", "__attrs__": {"owner": "foo"}},
+            {"value": 2, "__attrs__": {"priority": TestCase.EnumPriority.Low}},
         ]
 
         @datadrive.DataDrive(data)
@@ -90,13 +89,12 @@ class ClassDataDriveTest(unittest.TestCase):
         self.assertEqual(tests[1].priority, TestCase.EnumPriority.Low)
 
     def test_set_attrs_tags(self):
-
         class Base(TestCase):
             tags = "base"
 
         data = [
-            {"value":"x", "__attrs__":{"tags": "foo"}},
-            {"value":"x", "__attrs__":{"tags": ("fff", "xxx")}},
+            {"value": "x", "__attrs__": {"tags": "foo"}},
+            {"value": "x", "__attrs__": {"tags": ("fff", "xxx")}},
         ]
 
         @datadrive.DataDrive(data)
@@ -117,13 +115,14 @@ class ClassDataDriveTest(unittest.TestCase):
 
     def test_set_attrs_doc(self):
         data = [
-            {"value":"x", "__attrs__":{"__doc__": "doc"}},
-            {"value":"x", "__attrs__":{"xxxx": ("fff", "xxx")}},
+            {"value": "x", "__attrs__": {"__doc__": "doc"}},
+            {"value": "x", "__attrs__": {"xxxx": ("fff", "xxx")}},
         ]
 
         @datadrive.DataDrive(data)
         class Demo(TestCase):
             """base"""
+
             owner = "xxx"
             timeout = 1
             priority = TestCase.EnumPriority.BVT
@@ -140,9 +139,7 @@ class ClassDataDriveTest(unittest.TestCase):
 
 
 class GlobalDataDriveTest(unittest.TestCase):
-
     def test_global_overwrite_attrs(self):
-
         class Demo(TestCase):
             owner = "xxx"
             timeout = 1
@@ -175,11 +172,11 @@ class GlobalDataDriveTest(unittest.TestCase):
             ("d", "status", TestCase.EnumStatus.Implement),
             ("e", "__doc__", "e"),
             ("f", "tags", set(["abc"])),
-            ("g", "tags", set(["a", "b", "c"]))
+            ("g", "tags", set(["a", "b", "c"])),
         ]
         data_source = {}
         for char, field, value in data_map:
-            data_source[char] = {"data_%s" % char : char, "__attrs__" : {field : value}}
+            data_source[char] = {"data_%s" % char: char, "__attrs__": {field: value}}
 
         with modify_settings(DATA_DRIVE=True, DATA_SOURCE=data_source):
             tests = datadrive.load_datadrive_tests(Demo)

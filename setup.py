@@ -27,7 +27,9 @@ def generate_version():
             content = fd.read().strip()
             if content:
                 version = content
-    with codecs.open(os.path.join(BASE_DIR, "testbase", "version.py"), "w", encoding="utf-8") as fd:
+    with codecs.open(
+        os.path.join(BASE_DIR, "testbase", "version.py"), "w", encoding="utf-8"
+    ) as fd:
         fd.write('version = "%s"\n' % version)
     return str(version)
 
@@ -35,7 +37,9 @@ def generate_version():
 def parse_requirements():
     reqs = []
     if os.path.isfile(os.path.join(BASE_DIR, "requirements.txt")):
-        with codecs.open(os.path.join(BASE_DIR, "requirements.txt"), 'r', encoding="utf-8") as fd:
+        with codecs.open(
+            os.path.join(BASE_DIR, "requirements.txt"), "r", encoding="utf-8"
+        ) as fd:
             for line in fd.readlines():
                 line = line.strip()
                 if line:
@@ -50,26 +54,35 @@ def get_description():
 
 if __name__ == "__main__":
     setup(
-      version=generate_version(),
-      name="qtaf",
-      packages=find_packages(exclude=("tests", "tests.*",)),
-      py_modules=["qtaf_settings", "__main__", "qta-manage"],
-      include_package_data=True,
-      package_data={'':['*.txt', '*.TXT'], },
-      description="Basic test automation framework for QTA",
-      long_description=get_description(),
-      long_description_content_type="text/markdown",
-      author="Tencent",
-      license="Copyright(c)2010-2018 Tencent All Rights Reserved. ",
-      install_requires=parse_requirements(),
-      entry_points={'console_scripts': ['qta-manage = testbase.management:qta_manage_main'], },
-      classifiers=[
-        "Programming Language :: Python :: 2.7",
-        "Operating System :: OS Independent",
-      ],
-      url="https://github.com/Tencent/QTAF",
-      project_urls={
-          "TestBase Documentation": "https://qta-testbase.readthedocs.io/zh/latest/",
-          "TUIA Documentation": "https://qta-tuia.readthedocs.io/zh/latest/"
-      },
+        version=generate_version(),
+        name="qtaf",
+        packages=find_packages(
+            exclude=(
+                "tests",
+                "tests.*",
+            )
+        ),
+        py_modules=["qtaf_settings", "__main__", "qta-manage"],
+        include_package_data=True,
+        package_data={
+            "": ["*.txt", "*.TXT"],
+        },
+        description="Basic test automation framework for QTA",
+        long_description=get_description(),
+        long_description_content_type="text/markdown",
+        author="Tencent",
+        license="Copyright(c)2010-2018 Tencent All Rights Reserved. ",
+        install_requires=parse_requirements(),
+        entry_points={
+            "console_scripts": ["qta-manage = testbase.management:qta_manage_main"],
+        },
+        classifiers=[
+            "Programming Language :: Python :: 2.7",
+            "Operating System :: OS Independent",
+        ],
+        url="https://github.com/Tencent/QTAF",
+        project_urls={
+            "TestBase Documentation": "https://qta-testbase.readthedocs.io/zh/latest/",
+            "TUIA Documentation": "https://qta-tuia.readthedocs.io/zh/latest/",
+        },
     )

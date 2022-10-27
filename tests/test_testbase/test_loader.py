@@ -12,8 +12,8 @@
 # OF ANY KIND, either express or implied. See the License for the specific language
 # governing permissions and limitations under the License.
 #
-'''loader test
-'''
+"""loader test
+"""
 
 import unittest
 
@@ -27,11 +27,11 @@ class TestLoaderTest(unittest.TestCase):
     loader = TestLoader()
 
     def test_load_testcase(self):
-        '''load test cases from class path
-        '''
+        """load test cases from class path"""
         tests = self.loader.load("tests.sampletest.hellotest.HelloTest")
         self.assertEqual(len(tests), 1)
         from tests.sampletest.hellotest import HelloTest
+
         self.assertEqual(type(tests[0]), HelloTest)
 
     def test_load_failed_not_found(self):
@@ -40,7 +40,9 @@ class TestLoaderTest(unittest.TestCase):
         errors = self.loader.get_last_errors()
         self.assertEqual(len(errors), 1)
         self.assertIn("tests.sampletest.notfound", errors)
-        self.assertRegexpMatches(list(errors.values())[0], "No module named .*notfound.*")
+        self.assertRegexpMatches(
+            list(errors.values())[0], "No module named .*notfound.*"
+        )
 
     def test_load_failed_runtime_error(self):
         tests = self.loader.load("tests.sampletest.loaderr")
@@ -51,7 +53,7 @@ class TestLoaderTest(unittest.TestCase):
         self.assertIn("RuntimeError", list(errors.values())[0])
 
     def test_load_filter(self):
-        filtered_test = 'tests.sampletest.hellotest.HelloTest'
+        filtered_test = "tests.sampletest.hellotest.HelloTest"
 
         def filter_func(test):
             if test.test_class_name == filtered_test:
@@ -59,7 +61,7 @@ class TestLoaderTest(unittest.TestCase):
 
         loader = TestLoader(filter_func)
         tests = loader.load("tests.sampletest")
-        testnames = [ it.test_class_name for it in tests ]
+        testnames = [it.test_class_name for it in tests]
         self.assertNotIn(filtered_test, testnames)
         tests = loader.get_filtered_tests()
         self.assertEqual(len(tests), 1)
@@ -69,17 +71,28 @@ class TestLoaderTest(unittest.TestCase):
         self.assertEqual(list(result.keys())[0].test_class_name, filtered_test)
         self.assertEqual("hello filtered", list(result.values())[0])
 
+    def test_load_testcasedict(self):
+        testcases = [
+            {
+                "name": "tests.sampletest.paramtest.ParamTest",
+                "parameters": {"test": 200, "test1": 400},
+            }
+        ]
+        with modify_settings(QTAF_PARAM_MODE=True):
+            tests = self.loader.load(testcases)
+            self.assertEqual(len(tests), 1)
+            self.assertEqual(tests[0].test, 200)
+
 
 class LoadDataDriveReversibleTest(unittest.TestCase):
-
     @classmethod
     def setUpClass(cls):
         cls.loader = TestLoader()
 
     def test_dict_data_reversible(self):
-        '''load test cases from dict data and can be reverted loaded
-        '''
+        """load test cases from dict data and can be reverted loaded"""
         from tests.sampletest.datatest import DataTest
+
         tests = self.loader.load("tests.sampletest.datatest.DataTest")
         self.assertEqual(len(tests), 3)
         self.assertEqual(type(tests[0]), DataTest)
@@ -91,6 +104,7 @@ class LoadDataDriveReversibleTest(unittest.TestCase):
 
     def test_list_data_reversible(self):
         from tests.sampletest.datatest import ArrayDataTest
+
         tests = self.loader.load("tests.sampletest.datatest.ArrayDataTest")
         self.assertEqual(len(tests), 4)
         self.assertEqual(type(tests[0]), ArrayDataTest)
@@ -100,14 +114,24 @@ class LoadDataDriveReversibleTest(unittest.TestCase):
         new_tests = loader.load(test_set)
         self.assertEqual(len(new_tests), len(tests))
 
+    def test_empty_data_reversible(self):
+        from tests.sampletest.datatest import EmptyDataTest
+
+        tests = self.loader.load("tests.sampletest.datatest.EmptyDataTest")
+        self.assertEqual(len(tests), 1)
+        self.assertEqual(type(tests[0]), EmptyDataTest)
+
     def test_global_data_reversible(self):
         from tests.data import server
-        with modify_settings(DATA_DRIVE=True, DATA_SOURCE='tests/data/server.py'):
+
+        with modify_settings(DATA_DRIVE=True, DATA_SOURCE="tests/data/server.py"):
             tests = TestLoader().load("tests.sampletest.hellotest.HelloTest")
             self.assertEqual(len(tests), 3)
             casedata = set()
             for test in tests:
-                self.assertEqual(test.test_class_name, "tests.sampletest.hellotest.HelloTest")
+                self.assertEqual(
+                    test.test_class_name, "tests.sampletest.hellotest.HelloTest"
+                )
                 casedata.add(str(test.casedata))
             self.assertEqual(casedata, set([str(it) for it in server.DATASET]))
 
@@ -118,6 +142,7 @@ class LoadDataDriveReversibleTest(unittest.TestCase):
 
     def test_bad_name_reversible(self):
         from tests.sampletest.datatest import BadCharCaseTest, bad_drive_data
+
         tests = self.loader.load("tests.sampletest.datatest.BadCharCaseTest")
         self.assertEqual(len(tests), len(bad_drive_data))
         self.assertEqual(type(tests[0]), BadCharCaseTest)
@@ -129,5 +154,5 @@ class LoadDataDriveReversibleTest(unittest.TestCase):
 
 
 if __name__ == "__main__":
-#     unittest.main(defaultTest="LoadDataDriveReversibleTest")
+    #     unittest.main(defaultTest="LoadDataDriveReversibleTest")
     unittest.main()

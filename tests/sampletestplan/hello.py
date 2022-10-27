@@ -5,7 +5,6 @@ from testbase.resource import LocalResourceHandler, LocalResourceManagerBackend
 
 
 class HelloResourceHandler(LocalResourceHandler):
-
     def iter_resource(self, res_type, res_group=None, condition=None):
         for i in range(2):
             yield {"id": i + 1}
@@ -31,5 +30,5 @@ class HelloTestPlan(TestPlan):
         report.info("plan", "resource_teardown-%s-%s" % (res_type, resource["id"]))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     HelloTestPlan().debug_run()

@@ -24,9 +24,8 @@ class _NotExistedItem(object):
     pass
 
 
-class modify_settings(object):
-    """temporarily modify settings
-    """
+class modify_settings(object):  # pylint: disable=invalid-name
+    """temporarily modify settings"""
 
     def __init__(self, **kwargs):
         self.new_conf = kwargs
@@ -52,9 +51,8 @@ class modify_settings(object):
         settings._Settings__sealed = True
 
 
-class modify_environ(object):
-    """temporarily modify envrion
-    """
+class modify_environ(object):  # pylint: disable=invalid-name
+    """temporarily modify envrion"""
 
     def __init__(self, **kwargs):
         self.new_conf = kwargs
@@ -74,9 +72,9 @@ class modify_environ(object):
                 os.environ[key] = old_value
 
 
-class modify_attributes(object):
-    """temporarily modify attributes
-    """
+class modify_attributes(object):  # pylint: disable=invalid-name
+    """temporarily modify attributes"""
+
     _lock = threading.Lock()
 
     def __init__(self, target, key_values):

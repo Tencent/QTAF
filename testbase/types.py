@@ -15,8 +15,9 @@
 """qtaf related types
 """
 
-import pkg_resources
 import traceback
+
+import pkg_resources
 
 from testbase import runner, report, resource, logger
 
@@ -28,8 +29,9 @@ runner_types = {}
 report_types = {}
 resmgr_backend_types = {}
 
+
 def __init_runner_types():
-    global runner_types
+    global runner_types  # pylint: disable=invalid-name
     if runner_types:
         return
     runner_types["basic"] = runner.TestRunner
@@ -39,35 +41,41 @@ def __init_runner_types():
         if ep.name not in runner_types:
             try:
                 runner_types[ep.name] = ep.load()
-            except:
+            except Exception:  # pylint: disable=broad-except
                 stack = traceback.format_exc()
-                logger.warn("load TestRunner type for %s failed:\n%s" % (ep.name, stack))
+                logger.warn(
+                    "load TestRunner type for %s failed:\n%s" % (ep.name, stack)
+                )
 
 
 def __init_report_types():
-    global report_types
+    global report_types  # pylint: disable=invalid-name
     if report_types:
         return
-    report_types.update({
-        "empty"  : report.EmptyTestReport,
-        "stream" : report.StreamTestReport,
-        "xml"    : report.XMLTestReport,
-        "json"   : report.JSONTestReport,
-        "html"   : report.HtmlTestReport,
-    })
+    report_types.update(
+        {
+            "empty": report.EmptyTestReport,
+            "stream": report.StreamTestReport,
+            "xml": report.XMLTestReport,
+            "json": report.JSONTestReport,
+            "html": report.HtmlTestReport,
+        }
+    )
 
     # Register other `ITestReport` implementations from entry points
     for ep in pkg_resources.iter_entry_points(REPORT_ENTRY_POINT):
         if ep.name not in report_types:
             try:
                 report_types[ep.name] = ep.load()
-            except:
+            except Exception:  # pylint: disable=broad-except
                 stack = traceback.format_exc()
-                logger.warn("load ITestReport entry point for %s failed:\n%s" % (ep.name, stack))
+                logger.warn(
+                    "load ITestReport entry point for %s failed:\n%s" % (ep.name, stack)
+                )
 
 
 def __init_resmgr_backend_types():
-    global resmgr_backend_types
+    global resmgr_backend_types  # pylint: disable=invalid-name
     if resmgr_backend_types:
         return
     resmgr_backend_types["local"] = resource.LocalResourceManagerBackend
@@ -84,4 +92,3 @@ del __init_report_types
 
 __init_resmgr_backend_types()
 del __init_resmgr_backend_types
-

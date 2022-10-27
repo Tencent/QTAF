@@ -1,6 +1,9 @@
 执行测试
 ============
 
+
+.. _CmdRuntest:
+
 命令行执行测试
 ----------------------
 
@@ -192,6 +195,68 @@ windows下会自动通过IE打开。无命令行参数。
 
 * --retries，用例失败后的最大重试次数，默认为0，不重试。
 
+
+使用配置文件执行测试
+-------------------------
+
+.. _config_file:
+
+====================
+配置文件说明
+====================
+
+
+基于《:ref:`CmdRunTest`》，QTA支持将所有命令行参数存放于配置文件中，使用命令::
+
+    $ python manage.py runtest --config-file test.json
+
+即可执行测试（test.json为配置文件存放路径）。
+
+配置文件示例如下 test.json::
+
+    {
+        "tests": ["zoo", "foo", "bar"],
+        "excluded_name": [],
+        "owner": [],
+        "priority": ["BVT", "High"],
+        "status": ["Design", "Ready"],
+        "tag": [],
+        "excluded_tag": [],
+        "working_dir": null,
+        "stop_on_failure": true,
+        "execute_type": "random",
+        "report_type": "stream",
+        "report_args": "",
+        "resmgr_backend_type": "local",
+        "runner_type": "basic",
+        "runner_args": "",
+        "share_data": {},
+        "global_parameters": {}
+    }
+
+`test.json`中的参数基本分别对应《:ref:`CmdRunTest`》中说明的参数列表。
+
+====================
+顺序执行用例
+====================
+
+使用“:ref:`config_file`”，我们可以按照我们指定的顺序来执行我们指定的用例，只需要在配置文件中将 **execute_type** 配置为 **sequential** ，那么QTAF就会按照配置文件中tests配置的用例顺序依次执行用例。示例如下::
+
+    {
+        "tests": ["zoo.test.HelloTest1", "zoo.test.HelloTest2", "zoo.test.HelloTest3"],
+        "execute_type": "sequential"
+    }
+
+对于上面的配置文件，QTAF在执行的时候就会按顺序执行 `zoo.test.HelloTest1`、 `zoo.test.HelloTest2`、 `zoo.test.HelloTest3` 这三个用例。
+
+如果tests中配置的是用例集::
+
+    {
+        "tests": ["zoo", "foo", "bar"],
+        "execute_type": "sequential"
+    }
+
+那么在执行过程中，就会先执行完 `zoo` 用例集中的所有用例，再执行 `foo` 用例集中的所有用例，最后执行 `bar` 用例集中的所有用例。而对于在 `zoo` 用例集中的用例执行顺序，则按照用例加载顺序依次执行， `foo`、 `bar` 同理。
 
 自定义代码执行测试
 -------------------------
