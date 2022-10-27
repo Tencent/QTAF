@@ -199,7 +199,8 @@ class TestResultBase(object):
         '''
         return self.__last_failed_stage
 
-    def set_last_failed_stage(self, last_failed_stage):
+    @last_failed_stage.setter
+    def last_failed_stage(self, last_failed_stage):
         '''更新测试用例最后失败的阶段
 
         :param value: 阶段名
