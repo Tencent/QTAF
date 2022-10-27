@@ -139,6 +139,7 @@ class TestResultBase(object):
         self.__failed_info = ""
         self.__failed_priority = 0
         self._custom_result = None
+        self.__last_failed_stage = None
 
     @property
     def testcase(self):
@@ -189,6 +190,23 @@ class TestResultBase(object):
         :returns: float
         """
         return self.__end_time
+
+    @property
+    def last_failed_stage(self):
+        '''测试用例最后失败的阶段
+
+        :returns: str
+        '''
+        return self.__last_failed_stage
+
+    @last_failed_stage.setter
+    def last_failed_stage(self, last_failed_stage):
+        '''更新测试用例最后失败的阶段
+
+        :param value: 阶段名
+        :type value: str
+        '''
+        self.__last_failed_stage = last_failed_stage
 
     def begin_test(self, testcase):
         """开始执行测试用例
@@ -611,6 +629,8 @@ class XmlResult(TestResultBase):
             "duration",
             "%02d:%02d:%02.2f\n" % _convert_timelength(self.end_time - self.begin_time),
         )
+        if self.last_failed_stage:
+            self._testnode.setAttribute('last_failed_stage', str(self.last_failed_stage))
         if self._file_path:
             with codecs_open(smart_text(self._file_path), "wb") as fd:
                 fd.write(to_pretty_xml(self._xmldoc))
