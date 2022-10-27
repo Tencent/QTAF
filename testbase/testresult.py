@@ -573,7 +573,7 @@ class XmlResult(TestResultBase):
         self._testnode.setAttribute('endtime', time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(self.end_time)))
         self._testnode.setAttribute('duration', "%02d:%02d:%02.2f\n" % _convert_timelength(self.end_time - self.begin_time))
         if self.last_failed_stage:
-            self._testnode.setAttribute('last_failed_stage', self.last_failed_stage)
+            self._testnode.setAttribute('last_failed_stage', str(self.last_failed_stage))
         if self._file_path:
             with codecs_open(smart_text(self._file_path), 'wb') as fd:
                 fd.write(to_pretty_xml(self._xmldoc))
