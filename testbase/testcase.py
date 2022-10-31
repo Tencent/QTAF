@@ -232,6 +232,7 @@ class TestCase(object):
         self.__resmgr = None
         self.__share_data_mgr = None
         self.__test_doc = None
+        self.__current_stage = None
 
         # 参数相关
         self.__params_definitions = {}  # add_params原始的用例参数数据
@@ -379,6 +380,14 @@ class TestCase(object):
     @property
     def dynamic_params(self):
         return self.__dynamic_params
+
+    @property
+    def current_stage(self):
+        return self.__current_stage
+
+    @current_stage.setter
+    def current_stage(self, current_stage):
+        self.__current_stage = current_stage
 
     def get_test_extra_properties(self):
         var_dicts = {}
@@ -989,6 +998,7 @@ class TestCaseRunner(ITestCaseRunner):
 
                 if isinstance(it, str):
                     try:
+                        self._testcase.current_stage = it
                         if it in ["init_test", "initTest"]:
                             getattr(self._testcase, it)(self._testresult)
                         else:
@@ -1013,7 +1023,7 @@ class TestCaseRunner(ITestCaseRunner):
                                         self._subtasks.popleft()
                     except BaseException:  # pylint: disable=broad-except
                         self._testresult.exception("%s执行失败" % it)
-                        self._testresult.add_failed_stage(it)
+                        # self._testresult.add_failed_stage(it)
                         if settings.get("QTAF_FAILED_SKIP_RUNTEST", False) and it in [
                             "pre_test",
                             "preTest",

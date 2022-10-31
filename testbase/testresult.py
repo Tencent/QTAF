@@ -267,6 +267,8 @@ class TestResultBase(object):
             raise ValueError("msg='%r'必须是string类型" % msg)
         msg = smart_text(msg)
         if level >= EnumLogLevel.ERROR:
+            if self.__testcase.current_stage:
+                self.add_failed_stage(self.__testcase.current_stage)
             self.__steps_passed[self.__curr_step] = False
             if level > self.__error_level:
                 self.__error_level = level
