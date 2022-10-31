@@ -206,7 +206,7 @@ class TestResultBase(object):
         :type value: str
         '''
         if isinstance(failed_stage, str):
-            self.__failed_stages.append(failed_stage)
+            self.failed_stages.append(failed_stage)
 
     def begin_test(self, testcase):
         """开始执行测试用例
