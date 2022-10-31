@@ -1013,7 +1013,7 @@ class TestCaseRunner(ITestCaseRunner):
                                         self._subtasks.popleft()
                     except BaseException:  # pylint: disable=broad-except
                         self._testresult.exception("%s执行失败" % it)
-                        self._testresult.add_failed_stages(it)
+                        self._testresult.add_failed_stage(it)
                         if settings.get("QTAF_FAILED_SKIP_RUNTEST", False) and it in [
                             "pre_test",
                             "preTest",

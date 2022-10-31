@@ -199,7 +199,7 @@ class TestResultBase(object):
         '''
         return self.__failed_stages
 
-    def add_failed_stages(self, failed_stage):
+    def add_failed_stage(self, failed_stage):
         '''增加测试用例失败的阶段
 
         :param value: 阶段名
