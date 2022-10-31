@@ -232,7 +232,6 @@ class TestCase(object):
         self.__resmgr = None
         self.__share_data_mgr = None
         self.__test_doc = None
-        self.__current_stage = None
 
         # 参数相关
         self.__params_definitions = {}  # add_params原始的用例参数数据
@@ -383,11 +382,13 @@ class TestCase(object):
 
     @property
     def current_stage(self):
-        return self.__current_stage
+        if "current_stage" in self.__params:
+            return self.__params["current_stage"]
+        return None
 
     @current_stage.setter
     def current_stage(self, current_stage):
-        self.__current_stage = current_stage
+        self.__params["current_stage"] = current_stage
 
     def get_test_extra_properties(self):
         var_dicts = {}
