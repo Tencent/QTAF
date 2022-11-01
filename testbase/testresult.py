@@ -139,7 +139,7 @@ class TestResultBase(object):
         self.__failed_info = ""
         self.__failed_priority = 0
         self._custom_result = None
-        self.__last_failed_stage = None
+        self.__failed_stages = []
 
     @property
     def testcase(self):
@@ -192,21 +192,21 @@ class TestResultBase(object):
         return self.__end_time
 
     @property
-    def last_failed_stage(self):
-        '''测试用例最后失败的阶段
+    def failed_stages(self):
+        '''测试用例失败的阶段
 
         :returns: str
         '''
-        return self.__last_failed_stage
+        return self.__failed_stages
 
-    @last_failed_stage.setter
-    def last_failed_stage(self, last_failed_stage):
-        '''更新测试用例最后失败的阶段
+    def add_failed_stage(self, failed_stage):
+        '''增加测试用例失败的阶段
 
         :param value: 阶段名
         :type value: str
         '''
-        self.__last_failed_stage = last_failed_stage
+        if isinstance(failed_stage, str):
+            self.failed_stages.append(failed_stage)
 
     def begin_test(self, testcase):
         """开始执行测试用例
@@ -267,6 +267,8 @@ class TestResultBase(object):
             raise ValueError("msg='%r'必须是string类型" % msg)
         msg = smart_text(msg)
         if level >= EnumLogLevel.ERROR:
+            if self.__testcase.current_stage:
+                self.add_failed_stage(self.__testcase.current_stage)
             self.__steps_passed[self.__curr_step] = False
             if level > self.__error_level:
                 self.__error_level = level
@@ -629,8 +631,8 @@ class XmlResult(TestResultBase):
             "duration",
             "%02d:%02d:%02.2f\n" % _convert_timelength(self.end_time - self.begin_time),
         )
-        if self.last_failed_stage:
-            self._testnode.setAttribute('last_failed_stage', str(self.last_failed_stage))
+        if self.failed_stages:
+            self._testnode.setAttribute('failed_stages', "|".join(self.failed_stages))
         if self._file_path:
             with codecs_open(smart_text(self._file_path), "wb") as fd:
                 fd.write(to_pretty_xml(self._xmldoc))
