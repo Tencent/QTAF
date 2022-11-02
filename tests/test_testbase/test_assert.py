@@ -18,6 +18,7 @@
 import unittest
 
 from testbase.testcase import TestCase
+from testbase.assertion import _AssertHookedCache
 from testbase.datadrive import DataDrive
 from testbase.test import modify_settings
 
@@ -78,6 +79,14 @@ class AssertionDatadriveTest(AssertionFailureTest):
 
 class AssertionTest(unittest.TestCase):
     """unit test for assertion"""
+
+    def setUp(self):
+        _AssertHookedCache().clear()
+        self.case = AssertionFailureTest()
+        self.code = self.case.run_test.__func__.__code__
+
+    def tearDown(self):
+        self.case.run_test.__func__.__code__ = self.code
 
     def is_func_rewritten(self, new_func, old_code):
         new_code = new_func.__func__.__code__
