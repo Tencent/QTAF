@@ -715,6 +715,9 @@ class _AssertHookedCache(six.with_metaclass(Singleton, object)):
         else:
             raise ValueError("func must be a callable type or object")
 
+    def clear(self):
+        self.__cache.clear()
+
 
 if __name__ == "__main__":
     pass
