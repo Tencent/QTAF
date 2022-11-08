@@ -130,6 +130,9 @@ class AssertionRewriter(ast.NodeVisitor):
             _AssertHookedCache().add(func)
             return
 
+        pos = 0
+        lineno = func_node.lineno
+        col_offset = func_node.col_offset
         # compatibility with py 2 and 3
         if sys.version_info[0] == 3:
             builtins_mod = "builtins"
@@ -151,9 +154,6 @@ class AssertionRewriter(ast.NodeVisitor):
                 ast.alias(builtins_mod, "_py_builtins_"),
                 ast.alias("testbase.assertion", "_qtaf_assert_"),
             ]
-        pos = 0
-        lineno = func_node.lineno
-        col_offset = func_node.col_offset
 
         imports = [
             ast.Import([alias], lineno=lineno, col_offset=col_offset)
@@ -162,7 +162,7 @@ class AssertionRewriter(ast.NodeVisitor):
         imports.append(
             ast.ImportFrom(
                 module="testbase.testresult",
-                names=[ast.alias("EnumLogLevel", None)],
+                names=[ast.alias("EnumLogLevel", None, lineno=lineno, col_offset=col_offset)], #这里的lineno 和col_offset应该取啥
                 level=0,
                 lineno=lineno,
                 col_offset=col_offset,
