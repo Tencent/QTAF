@@ -135,10 +135,22 @@ class AssertionRewriter(ast.NodeVisitor):
             builtins_mod = "builtins"
         else:
             builtins_mod = "__builtin__"
-        aliases = [
-            ast.alias(builtins_mod, "_py_builtins_"),
-            ast.alias("testbase.assertion", "_qtaf_assert_"),
-        ]
+        # Now actually insert the special imports.
+        if sys.version_info >= (3, 10):
+            aliases = [
+                ast.alias(builtins_mod, "_py_builtins_", lineno=lineno, col_offset=0),
+                ast.alias(
+                    "testbase.assertion",
+                    "_qtaf_assert_",
+                    lineno=lineno,
+                    col_offset=0,
+                ),
+            ]
+        else:
+            aliases = [
+                ast.alias(builtins_mod, "_py_builtins_"),
+                ast.alias("testbase.assertion", "_qtaf_assert_"),
+            ]
         pos = 0
         lineno = func_node.lineno
         col_offset = func_node.col_offset
