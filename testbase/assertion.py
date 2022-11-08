@@ -159,15 +159,26 @@ class AssertionRewriter(ast.NodeVisitor):
             ast.Import([alias], lineno=lineno, col_offset=col_offset)
             for alias in aliases
         ]
-        imports.append(
-            ast.ImportFrom(
-                module="testbase.testresult",
-                names=[ast.alias("EnumLogLevel", None, lineno=lineno, col_offset=col_offset)], #这里的lineno 和col_offset应该取啥
-                level=0,
-                lineno=lineno,
-                col_offset=col_offset,
+        if sys.version_info >= (3, 10):
+            imports.append(
+                ast.ImportFrom(
+                    module="testbase.testresult",
+                    names=[ast.alias("EnumLogLevel", None, lineno=lineno, col_offset=0)],
+                    level=0,
+                    lineno=lineno,
+                    col_offset=col_offset,
+                )
             )
-        )
+        else:
+            imports.append(
+                ast.ImportFrom(
+                    module="testbase.testresult",
+                    names=[ast.alias("EnumLogLevel", None)],
+                    level=0,
+                    lineno=lineno,
+                    col_offset=col_offset,
+                )
+            )
         func_node.body[pos:pos] = imports
         nodes = [func_node]
         self.rewrite_code = False
