@@ -130,32 +130,55 @@ class AssertionRewriter(ast.NodeVisitor):
             _AssertHookedCache().add(func)
             return
 
+        pos = 0
+        lineno = func_node.lineno
+        col_offset = func_node.col_offset
         # compatibility with py 2 and 3
         if sys.version_info[0] == 3:
             builtins_mod = "builtins"
         else:
             builtins_mod = "__builtin__"
-        aliases = [
-            ast.alias(builtins_mod, "_py_builtins_"),
-            ast.alias("testbase.assertion", "_qtaf_assert_"),
-        ]
-        pos = 0
-        lineno = func_node.lineno
-        col_offset = func_node.col_offset
+        # Now actually insert the special imports.
+        if sys.version_info >= (3, 10):
+            aliases = [
+                ast.alias(builtins_mod, "_py_builtins_", lineno=lineno, col_offset=0),
+                ast.alias(
+                    "testbase.assertion",
+                    "_qtaf_assert_",
+                    lineno=lineno,
+                    col_offset=0,
+                ),
+            ]
+        else:
+            aliases = [
+                ast.alias(builtins_mod, "_py_builtins_"),
+                ast.alias("testbase.assertion", "_qtaf_assert_"),
+            ]
 
         imports = [
             ast.Import([alias], lineno=lineno, col_offset=col_offset)
             for alias in aliases
         ]
-        imports.append(
-            ast.ImportFrom(
-                module="testbase.testresult",
-                names=[ast.alias("EnumLogLevel", None)],
-                level=0,
-                lineno=lineno,
-                col_offset=col_offset,
+        if sys.version_info >= (3, 10):
+            imports.append(
+                ast.ImportFrom(
+                    module="testbase.testresult",
+                    names=[ast.alias("EnumLogLevel", None, lineno=lineno, col_offset=0)],
+                    level=0,
+                    lineno=lineno,
+                    col_offset=col_offset,
+                )
             )
-        )
+        else:
+            imports.append(
+                ast.ImportFrom(
+                    module="testbase.testresult",
+                    names=[ast.alias("EnumLogLevel", None)],
+                    level=0,
+                    lineno=lineno,
+                    col_offset=col_offset,
+                )
+            )
         func_node.body[pos:pos] = imports
         nodes = [func_node]
         self.rewrite_code = False
