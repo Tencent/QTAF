@@ -114,6 +114,7 @@ class ExtraInfoTest(testbase.TestCase):
     timeout = 1
     priority = testbase.TestCase.EnumPriority.Normal
     dev_owner = "foo"
+    name = "测试123"
 
     test_extra_info_def = [("dev_owner", "开发负责人")]
 
