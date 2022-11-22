@@ -213,6 +213,7 @@ class TestCase(object):
         "begintime",
         "endtime",
         "duration",
+        "name",
     ]
 
     def __init__(self, testdata=None, testdataname=None, attrs=None):
