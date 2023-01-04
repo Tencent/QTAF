@@ -23,7 +23,6 @@ from testbase.util import ensure_binary_stream, smart_binary
 
 _stream, _encoding = ensure_binary_stream(sys.stdout)
 
-
 class _Formatter(logging.Formatter):
     def format(self, record):
         s = super(_Formatter, self).format(record)
@@ -106,3 +105,13 @@ def addHandler(hdlr):  # pylint: disable=invalid-name
 def removeHandler(hdlr):  # pylint: disable=invalid-name
     """Remove the specified handler from this logger."""
     _logger.removeHandler(hdlr)
+
+def setFormatter(fmt):
+    """Set the specified formatter to this logger.
+    """
+    class __formatter(_Formatter):
+        def __init__(self, fmt):
+            super(_Formatter, self).__init__(fmt)
+
+    formatter = __formatter(fmt)
+    _stream_handler.setFormatter(formatter)
