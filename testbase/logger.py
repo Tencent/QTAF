@@ -113,5 +113,9 @@ def setFormatter(fmt):
         def __init__(self, fmt):
             super(_Formatter, self).__init__(fmt)
 
-    formatter = __formatter(fmt)
-    _stream_handler.setFormatter(formatter)
+    _stream_handler.setFormatter(__formatter(fmt))
+
+def setLevel(level):
+    """Set the specified log level to this logger.
+    """
+    _logger.setLevel(level)
