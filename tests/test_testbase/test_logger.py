@@ -40,7 +40,7 @@ class LoggerTest(unittest.TestCase):
             handler = TestHandler()
             logger._stream_handler = handler
 
-            logger.setFormatter('[%(message)s]')
+            logger.set_formatter('[%(message)s]')
             logger.info('www')
             last = handler.messages[-1]
 
@@ -53,7 +53,7 @@ class LoggerTest(unittest.TestCase):
             handler = TestHandler()
             logger._stream_handler = handler
 
-            logger.setLevel(logging.ERROR)
+            logger.set_level(logging.ERROR)
             logger.info('www')
 
             self.assertTrue(len(handler.messages) == 0)
