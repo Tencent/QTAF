@@ -15,9 +15,14 @@
 """logger test
 """
 
+import sys
 import logging
 import unittest
 from testbase import logger
+if sys.version_info < (3, 3):
+    from imp import reload
+else:
+    from importlib import reload
 
 class TestHandler(logging.Handler):
     def __init__(self, *args, **kwargs):
