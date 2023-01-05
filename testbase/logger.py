@@ -106,7 +106,7 @@ def removeHandler(hdlr):  # pylint: disable=invalid-name
     """Remove the specified handler from this logger."""
     _logger.removeHandler(hdlr)
 
-def setFormatter(fmt):
+def set_formatter(fmt):
     """Set the specified formatter to this logger.
     """
     class __formatter(_Formatter):
@@ -115,7 +115,7 @@ def setFormatter(fmt):
 
     _stream_handler.setFormatter(__formatter(fmt))
 
-def setLevel(level):
+def set_level(level):
     """Set the specified log level to this logger.
     """
     _logger.setLevel(level)
