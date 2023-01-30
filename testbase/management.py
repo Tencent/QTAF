@@ -273,7 +273,7 @@ class RunTest(Command):
 
     parser.add_argument("--config-file", help="runtime config file path")
 
-    ARGS_MAP = {
+    COMPLEX_ARG_MAP = {
         "priority": "priorities",
         "excluded_name": "excluded_names",
         "owner": "owners",
@@ -303,8 +303,8 @@ class RunTest(Command):
             with open(args.config_file, "r") as fp:
                 data = json.load(fp)
                 for k, value in data.items():
-                    if k in self.ARGS_MAP.keys():
-                        k = self.ARGS_MAP[k]
+                    if k in self.COMPLEX_ARG_MAP.keys():
+                        k = self.COMPLEX_ARG_MAP[k]
                     setattr(args, k, value)
 
         if args.report_args_help:
