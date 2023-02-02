@@ -273,6 +273,14 @@ class RunTest(Command):
 
     parser.add_argument("--config-file", help="runtime config file path")
 
+    COMPLEX_ARG_MAP = {
+        "priority": "priorities",
+        "excluded_name": "excluded_names",
+        "owner": "owners",
+        "tag": "tags",
+        "excluded_tag": "excluded_tags",
+    }
+
     def run_args_parser(self, runner_args):
         """兼容参数传入concurrency=5,retries=1，支持subprocess shell=False"""
         regex_c = re.compile(r"(\w+=\w+)+")
@@ -295,6 +303,8 @@ class RunTest(Command):
             with open(args.config_file, "r") as fp:
                 data = json.load(fp)
                 for k, value in data.items():
+                    if k in self.COMPLEX_ARG_MAP.keys():
+                        k = self.COMPLEX_ARG_MAP[k]
                     setattr(args, k, value)
 
         if args.report_args_help:
