@@ -356,6 +356,23 @@ class RunnerTest(unittest.TestCase):
                 sys.modules["__main__"] = old_main
                 sys.modules["__main__"].__file__ = old_main_file
 
+    def test_filter_with_reason(self):
+        runner_type = runner.TestRunner
+        report = TestReport()
+        r = runner_type(report)
+        r.run(
+            runner.TestCaseSettings(
+                ["tests.sampletest.runnertest.FilterCustomTest"]
+            )
+        )
+        testresults = {}
+        for it in report.logs:
+            if it[0] == "log_test_result":
+                testresults[it[1]] = it[2]
+        for _, testresult in testresults.items():
+            self.assertEqual(True, testresult.passed)
+            self.assertEqual("xxx", testresult._custom_reason)
+
 
 if __name__ == "__main__":
     unittest.main()
