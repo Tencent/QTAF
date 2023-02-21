@@ -1026,6 +1026,15 @@ class TestCaseRunner(ITestCaseRunner):
                                         "postTest",
                                     ]:
                                         self._subtasks.popleft()
+                            elif task_result and isinstance(
+                                task_result, tuple
+                            ):
+                                self._testresult.customize_result_reason(task_result[0], task_result[1])
+                                while self._subtasks[0] not in [
+                                        "post_test",
+                                        "postTest",
+                                    ]:
+                                        self._subtasks.popleft()
                     except BaseException:  # pylint: disable=broad-except
                         self._testresult.exception("%s执行失败" % it)
                         if settings.get("QTAF_FAILED_SKIP_RUNTEST", False) and it in [

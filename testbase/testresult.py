@@ -139,6 +139,7 @@ class TestResultBase(object):
         self.__failed_info = ""
         self.__failed_priority = 0
         self._custom_result = None
+        self._custom_reason = None
         self.__failed_stages = []
 
     @property
@@ -420,6 +421,10 @@ class TestResultBase(object):
     def customize_result(self, result):
         self._custom_result = result
 
+    def customize_result_reason(self, result, reason):
+        self._custom_result = result
+        self._custom_reason = reason
+
 
 class EmptyResult(TestResultBase):
     """不输出"""
@@ -624,6 +629,8 @@ class XmlResult(TestResultBase):
         if self._custom_result:
             test_result = str(self._custom_result)
         self._testnode.setAttribute("result", test_result)
+        if self._custom_reason:
+            self._testnode.setAttribute("reason", self._custom_reason)
         self._testnode.setAttribute(
             "endtime", time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(self.end_time))
         )
