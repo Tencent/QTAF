@@ -63,7 +63,7 @@ class FilterCustomTest(TestCase):
     owner = "foo"
     status = TestCase.EnumStatus.Ready
     priority = TestCase.EnumPriority.Normal
-    expect_passed = False
+    expect_passed = True
 
     def pre_test(self):
         return testresult.TestResultType.FILTERED, "xxx"
