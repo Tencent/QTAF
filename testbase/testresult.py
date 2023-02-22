@@ -418,12 +418,10 @@ class TestResultBase(object):
         """
         pass
 
-    def customize_result(self, result):
+    def customize_result(self, result, reason=None):
         self._custom_result = result
-
-    def customize_result_reason(self, result, reason):
-        self._custom_result = result
-        self._custom_reason = reason
+        if reason:
+            self._custom_reason = reason
 
 
 class EmptyResult(TestResultBase):

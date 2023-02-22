@@ -985,6 +985,23 @@ class TestCaseRunner(ITestCaseRunner):
 
         self._walk_bases(testcase)
 
+    def _check_valid_customize_result(self, task_result, reason=None):
+        valid_task_result = False
+        for name in TestResultType.__dict__:
+            value = TestResultType.__dict__[name]
+            if task_result == value:
+                valid_task_result = True
+                break
+        if not valid_task_result:
+            self._testresult.warning("指定的自定义状态不支持，用例将继续执行")
+        else:
+            self._testresult.customize_result(task_result, reason)
+            while self._subtasks[0] not in [
+                "post_test",
+                "postTest",
+            ]:
+                self._subtasks.popleft()
+
     def _thread_run(self):
         """测试用例线程过程"""
         #                     函数时发生了死锁，故注释掉。观察一段时间，看修改是否会影响测试。
@@ -1008,33 +1025,16 @@ class TestCaseRunner(ITestCaseRunner):
                             getattr(self._testcase, it)(self._testresult)
                         else:
                             task_result = getattr(self._testcase, it)()
-                            if task_result and isinstance(
-                                task_result, six.string_types
-                            ):
-                                valid_task_result = False
-                                for name in TestResultType.__dict__:
-                                    value = TestResultType.__dict__[name]
-                                    if task_result == value:
-                                        valid_task_result = True
-                                        break
-                                if not valid_task_result:
-                                    self._testresult.warning("指定的自定义状态不支持，用例将继续执行")
-                                else:
-                                    self._testresult.customize_result(task_result)
-                                    while self._subtasks[0] not in [
-                                        "post_test",
-                                        "postTest",
-                                    ]:
-                                        self._subtasks.popleft()
-                            elif task_result and isinstance(
-                                task_result, tuple
-                            ):
-                                self._testresult.customize_result_reason(task_result[0], task_result[1])
-                                while self._subtasks[0] not in [
-                                        "post_test",
-                                        "postTest",
-                                    ]:
-                                        self._subtasks.popleft()
+                            if task_result:
+                                if isinstance(
+                                    task_result, six.string_types
+                                ):
+                                    self._check_valid_customize_result(task_result)
+                                elif isinstance(
+                                    task_result, tuple
+                                ) and len(task_result) > 1:
+                                    result, reason = task_result[0], task_result[1]
+                                    self._check_valid_customize_result(result, reason)
                     except BaseException:  # pylint: disable=broad-except
                         self._testresult.exception("%s执行失败" % it)
                         if settings.get("QTAF_FAILED_SKIP_RUNTEST", False) and it in [
