@@ -3,7 +3,7 @@
 """
 
 from testbase import TestCase
-
+from testbase import testresult
 
 class SuccTest(TestCase):
     """测试示例"""
@@ -56,6 +56,20 @@ class ExceptTest(TestCase):
     def run_test(self):
         raise RuntimeError("fault")
 
+class FilterCustomTest(TestCase):
+    """测试示例"""
+
+    timeout = 1
+    owner = "foo"
+    status = TestCase.EnumStatus.Ready
+    priority = TestCase.EnumPriority.Normal
+    expect_passed = True
+
+    def pre_test(self):
+        return testresult.TestResultType.FILTERED, "xxx"
+
+    def run_test(self):
+        raise RuntimeError
 
 if __name__ == "__main__":
     SuccTest().debug_run()
