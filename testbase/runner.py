@@ -52,7 +52,7 @@ from testbase import serialization
 from testbase.report import TestReportBase
 from testbase.testcase import TestCase, TestCaseRunner
 from testbase.testsuite import TestSuiteBase
-from testbase.testresult import TestResultCollection
+from testbase.testresult import TestResultCollection, TestResultType
 from testbase.resource import TestResourceManager, LocalResourceManagerBackend
 from testbase.plan import TestPlan
 from testbase.util import ShareDataManager
