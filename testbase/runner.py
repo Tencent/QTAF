@@ -325,7 +325,7 @@ class BaseTestRunner(object):
         self.run_all_tests(self.load(target))
         if self._not_run:
             for testcase in self._not_run:
-                self.__report.log_filtered_test(None, testcase, self._error_msg)
+                self.__report.log_not_run_test(testcase, TestResultType.FILTERED, self._error_msg)
         self.resource_teardown(plan)
         plan.test_teardown(self.__report)
         self.__report.end_report()
@@ -1269,6 +1269,10 @@ class MultiProcessTestRunner(BaseTestRunner):
                     if self.stop:   # 如果当前有用例执行失败，配置了stop_on_failure时，停止测试
                         for index in list(self._workers_dict.keys())[::-1]:
                             _worker = self._workers_dict[index]
+                            current_case = _worker.current_testcase()
+                            if worker != _worker:
+                                self._not_run.append(current_case)
+                                self._error_msg = "some testcase failed, stop on failure."  # 其它进程的用例也进入not_run list
                             _worker.stop()
                             del self._workers_dict[index]
                         if len(tests_queue) <= 0:
