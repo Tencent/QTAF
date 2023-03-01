@@ -4,7 +4,8 @@
 
 import unittest
 
-from testbase.testcase import TestCase, SeqTestSuite
+from testbase.testcase import TestCase
+from testbase.testsuite import SeqTestSuite
 from testbase import serialization, datadrive
 
 drive_data = [
