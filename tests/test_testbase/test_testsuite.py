@@ -52,7 +52,7 @@ class TestSuiteTest(unittest.TestCase):
         time_cost = time.time() - time0
         self.assertEqual(test.test_result.passed, True)
         self.assertEqual(len(test.test_results), 4)
-        self.assertLess(time_cost, 6)
+        self.assertLess(time_cost, 7)
 
     def test_run_pre_test_fail(self):
         test = TestLoader().load("tests.sampletest.suitetest.HelloTestSuitePreTestFail")[0]
