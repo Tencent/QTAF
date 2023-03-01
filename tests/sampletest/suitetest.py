@@ -20,7 +20,7 @@ class HelloTest(TestCase):
         # -----------------------------
         with open("1.txt") as fp:
             self.assert_("Check file content", fp.read() == "123456")
-        time.sleep(1)
+        time.sleep(2)
 
 
 class HelloTestSuite(TestSuite):

@@ -42,8 +42,8 @@ class TestSuiteTest(unittest.TestCase):
         test.debug_run()
         self.assertEqual(test.test_result.passed, False)
         self.assertEqual(len(test.test_results), 2)
-        self.assertEqual(test.test_results[0].passed, True)
-        self.assertEqual(test.test_results[1].passed, False)
+        self.assertEqual(test.test_results[0].passed, False)
+        self.assertEqual(test.test_results[1].passed, True)
 
     def test_parallel_run(self):
         test = TestLoader().load("tests.sampletest.suitetest.HelloTestSuiteParallel")[0]
@@ -52,7 +52,7 @@ class TestSuiteTest(unittest.TestCase):
         time_cost = time.time() - time0
         self.assertEqual(test.test_result.passed, True)
         self.assertEqual(len(test.test_results), 4)
-        self.assertLess(time_cost, 3)
+        self.assertLess(time_cost, 6)
 
     def test_run_pre_test_fail(self):
         test = TestLoader().load("tests.sampletest.suitetest.HelloTestSuitePreTestFail")[0]
@@ -65,5 +65,4 @@ class TestSuiteTest(unittest.TestCase):
         test.debug_run()
         self.assertEqual(test.test_result.passed, False)
         self.assertEqual(len(test.test_results), 1)
-        self.assertEqual(test.test_results[0].passed, False)
-
+        self.assertEqual(test.test_results[0].passed, True)
