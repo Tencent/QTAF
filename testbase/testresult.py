@@ -206,6 +206,7 @@ class TestResultBase(object):
         :returns: bool
         """
         from testbase.testsuite import TestSuite
+
         return isinstance(self.testcase, TestSuite)
 
     def add_failed_stage(self, failed_stage):
@@ -306,7 +307,7 @@ class TestResultBase(object):
                 return
             self.handle_log_record(level, msg, record, attachments)
 
-    def  _get_extra_fail_record_safe(self, timeout=300):
+    def _get_extra_fail_record_safe(self, timeout=300):
         """使用线程调用测试用例的get_extra_fail_record"""
 
         def _run(outputs, errors):
@@ -498,10 +499,9 @@ class StreamResult(TestResultBase):
             "测试%s结束时间: %s\n"
             % (name, time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(self.end_time)))
         )
-        self._write(
-            "测试%s执行时间: %02d:%02d:%02.2f\n"
-            % (name, *_convert_timelength(self.end_time - self.begin_time))
-        )
+        items = list(_convert_timelength(self.end_time - self.begin_time))
+        items.insert(0, name)
+        self._write("测试%s执行时间: %02d:%02d:%02.2f\n" % tuple(items))
 
         rsttxts = {True: "通过", False: "失败"}
         test_result = rsttxts[passed]
