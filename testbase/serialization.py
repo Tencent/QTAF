@@ -18,7 +18,7 @@
 
 import sys
 import pickle
-from testbase.testcase import TestSuite
+from testbase.testsuite import TestSuiteBase
 
 
 class _EmptyClass(object):
@@ -31,7 +31,7 @@ def dumps(testcase):
     :param testcase: 测试用例
     :type testcase: TestCase
     """
-    if isinstance(testcase, TestSuite):
+    if isinstance(testcase, TestSuiteBase):
         return {"id": testcase.suite_class_name, "data": pickle.dumps(testcase.dumps())}
     else:
         return {
@@ -59,7 +59,7 @@ def loads(buf):
     module = sys.modules[modulename]
     testclass = getattr(module, classname)
     data = pickle.loads(buf["data"])
-    if issubclass(testclass, TestSuite):
+    if issubclass(testclass, TestSuiteBase):
         obj = _EmptyClass()
         obj.__class__ = testclass
         obj.loads(data)

@@ -194,18 +194,26 @@ class TestResultBase(object):
 
     @property
     def failed_stages(self):
-        '''测试用例失败的阶段
+        """测试用例失败的阶段
 
         :returns: str
-        '''
+        """
         return self.__failed_stages
 
+    def is_testsuite(self):
+        """是否是测试用例套
+
+        :returns: bool
+        """
+        from testbase.testsuite import TestSuite
+        return isinstance(self.testcase, TestSuite)
+
     def add_failed_stage(self, failed_stage):
-        '''增加测试用例失败的阶段
+        """增加测试用例失败的阶段
 
         :param value: 阶段名
         :type value: str
-        '''
+        """
         if isinstance(failed_stage, str):
             self.failed_stages.append(failed_stage)
 
@@ -220,8 +228,8 @@ class TestResultBase(object):
                 raise RuntimeError("此时不可调用begin_test")
             self.__accept_result = True
             self.__begin_time = time.time()
-            self.handle_test_begin(testcase)
             self.__testcase = testcase
+            self.handle_test_begin(testcase)
 
     def end_test(self):
         """结束执行测试用例"""
@@ -298,7 +306,7 @@ class TestResultBase(object):
                 return
             self.handle_log_record(level, msg, record, attachments)
 
-    def _get_extra_fail_record_safe(self, timeout=300):
+    def  _get_extra_fail_record_safe(self, timeout=300):
         """使用线程调用测试用例的get_extra_fail_record"""
 
         def _run(outputs, errors):
@@ -457,12 +465,14 @@ class StreamResult(TestResultBase):
         owner = getattr(testcase, "owner", None)
         priority = getattr(testcase, "priority", None)
         timeout = getattr(testcase, "timeout", None)
-        begin_msg = "测试用例:%s 所有者:%s 优先级:%s 超时:%s分钟\n" % (
+        begin_msg = "测试%s:%s 所有者:%s 优先级:%s 超时:%s分钟\n" % (
+            "套" if self.is_testsuite() else "用例",
             testcase.test_name,
             owner,
             priority,
             timeout,
         )
+
         self._write(begin_msg)
         self._write(self._seperator2)
 
@@ -473,17 +483,24 @@ class StreamResult(TestResultBase):
         :type passed: boolean
         """
         self._write(self._seperator2)
+        name = "用例"
+        if self.is_testsuite():
+            name = "套"
+
         self._write(
-            "测试用例开始时间: %s\n"
-            % time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(self.begin_time))
+            "测试%s开始时间: %s\n"
+            % (
+                name,
+                time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(self.begin_time)),
+            )
         )
         self._write(
-            "测试用例结束时间: %s\n"
-            % time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(self.end_time))
+            "测试%s结束时间: %s\n"
+            % (name, time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(self.end_time)))
         )
         self._write(
-            "测试用例执行时间: %02d:%02d:%02.2f\n"
-            % _convert_timelength(self.end_time - self.begin_time)
+            "测试%s执行时间: %02d:%02d:%02.2f\n"
+            % (name, *_convert_timelength(self.end_time - self.begin_time))
         )
 
         rsttxts = {True: "通过", False: "失败"}
@@ -493,8 +510,8 @@ class StreamResult(TestResultBase):
         steptxt = ""
         for i, ipassed in enumerate(self._step_results):
             steptxt += " %s:%s" % (i + 1, rsttxts[ipassed])
-        self._write("测试用例步骤结果: %s\n" % steptxt)
-        self._write("测试用例最终结果: %s\n" % test_result)
+        self._write("测试%s步骤结果: %s\n" % (name, steptxt))
+        self._write("测试%s最终结果: %s\n" % (name, test_result))
         self._write(self._seperator2)
 
     def handle_step_begin(self, msg):
@@ -637,7 +654,7 @@ class XmlResult(TestResultBase):
             "%02d:%02d:%02.2f\n" % _convert_timelength(self.end_time - self.begin_time),
         )
         if self.failed_stages:
-            self._testnode.setAttribute('failed_stages', "|".join(self.failed_stages))
+            self._testnode.setAttribute("failed_stages", "|".join(self.failed_stages))
         if self._file_path:
             with codecs_open(smart_text(self._file_path), "wb") as fd:
                 fd.write(to_pretty_xml(self._xmldoc))

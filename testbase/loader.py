@@ -29,7 +29,8 @@ from collections import OrderedDict
 import six
 
 from testbase import datadrive
-from testbase.testcase import TestCase, SeqTestSuite
+from testbase.testcase import TestCase
+from testbase.testsuite import SeqTestSuite, TestSuite
 from testbase.conf import settings
 from testbase.util import smart_text
 
@@ -106,9 +107,14 @@ class TestLoader(object):
                         obj, data_key, exclude_data_keys, parameters
                     )
             elif isinstance(obj, type):
-                testcases += self._load_from_class(
-                    obj, data_key, exclude_data_keys, parameters
-                )
+                if issubclass(obj, TestCase):
+                    testcases += self._load_from_class(
+                        obj, data_key, exclude_data_keys, parameters
+                    )
+                elif issubclass(obj, TestSuite):
+                    testcases += self._load_from_testsuite(
+                        obj, data_key, exclude_data_keys, parameters
+                    )
 
         # 过滤掉重复的用例
         testcase_dict = OrderedDict()
@@ -147,8 +153,10 @@ class TestLoader(object):
         elif parts_imp == parts[0:-1] and hasattr(module, parts[-1]):  # 为一个类
             try:
                 testclass = getattr(module, parts[-1])
-                if not self._is_testcase_class(testclass):
-                    raise TypeError("%s不是一个有效的测试用例" % testname)
+                if not self._is_testcase_class(
+                    testclass
+                ) and not self._is_testsuite_class(testclass):
+                    raise TypeError("%s不是一个有效的测试用例(套)" % testname)
             except Exception:  # pylint: disable=broad-except
                 self._module_errs[testname] = traceback.format_exc()
                 return
@@ -178,6 +186,13 @@ class TestLoader(object):
             and hasattr(obj, "runTest")
             and getattr(obj, "priority", None)
         )
+
+    def _is_testsuite_class(self, obj):
+        """是否是测试用例套类
+
+        :returns bool - 是否为用例套类
+        """
+        return isinstance(obj, type) and issubclass(obj, TestSuite)
 
     def _walk_package_error(self, modulename):
         """walk_packages错误回调"""
@@ -247,6 +262,19 @@ class TestLoader(object):
                 tests_list += test_dict[it]
             tests = [SeqTestSuite(tests_list)]
         return tests
+
+    def _load_from_testsuite(
+        self, cls, data_key=None, exclude_data_key=None, attrs=None
+    ):
+        """从测试用例套类加载测试用例"""
+        tests = []
+        for test in cls.testcases:
+            if isinstance(test, str):
+                test = self._load(test)
+            tests += self._load_from_class(
+                test, data_key, exclude_data_key=exclude_data_key, attrs=attrs
+            )
+        return [cls(tests)]
 
     def _load_from_class(self, cls, data_key=None, exclude_data_key=None, attrs=None):
         """加载用例类

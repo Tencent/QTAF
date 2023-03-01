@@ -49,8 +49,9 @@ from six.moves import queue
 from testbase import logger
 from testbase.loader import TestLoader
 from testbase import serialization
-from testbase.testcase import TestCase, TestCaseRunner, TestSuite
 from testbase.report import TestReportBase
+from testbase.testcase import TestCase, TestCaseRunner
+from testbase.testsuite import TestSuiteBase
 from testbase.testresult import TestResultCollection
 from testbase.resource import TestResourceManager, LocalResourceManagerBackend
 from testbase.plan import TestPlan
@@ -367,7 +368,7 @@ class BaseTestRunner(object):
         test.test_resmgr = self._resmgr
         if isinstance(test, TestCase):
             test.share_data_mgr = self._share_data_mgr  # 用于传递共享数据
-        elif isinstance(test, TestSuite):
+        elif isinstance(test, TestSuiteBase):
             for it in test:
                 it.share_data_mgr = self._share_data_mgr
 
