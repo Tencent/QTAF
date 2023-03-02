@@ -456,6 +456,18 @@ class TestSuite(TestSuiteBase):
     def end_test(self, testresults):
         self.__testresults = testresults
 
+    def dumps(self):
+        """序列化"""
+        from testbase import serialization
+
+        return [serialization.dumps(it) for it in self.__testcases]
+
+    def loads(self, buf):
+        """反序列化"""
+        from testbase import serialization
+
+        self.__testcases = [serialization.loads(it) for it in buf]
+
     def debug_run(self):
         """本地调试测试套"""
         from testbase.runner import TestRunner
