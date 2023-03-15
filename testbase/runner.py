@@ -1273,8 +1273,6 @@ class MultiProcessTestRunner(BaseTestRunner):
                             if worker != _worker:
                                 self._not_run.append(current_case)
                                 self._error_msg = "some testcase failed, stop on failure."  # 其它进程的用例也进入not_run list
-                            _worker.stop()
-                            del self._workers_dict[index]
                         if len(tests_queue) <= 0:
                             return
                         while len(tests_queue) > 0:
