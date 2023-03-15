@@ -1128,8 +1128,6 @@ class TestWorker(object):
         self._process.join(5)
         if self._process.is_alive():
             self._process.terminate()
-        if self._monitor.is_alive():
-            self._monitor.join()
 
     def restart(self):
         """重新开始执行"""

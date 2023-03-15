@@ -97,6 +97,7 @@ for name in EnumLogLevel.__dict__:
 
 RESULT_TYPES = ((TestResultType.FILTERED, "被忽略"),)
 
+
 def _convert_timelength(sec):
     h = int(sec / 3600)
     sec -= h * 3600
