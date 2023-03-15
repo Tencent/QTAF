@@ -4,7 +4,8 @@
 
 import unittest
 
-from testbase.testcase import TestCase, SeqTestSuite
+from testbase.testcase import TestCase
+from testbase.testsuite import SeqTestSuite, TestSuite
 from testbase import serialization, datadrive
 
 drive_data = [
@@ -59,7 +60,7 @@ class SerializationTest(unittest.TestCase):
         self.assertEqual(deserialized_test.tags, set(["a", "b", "c"]))
         self.assertEqual(deserialized_test.test_doc, "demo")
 
-    def test_serialize_testsuite(self):
+    def test_serialize_seq_testsuite(self):
         from tests.sampletest.hellotest import HelloTest, TimeoutTest
 
         foo_test = datadrive.load_datadrive_tests(FooTest, 1)[0]
@@ -71,6 +72,13 @@ class SerializationTest(unittest.TestCase):
             self.assertEqual(type(deserialized_test), type(test))
             for attr in ["owner", "timeout", "priority", "status", "tags", "test_doc"]:
                 self.assertEqual(getattr(deserialized_test, attr), getattr(test, attr))
+
+    def test_serialize_testsuite(self):
+        foo_test = datadrive.load_datadrive_tests(FooTest, 1)[0]
+        testsuite = TestSuite([foo_test])
+        data = serialization.dumps(testsuite)
+        deserialized_testsuite = serialization.loads(data)
+        self.assertEqual(len(deserialized_testsuite), len(testsuite))
 
 
 if __name__ == "__main__":
