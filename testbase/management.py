@@ -269,7 +269,7 @@ class RunTest(Command):
     )
 
     parser.add_argument(
-        "--stop",
+        "--stop-on-failure",
         action="store_true",
         help="task stop on failure, default is False.",
         dest="stop_on_failure",
