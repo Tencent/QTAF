@@ -373,6 +373,28 @@ class RunnerTest(unittest.TestCase):
             self.assertEqual(True, testresult.passed)
             self.assertEqual("xxx", testresult._custom_reason)
 
+    def test_run_stop_on_failure(self):
+        runner_types = [
+            runner.TestRunner,
+            runner.ThreadingTestRunner,
+            runner.MultiProcessTestRunner,
+        ]
+        for runner_type in runner_types:
+            report = TestReport()
+            if runner_type == runner.ThreadingTestRunner:
+                r = runner_type(report, 1)
+            else:
+                r = runner_type(report)
+            r.run(
+                runner.TestCaseSettings(
+                    ["tests.sampletest.runnertest.FailedTest",
+                     "tests.sampletest.runnertest.ExceptTest",
+                     "tests.sampletest.runnertest.ExceptTest2"],
+                    stop=True
+                )
+            )
+            self.assertEqual(2, len(r._not_run))
+
 
 if __name__ == "__main__":
     unittest.main()

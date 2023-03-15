@@ -357,6 +357,7 @@ class RuntestReportTest(TestReportBase):
             args.share_data = None
             args.global_parameters = None
             args.config_file = None
+            args.stop_on_failure = False
 
             with context:
                 self.assertEqual(RunTest().execute(args), 1)
