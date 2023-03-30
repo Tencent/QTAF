@@ -132,11 +132,12 @@ class ITestReport(object):
     def log_not_run_test(self, testcase, testresult_type, reason=""):
         """记录没有执行的用例
 
-        Args:
-            testcase (TestCase): 测试用例
-            testresult (TestResult): 测试结果
-            testresult_type (TestResultType): 自定义测试结果类型
-            reason (str): 原因
+        :param testcase: 测试用例
+        :type testcase: TestCase
+        :param testresult_type: 自定义测试结果类型
+        :type testresult_type: TestResultType
+        :param reason: 原因
+        :type reason: str
         """
         pass
 
