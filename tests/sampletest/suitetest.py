@@ -22,6 +22,12 @@ class HelloTest(TestCase):
             self.assert_("Check file content", fp.read() == "123456")
         time.sleep(2)
 
+        # -----------------------------
+        self.startStep("Check share data")
+        # -----------------------------
+        value = self.get_share_data("suite")
+        self.assert_equal("Check share data", value, "add_share_data")
+
 
 class HelloTestSuite(TestSuite):
     """HelloTestSuite"""
@@ -38,6 +44,7 @@ class HelloTestSuite(TestSuite):
         print("This is pre_test")
         with open("1.txt", "w") as fp:
             fp.write("123456")
+        self.add_share_data("suite", "add_share_data")
 
     def post_test(self):
         print("This is post_test")
