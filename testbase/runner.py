@@ -381,6 +381,7 @@ class BaseTestRunner(object):
         if isinstance(test, TestCase):
             test.share_data_mgr = self._share_data_mgr  # 用于传递共享数据
         elif isinstance(test, TestSuiteBase):
+            test.share_data_mgr = self._share_data_mgr
             for it in test:
                 it.share_data_mgr = self._share_data_mgr
 

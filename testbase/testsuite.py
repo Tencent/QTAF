@@ -474,6 +474,26 @@ class TestSuite(TestSuiteBase):
             return True
         return False
 
+    def add_share_data(self, name, value, level=0):
+        """添加共享数据
+
+        :type name: string
+        :param name: 需要共享的数据名称
+        :param value: 需要共享的数据内容
+        """
+        if self.share_data_mgr:
+            self.share_data_mgr.set(name, value, level)
+
+    def get_share_data(self, name):
+        """从内存中获取存储的全局数据，给当前用例使用"""
+        if self.share_data_mgr:
+            return self.share_data_mgr.get(name)
+
+    def remove_share_data(self, name):
+        """从内存中移除存储的共享数据"""
+        if self.share_data_mgr:
+            return self.share_data_mgr.remove(name)
+
     def get_extra_fail_record(self):
         """当错误发生时，获取需要额外添加的日志记录和附件信息
 
