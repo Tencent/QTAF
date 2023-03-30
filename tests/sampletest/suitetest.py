@@ -48,6 +48,9 @@ class HelloTestSuite(TestSuite):
 
     def post_test(self):
         print("This is post_test")
+        value = self.get_share_data("suite")
+        assert value == "add_share_data"
+        self.remove_share_data("suite")
         os.remove("1.txt")
 
 
