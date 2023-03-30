@@ -268,6 +268,13 @@ class RunTest(Command):
         default="random",
     )
 
+    parser.add_argument(
+        "--stop-on-failure",
+        action="store_true",
+        help="task stop on failure, default is False.",
+        dest="stop_on_failure",
+    )
+
     parser.add_argument("--share-data", help="share data", default="{}")
     parser.add_argument("--global-parameters", help="global parameters", default="")
 
@@ -356,6 +363,7 @@ class RunTest(Command):
             excluded_tags=args.excluded_tags,
             share_data=args.share_data,
             global_parameters=args.global_parameters,
+            stop=args.stop_on_failure,
         )
 
         report_type = report_types[args.report_type]

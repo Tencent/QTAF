@@ -52,7 +52,7 @@ from testbase import serialization
 from testbase.report import TestReportBase
 from testbase.testcase import TestCase, TestCaseRunner
 from testbase.testsuite import TestSuiteBase
-from testbase.testresult import TestResultCollection
+from testbase.testresult import TestResultCollection, TestResultType
 from testbase.resource import TestResourceManager, LocalResourceManagerBackend
 from testbase.plan import TestPlan
 from testbase.util import ShareDataManager
@@ -77,6 +77,7 @@ class TestCaseSettings(object):
         excluded_tags=None,
         share_data=None,
         global_parameters=None,
+        stop=False
     ):
         """构造函数
 
@@ -94,9 +95,12 @@ class TestCaseSettings(object):
         :type tags: list
         :param excluded_tags: 指定标签排除用例
         :type tags: list
+        :param stop: 遇见执行失败时，是否停止测试，如果True则支持，默认False
+        :type stop: bool
         """
         share_data = share_data or {}
         global_parameters = global_parameters or {}
+        self.stop = stop
         if names is None:
             self.names = []
         else:
@@ -223,10 +227,14 @@ class BaseTestRunner(object):
         :type report: ITestReport
         """
         self.__report = report
+        self.stop = False
         if resmgr_backend is None:
             resmgr_backend = LocalResourceManagerBackend()
         self._resmgr = TestResourceManager(resmgr_backend)
         self._execute_type = execute_type
+
+        self._not_run = []  # 未执行的用例
+        self._error_msg = ""    # 错误信息，目前用于未执行的用例
 
         self._share_data_mgr = ShareDataManager()
 
@@ -299,6 +307,7 @@ class BaseTestRunner(object):
             plan = target
             target = plan.get_tests()
         else:
+            self.stop = getattr(target, "stop", False)  # TestCaseSettings stop
 
             class SimplePlan(TestPlan):
                 tests = target
@@ -314,6 +323,9 @@ class BaseTestRunner(object):
         self.__report.log_test_target(plan.get_test_target())
         self.resource_setup(plan)
         self.run_all_tests(self.load(target))
+        if self._not_run:
+            for testcase in self._not_run:
+                self.__report.log_not_run_test(testcase, TestResultType.FILTERED, self._error_msg)
         self.resource_teardown(plan)
         plan.test_teardown(self.__report)
         self.__report.end_report()
@@ -410,6 +422,21 @@ class BaseTestRunner(object):
         """
         raise NotImplementedError()
 
+    def handle_result(self, test, tests_queue, passed, tests_retry_dict):
+        if not passed:
+            if self.stop:
+                if len(tests_queue) <= 0:
+                    return
+                while len(tests_queue) > 0:
+                    testcase = tests_queue.popleft()
+                    self._error_msg = "some testcase failed, stop on failure."
+                    self._not_run.append(testcase)
+                return
+            tests_retry_dict.setdefault(test, 0)
+            if tests_retry_dict[test] < self._retries:
+                tests_retry_dict[test] += 1
+                tests_queue.append(test)
+
 
 class TestRunner(BaseTestRunner):
     """测试执行器"""
@@ -438,11 +465,10 @@ class TestRunner(BaseTestRunner):
         while len(tests_queue) > 0:
             test = tests_queue.popleft()
             passed = self.run_test(test)
-            if not passed:
-                tests_retry_dict.setdefault(test, 0)
-                if tests_retry_dict[test] < self._retries:
-                    tests_retry_dict[test] += 1
-                    tests_queue.append(test)
+            self.handle_result(test=test,
+                             tests_queue=tests_queue,
+                             passed=passed,
+                             tests_retry_dict=tests_retry_dict)
 
     @classmethod
     def get_parser(cls):
@@ -628,11 +654,11 @@ class ThreadingTestRunner(BaseTestRunner):
                 test = tests_queue.pop()
             passed = self.run_test(test)
             with self._lock:
-                if not passed:
-                    tests_retry_dict.setdefault(test, 0)
-                    if tests_retry_dict[test] < self._retries:
-                        tests_retry_dict[test] += 1
-                        tests_queue.append(test)
+                self.handle_result(test=test,
+                                 tests_queue=tests_queue,
+                                 passed=passed,
+                                 tests_retry_dict=tests_retry_dict)
+
 
     @classmethod
     def get_parser(cls):
@@ -1238,6 +1264,20 @@ class MultiProcessTestRunner(BaseTestRunner):
                 test = serialization.loads(msg[2])
                 passed = msg[3]
                 if not passed:
+                    if self.stop:   # 如果当前有用例执行失败，配置了stop_on_failure时，停止测试
+                        for index in list(self._workers_dict.keys())[::-1]:
+                            _worker = self._workers_dict[index]
+                            current_case = _worker.current_testcase()
+                            if worker != _worker:
+                                self._not_run.append(current_case)
+                                self._error_msg = "some testcase failed, stop on failure."  # 其它进程的用例也进入not_run list
+                        if len(tests_queue) <= 0:
+                            return
+                        while len(tests_queue) > 0:
+                            testcase = tests_queue.popleft()
+                            self._error_msg = "some testcase failed, stop on failure."
+                            self._not_run.append(testcase)
+                        return
                     tests_retry_dict.setdefault(test.test_name, 0)
                     if tests_retry_dict[test.test_name] < self._retries:
                         tests_retry_dict[test.test_name] += 1

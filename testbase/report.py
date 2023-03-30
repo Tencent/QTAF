@@ -129,6 +129,18 @@ class ITestReport(object):
         """
         pass
 
+    def log_not_run_test(self, testcase, testresult_type, reason=""):
+        """记录没有执行的用例
+
+        :param testcase: 测试用例
+        :type testcase: TestCase
+        :param testresult_type: 自定义测试结果类型
+        :type testresult_type: TestResultType
+        :param reason: 原因
+        :type reason: str
+        """
+        pass
+
     def log_resource(self, res_type, resource):
         """记录测试使用的资源
 
@@ -260,6 +272,21 @@ class TestReportBase(ITestReport):
         :return: boolean
         """
         return all(self._cases_passed.values()) and len(self._cases_passed) > 0
+
+    def log_not_run_test(self, testcase, testresult_type, reason=""):
+        """记录没有执行的用例
+
+        :param testcase: 测试用例
+        :type testcase: TestCase
+        :param testresult_type: 自定义测试结果类型
+        :type testresult_type: TestResultType
+        :param reason: 原因
+        :type reason: str
+        """
+        result = self.get_testresult_factory().create(testcase)
+        result.customize_result(testresult_type, reason)
+        result.begin_test(testcase)
+        result.end_test()
 
 
 class ITestResultFactory(object):

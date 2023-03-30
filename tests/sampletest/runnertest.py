@@ -71,5 +71,18 @@ class FilterCustomTest(TestCase):
     def run_test(self):
         raise RuntimeError
 
+class ExceptTest2(TestCase):
+    """测试示例"""
+
+    timeout = 1
+    owner = "foo"
+    status = TestCase.EnumStatus.Ready
+    priority = TestCase.EnumPriority.Normal
+    expect_passed = False
+
+    def run_test(self):
+        raise RuntimeError("fault")
+
+
 if __name__ == "__main__":
     SuccTest().debug_run()
