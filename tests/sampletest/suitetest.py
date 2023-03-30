@@ -66,3 +66,11 @@ class HelloTestSuiteParallel(HelloTestSuite):
     testcases = [HelloTest, HelloTest, HelloTest, HelloTest]
     exec_mode = TestSuite.EnumExecMode.Parallel
     concurrency = 2
+
+
+class HelloTestSuiteFilter(HelloTestSuite):
+    testcases = ["sampletest.hellotest.HelloTest", "sampletest.hellotest.HelloTest2", HelloTest]
+    testcase_filter = {
+        "priorities": [TestCase.EnumPriority.Normal],
+        "statuses": [TestCase.EnumStatus.Ready],
+    }
