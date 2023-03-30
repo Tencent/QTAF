@@ -422,7 +422,7 @@ class BaseTestRunner(object):
         """
         raise NotImplementedError()
 
-    def result_deal(self, test, tests_queue, passed, tests_retry_dict):
+    def handle_result(self, test, tests_queue, passed, tests_retry_dict):
         if not passed:
             if self.stop:
                 if len(tests_queue) <= 0:
@@ -465,7 +465,7 @@ class TestRunner(BaseTestRunner):
         while len(tests_queue) > 0:
             test = tests_queue.popleft()
             passed = self.run_test(test)
-            self.result_deal(test=test,
+            self.handle_result(test=test,
                              tests_queue=tests_queue,
                              passed=passed,
                              tests_retry_dict=tests_retry_dict)
@@ -654,7 +654,7 @@ class ThreadingTestRunner(BaseTestRunner):
                 test = tests_queue.pop()
             passed = self.run_test(test)
             with self._lock:
-                self.result_deal(test=test,
+                self.handle_result(test=test,
                                  tests_queue=tests_queue,
                                  passed=passed,
                                  tests_retry_dict=tests_retry_dict)
