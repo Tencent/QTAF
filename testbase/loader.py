@@ -271,6 +271,8 @@ class TestLoader(object):
         for test in cls.testcases:
             if isinstance(test, str):
                 test = self._load(test)
+            if cls.filter(test):
+                continue
             tests += self._load_from_class(
                 test, data_key, exclude_data_key=exclude_data_key, attrs=attrs
             )
