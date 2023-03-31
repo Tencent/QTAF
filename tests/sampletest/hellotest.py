@@ -26,6 +26,7 @@ class HelloTest(testbase.TestCase):
     status = testbase.TestCase.EnumStatus.Ready
     timeout = 1
     priority = testbase.TestCase.EnumPriority.Normal
+    tags = "a", "b"
 
     def run_test(self):
         # -----------------------------
@@ -40,6 +41,22 @@ class HelloTest(testbase.TestCase):
                 "设备723982ef8截图": __file__,
             }
         }
+
+
+class HelloTest2(testbase.TestCase):
+    """测试示例2"""
+
+    owner = "bar"
+    status = testbase.TestCase.EnumStatus.Design
+    timeout = 1
+    priority = testbase.TestCase.EnumPriority.Low
+    tags = "b", "c"
+
+    def run_test(self):
+        # -----------------------------
+        self.startStep("测试")
+        # -----------------------------
+        self.assert_equal("断言失败", False, True)
 
 
 class TimeoutTest(testbase.TestCase):

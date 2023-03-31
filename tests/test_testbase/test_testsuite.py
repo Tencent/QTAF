@@ -19,6 +19,7 @@ import time
 import unittest
 
 from testbase.loader import TestLoader
+from testbase.testcase import TestCase
 from testbase.testsuite import TestSuite, TestSuiteCaseRunner
 
 class TestSuiteTest(unittest.TestCase):
@@ -66,3 +67,46 @@ class TestSuiteTest(unittest.TestCase):
         self.assertEqual(test.test_result.passed, False)
         self.assertEqual(len(test.test_results), 1)
         self.assertEqual(test.test_results[0].passed, True)
+
+    def test_filter(self):
+        testloader = TestLoader()
+        testsuite = "tests.sampletest.suitetest.HelloTestSuiteFilter"
+        testsuite_class = testloader._load(testsuite)
+        test = testloader.load(testsuite)[0]
+        self.assertEqual(len(test), 2)
+
+        testsuite_class.testcase_filter["priorities"] = [TestCase.EnumPriority.Low]
+        testsuite_class.testcase_filter["statuses"] = [TestCase.EnumStatus.Design, TestCase.EnumStatus.Ready]
+        test = testloader.load(testsuite)[0]
+        self.assertEqual(len(test), 1)
+
+        testsuite_class.testcase_filter["priorities"] = [TestCase.EnumPriority.Low, TestCase.EnumPriority.Normal]
+        testsuite_class.testcase_filter["statuses"] = [TestCase.EnumStatus.Design, TestCase.EnumStatus.Ready]
+        test = testloader.load(testsuite)[0]
+        self.assertEqual(len(test), 3)
+
+        testsuite_class.testcase_filter["owners"] = ["foo"]
+        test = testloader.load(testsuite)[0]
+        self.assertEqual(len(test), 2)
+
+        testsuite_class.testcase_filter["owners"] = []
+        testsuite_class.testcase_filter["tags"] = ["a", "b", "c"]
+        test = testloader.load(testsuite)[0]
+        self.assertEqual(len(test), 2)
+
+        testsuite_class.testcase_filter["tags"] = ["a"]
+        test = testloader.load(testsuite)[0]
+        self.assertEqual(len(test), 1)
+
+        testsuite_class.testcase_filter["tags"] = ["b", "c"]
+        test = testloader.load(testsuite)[0]
+        self.assertEqual(len(test), 2)
+
+        testsuite_class.testcase_filter["tags"] = []
+        testsuite_class.testcase_filter["exclude_tags"] = ["a"]
+        test = testloader.load(testsuite)[0]
+        self.assertEqual(len(test), 2)
+
+        testsuite_class.testcase_filter["exclude_tags"] = ["b"]
+        test = testloader.load(testsuite)[0]
+        self.assertEqual(len(test), 1)

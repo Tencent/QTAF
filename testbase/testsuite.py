@@ -337,7 +337,10 @@ class TestSuiteCaseRunner(ITestCaseRunner):
                 )
             elif self._exec_mode == TestSuite.EnumExecMode.Parallel:
                 result = self.parallel_run(
-                    testsuite, testresult_factory, testresult, concurrency=self._concurrency
+                    testsuite,
+                    testresult_factory,
+                    testresult,
+                    concurrency=self._concurrency,
                 )
             else:
                 raise ValueError("Invalid exec mode: %s" % self._exec_mode)
@@ -367,6 +370,7 @@ class TestSuite(TestSuiteBase):
         Sequential = "sequential"
 
     testcases = []
+    testcase_filter = {}
     exec_mode = EnumExecMode.Sequential
     stop_on_failure = True
     concurrency = 1
@@ -428,6 +432,67 @@ class TestSuite(TestSuiteBase):
     @current_stage.setter
     def current_stage(self, value):
         self.__current_stage = value
+
+    @classmethod
+    def filter(cls, testcase):
+        if not cls.testcase_filter:
+            return False
+        priority_list = cls.testcase_filter.get("priorities", [])
+        if (
+            priority_list
+            and isinstance(priority_list, list)
+            and testcase.priority not in priority_list
+        ):
+            return True
+        status_list = cls.testcase_filter.get("statuses", [])
+        if (
+            status_list
+            and isinstance(status_list, list)
+            and testcase.status not in status_list
+        ):
+            return True
+        owner_list = cls.testcase_filter.get("owners", [])
+        if (
+            owner_list
+            and isinstance(owner_list, list)
+            and testcase.owner not in owner_list
+        ):
+            return True
+        tag_list = cls.testcase_filter.get("tags", [])
+        if (
+            tag_list
+            and isinstance(tag_list, list)
+            and set(tag_list).isdisjoint(testcase.tags)
+        ):
+            return True
+        exclude_tag_list = cls.testcase_filter.get("exclude_tags", [])
+        if (
+            exclude_tag_list
+            and isinstance(exclude_tag_list, list)
+            and not set(exclude_tag_list).isdisjoint(testcase.tags)
+        ):
+            return True
+        return False
+
+    def add_share_data(self, name, value, level=0):
+        """添加共享数据
+
+        :type name: string
+        :param name: 需要共享的数据名称
+        :param value: 需要共享的数据内容
+        """
+        if self.share_data_mgr:
+            self.share_data_mgr.set(name, value, level)
+
+    def get_share_data(self, name):
+        """从内存中获取存储的全局数据，给当前用例使用"""
+        if self.share_data_mgr:
+            return self.share_data_mgr.get(name)
+
+    def remove_share_data(self, name):
+        """从内存中移除存储的共享数据"""
+        if self.share_data_mgr:
+            return self.share_data_mgr.remove(name)
 
     def get_extra_fail_record(self):
         """当错误发生时，获取需要额外添加的日志记录和附件信息
