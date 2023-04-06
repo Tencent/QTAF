@@ -68,6 +68,15 @@ class TestSuiteTest(unittest.TestCase):
         self.assertEqual(len(test.test_results), 1)
         self.assertEqual(test.test_results[0].passed, True)
 
+    def test_load_from_testsuite(self):
+        testloader = TestLoader()
+        testsuite = "tests.sampletest.suitetest.HelloTestSuiteFilter"
+        testsuite_class = testloader._load(testsuite)
+        testsuite_class.testcases = ["tests.sampletest.suitetest"]
+        testsuite_class.testcase_filter = {}
+        tests = list(testloader.load(testsuite)[0])
+        self.assertEqual(len(tests), 1)
+
     def test_filter(self):
         testloader = TestLoader()
         testsuite = "tests.sampletest.suitetest.HelloTestSuiteFilter"
