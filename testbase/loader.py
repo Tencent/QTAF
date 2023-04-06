@@ -271,12 +271,21 @@ class TestLoader(object):
         for test in cls.testcases:
             if isinstance(test, str):
                 test = self._load(test)
-            if cls.filter(test):
-                continue
-            tests += self._load_from_class(
-                test, data_key, exclude_data_key=exclude_data_key, attrs=attrs
-            )
-        return [cls(tests)]
+            if not isinstance(test, type):
+                if hasattr(test, "__path__"):
+                    tests += self._load_from_package(
+                        test, data_key, exclude_data_key=exclude_data_key, attrs=attrs
+                    )
+                else:
+                    tests += self._load_from_module(
+                        test, data_key, exclude_data_key=exclude_data_key, attrs=attrs
+                    )
+            else:
+                tests += self._load_from_class(
+                    test, data_key, exclude_data_key=exclude_data_key, attrs=attrs
+                )
+
+        return [cls([it for it in tests if not cls.filter(it)])]
 
     def _load_from_class(self, cls, data_key=None, exclude_data_key=None, attrs=None):
         """加载用例类
