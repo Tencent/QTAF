@@ -34,6 +34,7 @@ from testbase.exlib import ExLibManager
 from testbase.dist import DistGenerator, VirtuelEnv
 from testbase.loader import TestLoader
 from testbase.testcase import TestCasePriority, TestCaseStatus, TestCase
+from testbase.testsuite import TestSuite
 from testbase.runner import TestCaseSettings
 from testbase.report import test_list_types
 from testbase.types import runner_types, report_types, resmgr_backend_types
@@ -526,7 +527,7 @@ class DiscoverTests(Command):
         if not args.tests:
             logger.info("no test set specified")
             return 1
-        shows = args.shows or ["filtered", "error", "normal"]
+        shows = args.shows or ["filtered", "error", "normal", "testsuite"]
         priorities = args.priorities or [
             TestCase.EnumPriority.Normal,
             TestCase.EnumPriority.High,
@@ -545,6 +546,11 @@ class DiscoverTests(Command):
 
         loader = TestLoader(test_conf.filter)
         tests = loader.load(test_conf.names)
+        testsuites = []
+        for test in tests[:]:
+            if isinstance(test, TestSuite):
+                testsuites.append(test)
+                tests.remove(test)
 
         test_list_output = test_list_types[args.output_type](args.output_file)
 
@@ -561,6 +567,10 @@ class DiscoverTests(Command):
             error_tests = loader.get_last_errors().items()
             sorted_error_tests = sorted(error_tests, key=lambda x: x[0])
             test_list_output.output_error_tests(sorted_error_tests)
+
+        if "testsuite" in shows:
+            test_list_output.output_testsuites(testsuites)
+
         test_list_output.end_output()
 
 
