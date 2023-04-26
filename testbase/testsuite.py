@@ -369,6 +369,10 @@ class TestSuite(TestSuiteBase):
         Parallel = "parallel"
         Sequential = "sequential"
 
+    owner = None
+    priority = None
+    status = None
+    timeout = None
     testcases = []
     testcase_filter = {}
     exec_mode = EnumExecMode.Sequential
@@ -461,6 +465,7 @@ class TestSuite(TestSuiteBase):
         tag_list = cls.testcase_filter.get("tags", [])
         if (
             tag_list
+            and hasattr(testcase, "tags")
             and isinstance(tag_list, list)
             and set(tag_list).isdisjoint(testcase.tags)
         ):
