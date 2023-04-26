@@ -112,9 +112,10 @@ class TestLoader(object):
                         obj, data_key, exclude_data_keys, parameters
                     )
                 elif issubclass(obj, TestSuite):
-                    testcases += self._load_from_testsuite(
+                    tests = self._load_from_testsuite(
                         obj, data_key, exclude_data_keys, parameters
                     )
+                    testcases.append(obj(tests))  # append testsuite to testcase list
 
         # 过滤掉重复的用例
         testcase_dict = OrderedDict()
@@ -192,13 +193,24 @@ class TestLoader(object):
 
         :returns bool - 是否为用例套类
         """
-        return isinstance(obj, type) and issubclass(obj, TestSuite)
+        return (
+            isinstance(obj, type)
+            and issubclass(obj, TestSuite)
+            and obj is not TestSuite
+        )
 
     def _walk_package_error(self, modulename):
         """walk_packages错误回调"""
         self._module_errs[modulename] = traceback.format_exc()
 
-    def _load_from_package(self, pkg, data_key=None, exclude_data_key=None, attrs=None):
+    def _load_from_package(
+        self,
+        pkg,
+        data_key=None,
+        exclude_data_key=None,
+        attrs=None,
+        ignore_testsuite=False,
+    ):
         """从一个python包加载测试用例
 
         :param pkg: Python包
@@ -218,12 +230,20 @@ class TestLoader(object):
                     data_key,
                     exclude_data_key=exclude_data_key,
                     attrs=None,
+                    ignore_testsuite=ignore_testsuite,
                 )
             except Exception:  # pylint: disable=broad-except
                 self._module_errs[modulename] = traceback.format_exc()
         return tests
 
-    def _load_from_module(self, mod, data_key=None, exclude_data_key=None, attrs=None):
+    def _load_from_module(
+        self,
+        mod,
+        data_key=None,
+        exclude_data_key=None,
+        attrs=None,
+        ignore_testsuite=False,
+    ):
         """从一个python模块加载测试用例
 
         :param mod: Python模块
@@ -237,6 +257,12 @@ class TestLoader(object):
                 tests += self._load_from_class(
                     obj, data_key, exclude_data_key=exclude_data_key, attrs=attrs
                 )
+            elif self._is_testsuite_class(obj) and not ignore_testsuite:
+                testcases = self._load_from_testsuite(
+                    obj, data_key, exclude_data_key=exclude_data_key, attrs=attrs
+                )
+                tests.append(obj(testcases))
+
         if hasattr(mod, "__qtaf_seq_tests__"):  # 测试用例需要顺序执行
             seqdef = mod.__qtaf_seq_tests__
             if not isinstance(seqdef, list):
@@ -274,18 +300,26 @@ class TestLoader(object):
             if not isinstance(test, type):
                 if hasattr(test, "__path__"):
                     tests += self._load_from_package(
-                        test, data_key, exclude_data_key=exclude_data_key, attrs=attrs
+                        test,
+                        data_key,
+                        exclude_data_key=exclude_data_key,
+                        attrs=attrs,
+                        ignore_testsuite=True,
                     )
                 else:
                     tests += self._load_from_module(
-                        test, data_key, exclude_data_key=exclude_data_key, attrs=attrs
+                        test,
+                        data_key,
+                        exclude_data_key=exclude_data_key,
+                        attrs=attrs,
+                        ignore_testsuite=True,
                     )
             else:
                 tests += self._load_from_class(
                     test, data_key, exclude_data_key=exclude_data_key, attrs=attrs
                 )
 
-        return [cls([it for it in tests if not cls.filter(it)])]
+        return [it for it in tests if not cls.filter(it)]
 
     def _load_from_class(self, cls, data_key=None, exclude_data_key=None, attrs=None):
         """加载用例类
