@@ -112,10 +112,11 @@ class TestLoader(object):
                         obj, data_key, exclude_data_keys, parameters
                     )
                 elif issubclass(obj, TestSuite):
-                    tests = self._load_from_testsuite(
-                        obj, data_key, exclude_data_keys, parameters
-                    )
-                    testcases.append(obj(tests))  # append testsuite to testcase list
+                    if not self._filter_testcase(obj):
+                        tests = self._load_from_testsuite(
+                            obj, data_key, exclude_data_keys, parameters
+                        )
+                        testcases.append(obj(tests))  # append testsuite to testcase list
 
         # 过滤掉重复的用例
         testcase_dict = OrderedDict()
@@ -258,10 +259,11 @@ class TestLoader(object):
                     obj, data_key, exclude_data_key=exclude_data_key, attrs=attrs
                 )
             elif self._is_testsuite_class(obj) and not ignore_testsuite:
-                testcases = self._load_from_testsuite(
-                    obj, data_key, exclude_data_key=exclude_data_key, attrs=attrs
-                )
-                tests.append(obj(testcases))
+                if not self._filter_testcase(obj):
+                    testcases = self._load_from_testsuite(
+                        obj, data_key, exclude_data_key=exclude_data_key, attrs=attrs
+                    )
+                    tests.append(obj(testcases))
 
         if hasattr(mod, "__qtaf_seq_tests__"):  # 测试用例需要顺序执行
             seqdef = mod.__qtaf_seq_tests__
@@ -321,6 +323,16 @@ class TestLoader(object):
 
         return [it for it in tests if not cls.filter(it)]
 
+    def _filter_testcase(self, test):
+        if not self._filter:
+            return False
+        filter_reason = self._filter(test)
+        if filter_reason:
+            self._filtered_tests[test] = filter_reason
+            return True
+        else:
+            return False
+
     def _load_from_class(self, cls, data_key=None, exclude_data_key=None, attrs=None):
         """加载用例类
 
@@ -346,16 +358,7 @@ class TestLoader(object):
         else:
             tests = [cls(attrs=attrs)]
 
-        if self._filter:
-            final_tests = []
-            for it in tests:
-                filter_reason = self._filter(it)
-                if filter_reason:
-                    self._filtered_tests[it] = filter_reason
-                else:
-                    final_tests.append(it)
-            tests = final_tests
-        return tests
+        return [it for it in tests if not self._filter_testcase(it)]
 
 
 class TestDataLoader(object):
