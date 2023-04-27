@@ -223,7 +223,7 @@ class TestSuiteCaseRunner(ITestCaseRunner):
         :return TestResult/TestResultCollection - 测试结果
         """
         passed = True
-        results = []
+        results = [testresult]
         for it in testsuite:
             case_result = self._run_test(testsuite, it, testresult_factory, testresult)
             passed &= case_result.passed
@@ -276,7 +276,7 @@ class TestSuiteCaseRunner(ITestCaseRunner):
         :return TestResult/TestResultCollection - 测试结果
         """
         tests_queue = collections.deque([it for it in testsuite])
-        results = []
+        results = [testresult]
         threads = []
         lock = threading.Lock()
         for _ in range(concurrency):
@@ -318,7 +318,7 @@ class TestSuiteCaseRunner(ITestCaseRunner):
         testresult.begin_test(testsuite)
         testresult.begin_step("pre_test")
         testsuite.init_test(testresult)
-        result = TestResultCollection([], False)
+        result = TestResultCollection([testresult], False)
         try:
             testsuite.pre_test()
         except:
