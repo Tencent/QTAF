@@ -1047,6 +1047,9 @@ class TestListOutputBase(object):
     def output_error_tests(self, error_tests):
         raise NotImplementedError
 
+    def output_testsuites(self, testsuites):
+        raise NotImplementedError
+
     def end_output(self):
         if self._close_fd:
             self._fd.close()
@@ -1077,6 +1080,14 @@ class StreamTestListOutput(TestListOutputBase):
         self._output_func("======================")
         for test_name, error in error_tests:
             test_info = 'cannot load test "%s"' % test_name + ", error:\n" + error
+            self._output_func(test_info)
+
+    def output_testsuites(self, testsuites):
+        self._output_func("\n======================")
+        self._output_func("%s testsuites:" % len(testsuites))
+        self._output_func("======================")
+        for testsuite in testsuites:
+            test_info = self.stream_format_test(testsuite)
             self._output_func(test_info)
 
     def stream_format_test(self, test):

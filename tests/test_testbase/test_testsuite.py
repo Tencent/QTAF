@@ -76,6 +76,7 @@ class TestSuiteTest(unittest.TestCase):
         testsuite_class.testcase_filter = {}
         tests = list(testloader.load(testsuite)[0])
         self.assertEqual(len(tests), 1)
+        self.assertEqual(tests[0].__class__.__name__, "HelloTest")
 
     def test_filter(self):
         testloader = TestLoader()

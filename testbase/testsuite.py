@@ -223,7 +223,7 @@ class TestSuiteCaseRunner(ITestCaseRunner):
         :return TestResult/TestResultCollection - 测试结果
         """
         passed = True
-        results = []
+        results = [testresult]
         for it in testsuite:
             case_result = self._run_test(testsuite, it, testresult_factory, testresult)
             passed &= case_result.passed
@@ -276,7 +276,7 @@ class TestSuiteCaseRunner(ITestCaseRunner):
         :return TestResult/TestResultCollection - 测试结果
         """
         tests_queue = collections.deque([it for it in testsuite])
-        results = []
+        results = [testresult]
         threads = []
         lock = threading.Lock()
         for _ in range(concurrency):
@@ -318,7 +318,7 @@ class TestSuiteCaseRunner(ITestCaseRunner):
         testresult.begin_test(testsuite)
         testresult.begin_step("pre_test")
         testsuite.init_test(testresult)
-        result = TestResultCollection([], False)
+        result = TestResultCollection([testresult], False)
         try:
             testsuite.pre_test()
         except:
@@ -369,6 +369,10 @@ class TestSuite(TestSuiteBase):
         Parallel = "parallel"
         Sequential = "sequential"
 
+    owner = None
+    priority = None
+    status = None
+    timeout = None
     testcases = []
     testcase_filter = {}
     exec_mode = EnumExecMode.Sequential
@@ -382,8 +386,7 @@ class TestSuite(TestSuiteBase):
             concurrency=self.concurrency,
         )
         self.__testcases = testcases
-        self.__testresult = None
-        self.__testresults = None
+        self.__testresults = []
         self.__current_stage = ""
 
     def __iter__(self):
@@ -415,7 +418,9 @@ class TestSuite(TestSuiteBase):
 
         :return: TestResult
         """
-        return self.__testresult
+        if self.__testresults:
+            return self.__testresults[0]
+        return None
 
     @property
     def test_results(self):
@@ -423,7 +428,9 @@ class TestSuite(TestSuiteBase):
 
         :return: TestResultCollection
         """
-        return self.__testresults
+        if len(self.__testresults) > 1:
+            return self.__testresults[1:]
+        return []
 
     @property
     def current_stage(self):
@@ -461,6 +468,7 @@ class TestSuite(TestSuiteBase):
         tag_list = cls.testcase_filter.get("tags", [])
         if (
             tag_list
+            and hasattr(testcase, "tags")
             and isinstance(tag_list, list)
             and set(tag_list).isdisjoint(testcase.tags)
         ):
@@ -510,7 +518,7 @@ class TestSuite(TestSuiteBase):
         :param testresult: 测试结果
         :type testresult: TestResult
         """
-        self.__testresult = testresult
+        self.__testresults.append(testresult)
 
     def pre_test(self):
         pass
