@@ -386,8 +386,7 @@ class TestSuite(TestSuiteBase):
             concurrency=self.concurrency,
         )
         self.__testcases = testcases
-        self.__testresult = None
-        self.__testresults = None
+        self.__testresults = []
         self.__current_stage = ""
 
     def __iter__(self):
@@ -419,7 +418,9 @@ class TestSuite(TestSuiteBase):
 
         :return: TestResult
         """
-        return self.__testresult
+        if self.__testresults:
+            return self.__testresults[0]
+        return None
 
     @property
     def test_results(self):
@@ -427,7 +428,9 @@ class TestSuite(TestSuiteBase):
 
         :return: TestResultCollection
         """
-        return self.__testresults
+        if len(self.__testresults) > 1:
+            return self.__testresults[1:]
+        return []
 
     @property
     def current_stage(self):
@@ -515,7 +518,7 @@ class TestSuite(TestSuiteBase):
         :param testresult: 测试结果
         :type testresult: TestResult
         """
-        self.__testresult = testresult
+        self.__testresults.append(testresult)
 
     def pre_test(self):
         pass
