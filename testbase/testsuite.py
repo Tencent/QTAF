@@ -200,14 +200,14 @@ class TestSuiteCaseRunner(ITestCaseRunner):
         """执行测试用例"""
         step_name = test.test_name
         if isinstance(test, TestSuite):
-            step_name += "(%s)" % test.exec_mode
+            step_name = "【%s】(%s)" % (step_name, test.exec_mode)
         if testsuite.root_test_result and testsuite.root_test_result != testresult:
             testsuite.root_test_result.begin_step(step_name)
         testresult.begin_step(step_name)
         testsuite.current_stage = test.test_name
         runner = getattr(test, "case_runner", TestCaseRunner())
         if isinstance(test, TestSuite):
-            test.root_test_result = testresult
+            test.root_test_result = testsuite.root_test_result
         case_result = runner.run(test, testresult_factory)
         if not case_result.passed:
             self._log_testsuite_error(
@@ -324,8 +324,8 @@ class TestSuiteCaseRunner(ITestCaseRunner):
         testresult = testresult_factory.create(testsuite)
         testresult.begin_test(testsuite)
         if testsuite.root_test_result and testsuite.root_test_result != testresult:
-            testsuite.root_test_result.begin_step("pre_test - %s" % testsuite.__class__.__name__)
-        testresult.begin_step("pre_test - %s" % testsuite.__class__.__name__)
+            testsuite.root_test_result.begin_step("【%s】 - pre_test" % testsuite.__class__.__name__)
+        testresult.begin_step("【%s】 - pre_test" % testsuite.__class__.__name__)
         testsuite.init_test(testresult)
         result = TestResultCollection([testresult], False)
         if not testsuite.root_test_result:
@@ -357,8 +357,8 @@ class TestSuiteCaseRunner(ITestCaseRunner):
                 raise ValueError("Invalid exec mode: %s" % self._exec_mode)
 
         if testsuite.root_test_result and testsuite.root_test_result != testresult:
-            testsuite.root_test_result.begin_step("post_test - %s" % testsuite.__class__.__name__)
-        testresult.begin_step("post_test - %s" % testsuite.__class__.__name__)
+            testsuite.root_test_result.begin_step("【%s】 - post_test" % testsuite.__class__.__name__)
+        testresult.begin_step("【%s】 - post_test" % testsuite.__class__.__name__)
         try:
             testsuite.post_test()
         except:
