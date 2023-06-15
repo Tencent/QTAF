@@ -198,10 +198,7 @@ class AssertionRewriter(ast.NodeVisitor):
                 for child in value:
                     if isinstance(child, ast.Expr):
                         new_nodes.extend(self.visit(child))
-                    elif isinstance(child, ast.For):
-                        self.iter_ast_node(child)
-                        new_nodes.append(child)
-                    elif isinstance(child, ast.If):
+                    elif isinstance(child, ast.For) or isinstance(child, ast.While) or isinstance(child, ast.If):
                         self.iter_ast_node(child)
                         new_nodes.append(child)
                     else:
