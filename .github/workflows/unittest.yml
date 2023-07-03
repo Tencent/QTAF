@@ -29,9 +29,6 @@ jobs:
         uses: MatteoH2O1999/setup-python@v1
         with:
           python-version: ${{ matrix.python-version }}
-          allow-build: info
-          cache-build: true
-          cache: pip
       - name: Install Dependencies
         run: |
           python -m pip install --upgrade pip pytest pytest-cov codecov mock
