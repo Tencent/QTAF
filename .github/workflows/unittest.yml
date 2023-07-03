@@ -19,14 +19,17 @@ jobs:
       matrix:
         python-version: [2.7, 3.6, 3.7, 3.8, 3.9]
         os: [ubuntu-20.04, windows-2019, macos-10.15]
+        include:
+          - os: ubuntu-20.04
+            python-version: 2.7
+            container:
+              image: python:2.7.18-buster
 
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python ${{ matrix.python-version }}
-        # setup-python stopped supporting Python 2.7, use https://github.com/MatteoH2O1999/setup-python
-        # This action tries to build all Python versions that actions/setup-python does not support.
-        # It caches built versions, so that after the first run, installation time is really low.
-        uses: MatteoH2O1999/setup-python@v1
+        if: matrix.os != "ubuntu-20.04" && matrix.python-version != "2.7"
+        uses: actions/setup-python@v1
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install Dependencies
@@ -46,4 +49,5 @@ jobs:
             name: codecov-qtaf
             path_to_write_report: ./coverage/codecov_report.txt
             verbose: true
+  test_on_linux:
 
