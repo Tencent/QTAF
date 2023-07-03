@@ -14,6 +14,8 @@ jobs:
   test:
     name: Test on python ${{ matrix.python-version }} and ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
+    container:
+      image: python:2.7.18-buster
     strategy:
       max-parallel: 4
       matrix:
