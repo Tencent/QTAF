@@ -50,7 +50,7 @@ jobs:
           pip install -r requirements.txt
       - name: Run Tests
         run: |
-          pytest tests/ --cov=testbase --cov-report=xml
+          python -m pytest tests/ --cov=testbase --cov-report=xml
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v2
         with:
