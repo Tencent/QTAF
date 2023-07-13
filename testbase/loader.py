@@ -18,6 +18,7 @@
 from __future__ import absolute_import
 
 import imp
+import itertools
 import pkgutil
 import os
 import sys
@@ -292,11 +293,16 @@ class TestLoader(object):
         return tests
 
     def _load_from_testsuite(
-        self, cls, data_key=None, exclude_data_key=None, attrs=None
+        self, cls, data_key=None, exclude_data_key=None, attrs=None, case_params=None
     ):
         """从测试用例套类加载测试用例"""
-        tests = []
-        for test in cls.testcases:
+
+        if case_params is None:
+            case_params = []
+
+        zip_longest = itertools.izip_longest if six.PY2 else itertools.zip_longest
+        for test, attr in zip_longest(cls.testcases, case_params):
+            attr = attr or attrs
             if isinstance(test, str):
                 test = self._load(test)
             if not isinstance(test, type):
@@ -305,7 +311,7 @@ class TestLoader(object):
                         test,
                         data_key,
                         exclude_data_key=exclude_data_key,
-                        attrs=attrs,
+                        attrs=attr,
                         ignore_testsuite=True,
                     )
                 else:
@@ -313,13 +319,19 @@ class TestLoader(object):
                         test,
                         data_key,
                         exclude_data_key=exclude_data_key,
-                        attrs=attrs,
+                        attrs=attr,
                         ignore_testsuite=True,
                     )
             else:
-                tests += self._load_from_class(
-                    test, data_key, exclude_data_key=exclude_data_key, attrs=attrs
-                )
+                if issubclass(test, TestSuite):
+                    testcases = self._load_from_testsuite(
+                        test, data_key, exclude_data_key=exclude_data_key, attrs=attr
+                    )
+                    tests += [test(testcases)]
+                else:
+                    tests += self._load_from_class(
+                        test, data_key, exclude_data_key=exclude_data_key, attrs=attr
+                    )
 
         return [it for it in tests if not cls.filter(it)]
 
