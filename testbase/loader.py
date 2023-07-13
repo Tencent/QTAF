@@ -297,6 +297,7 @@ class TestLoader(object):
     ):
         """从测试用例套类加载测试用例"""
 
+        tests = []
         if case_params is None:
             case_params = []
 
