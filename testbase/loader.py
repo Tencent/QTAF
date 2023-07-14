@@ -151,6 +151,9 @@ class TestLoader(object):
 
         if parts_imp == parts:  # 为一个包或模块
             return obj
+        
+        elif parts_imp == parts[0:-1] and parts[-1] == 'SeqTestSuiteTest':  # 为顺序测试套
+            return obj
 
         elif parts_imp == parts[0:-1] and hasattr(module, parts[-1]):  # 为一个类
             try:
@@ -264,6 +267,8 @@ class TestLoader(object):
                         obj, data_key, exclude_data_key=exclude_data_key, attrs=attrs
                     )
                     tests.append(obj(testcases))
+
+        print(mod)
 
         if hasattr(mod, "__qtaf_seq_tests__"):  # 测试用例需要顺序执行
             seqdef = mod.__qtaf_seq_tests__
