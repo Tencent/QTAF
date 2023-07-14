@@ -268,8 +268,6 @@ class TestLoader(object):
                     )
                     tests.append(obj(testcases))
 
-        print(mod)
-
         if hasattr(mod, "__qtaf_seq_tests__"):  # 测试用例需要顺序执行
             seqdef = mod.__qtaf_seq_tests__
             if not isinstance(seqdef, list):
