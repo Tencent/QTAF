@@ -152,6 +152,14 @@ class LoadDataDriveReversibleTest(unittest.TestCase):
         new_tests = loader.load(test_set)
         self.assertEqual(len(new_tests), len(tests))
 
+    def test_bad_name_reversible(self):
+        tests = self.loader.load("tests.sampletest.seqtest.SeqTestSuiteTest")
+        tests_by_file = self.loader.load("tests.sampletest.seqtest")
+        from testbase.testsuite import SeqTestSuite
+        self.assertEqual(type(tests[0]), SeqTestSuite)
+        self.assertEqual(tests[0].test_class_name, tests_by_file[0].test_class_name)
+
+        
 
 if __name__ == "__main__":
     #     unittest.main(defaultTest="LoadDataDriveReversibleTest")

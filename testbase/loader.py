@@ -151,6 +151,9 @@ class TestLoader(object):
 
         if parts_imp == parts:  # 为一个包或模块
             return obj
+        
+        elif parts_imp == parts[0:-1] and parts[-1] == 'SeqTestSuiteTest':  # 为顺序测试套
+            return obj
 
         elif parts_imp == parts[0:-1] and hasattr(module, parts[-1]):  # 为一个类
             try:
