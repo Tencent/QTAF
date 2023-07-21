@@ -37,9 +37,18 @@ _stream_handler.setFormatter(_Formatter())
 class TestResultBridge(logging.Handler):
     """中转log信息到TestResult"""
 
+    def __init__(self, *args, **kwargs):
+        formatter = kwargs.pop('formatter', None)
+        super().__init__(*args, **kwargs)
+        if formatter is not None:
+            self.formatter = formatter
+        else:
+            self.formatter = logging.Formatter()
+
     def emit(self, log_record):
         """Log Handle 必须实现此函数"""
         testresult = context.current_testresult()
+        formatted_msg = self.formatter.format(log_record)
         if testresult is None:
             _stream_handler.emit(log_record)
             return
@@ -48,13 +57,14 @@ class TestResultBridge(logging.Handler):
             record["traceback"] = "".join(
                 traceback.format_tb(log_record.exc_info[2])
             ) + "%s: %s" % (log_record.exc_info[0].__name__, log_record.exc_info[1])
-        testresult.log_record(log_record.levelno, log_record.msg, record)
+        testresult.log_record(log_record.levelno, formatted_msg, record)
 
 
 _LOGGER_NAME = "QTA_LOGGER"
 _logger = logging.getLogger(_LOGGER_NAME)
 _logger.setLevel(logging.DEBUG)
-_logger.addHandler(TestResultBridge())
+_testresult_bridge = TestResultBridge()
+_logger.addHandler(_testresult_bridge)
 
 
 def critical(msg, *args, **kwargs):
@@ -114,6 +124,9 @@ def set_formatter(fmt):
             super(_Formatter, self).__init__(fmt)
 
     _stream_handler.setFormatter(__formatter(fmt))
+    testresult_bridge = TestResultBridge(formatter=logging.Formatter(fmt))
+    _logger.removeHandler(_testresult_bridge)
+    _logger.addHandler(testresult_bridge)
 
 def set_level(level):
     """Set the specified log level to this logger.
