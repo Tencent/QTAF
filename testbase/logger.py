@@ -122,10 +122,11 @@ def set_formatter(fmt):
     class _custom_formatter(logging.Formatter):
         def format(self, record):
             # Get the code line number and file name of the call logger function.
+            logger_module = "logger"
             for frame_info in inspect.stack():
                 frame = frame_info[0]
                 module_name = inspect.getmodulename(frame.f_code.co_filename)
-                if module_name != "__init__" and module_name != "logger":
+                if module_name != "__init__" and module_name != logger_module:
                     caller = inspect.getframeinfo(frame)
                     break
             else:
