@@ -127,10 +127,10 @@ def set_formatter(fmt):
                     caller = inspect.getframeinfo(frame)
                     break
             else:
-                return super().format(record)
+                return super(_custom_formatter, self).format(record)
             record.filename = caller.filename.split('/')[-1]
             record.lineno = caller.lineno
-            return super().format(record)
+            return super(_custom_formatter, self).format(record)
 
     _stream_handler.setFormatter(__formatter(fmt))
     _testresult_bridge.setFormatter(_custom_formatter(fmt))
