@@ -18,6 +18,7 @@
 import logging
 import sys
 import traceback
+import inspect
 from testbase import context
 from testbase.util import ensure_binary_stream, smart_binary
 
@@ -38,17 +39,12 @@ class TestResultBridge(logging.Handler):
     """中转log信息到TestResult"""
 
     def __init__(self, *args, **kwargs):
-        formatter = kwargs.pop('formatter', None)
         super().__init__(*args, **kwargs)
-        if formatter is not None:
-            self.formatter = formatter
-        else:
-            self.formatter = logging.Formatter()
 
     def emit(self, log_record):
         """Log Handle 必须实现此函数"""
         testresult = context.current_testresult()
-        formatted_msg = self.formatter.format(log_record)
+        formatted_msg = self.format(log_record)
         if testresult is None:
             _stream_handler.emit(log_record)
             return
@@ -123,10 +119,23 @@ def set_formatter(fmt):
         def __init__(self, fmt):
             super(_Formatter, self).__init__(fmt)
 
+    class _custom_formatter(logging.Formatter):
+        def format(self, record):
+            # Get the code line number and file name of the call logger function.
+            for frame_info in inspect.stack():
+                frame = frame_info[0]
+                module_name = inspect.getmodulename(frame.f_code.co_filename)
+                if module_name != "__init__" and module_name != "logger":
+                    caller = inspect.getframeinfo(frame)
+                    break
+            else:
+                return super().format(record)
+            record.filename = caller.filename.split('/')[-1]
+            record.lineno = caller.lineno
+            return super().format(record)
+
     _stream_handler.setFormatter(__formatter(fmt))
-    testresult_bridge = TestResultBridge(formatter=logging.Formatter(fmt))
-    _logger.removeHandler(_testresult_bridge)
-    _logger.addHandler(testresult_bridge)
+    _testresult_bridge.setFormatter(_custom_formatter(fmt))
 
 def set_level(level):
     """Set the specified log level to this logger.
