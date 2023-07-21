@@ -38,9 +38,6 @@ _stream_handler.setFormatter(_Formatter())
 class TestResultBridge(logging.Handler):
     """中转log信息到TestResult"""
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
     def emit(self, log_record):
         """Log Handle 必须实现此函数"""
         testresult = context.current_testresult()
