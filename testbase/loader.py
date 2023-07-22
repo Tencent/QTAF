@@ -134,8 +134,9 @@ class TestLoader(object):
         """
         parts = testname.split(".")
         module = None
-        i = 1
-        while i <= len(parts):
+        i = 0
+        while i < len(parts):
+            i += 1
             modulename = ".".join(parts[:i])
             try:
                 module = __import__(modulename)  # __import__得到的是最外层模块的object
@@ -148,7 +149,6 @@ class TestLoader(object):
                 if not hasattr(module, "__path__"):
                     # file module
                     break
-                i += 1
 
         obj = module
         if i == len(parts):  # 为一个包或模块
