@@ -116,7 +116,9 @@ class TestLoader(object):
                         tests = self._load_from_testsuite(
                             obj, data_key, exclude_data_keys, parameters
                         )
-                        testcases.append(obj(tests))  # append testsuite to testcase list
+                        testcases.append(
+                            obj(tests)
+                        )  # append testsuite to testcase list
 
         # 过滤掉重复的用例
         testcase_dict = OrderedDict()
@@ -158,7 +160,7 @@ class TestLoader(object):
             return
 
         classname = parts[-1]
-        if classname == 'SeqTestSuiteTest':  # 为顺序测试套
+        if classname == "SeqTestSuiteTest":  # 为顺序测试套
             return obj
 
         elif hasattr(module, classname):  # 为一个类
@@ -175,7 +177,12 @@ class TestLoader(object):
                 return testclass
 
         else:  # 触发异常
-            self._module_errs[testname] = "ImportError: Testcase %s not exist" % testname
+            self._module_errs[
+                testname
+            ] = "ImportError: No testcase named %s in module %s" % (
+                classname,
+                module.__name__,
+            )
 
     def _is_testcase_class(self, obj):
         """是否为测试用例类
