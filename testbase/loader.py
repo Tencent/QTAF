@@ -156,7 +156,9 @@ class TestLoader(object):
         if i == len(parts):  # 为一个包或模块
             return obj
         elif i < len(parts) - 1:
-            self._module_errs[testname] = "ImportError: No module named %s" % parts[i]
+            self._module_errs[testname] = "ImportError: No module named %s" % ".".join(
+                parts[: i + 1]
+            )
             return
 
         classname = parts[-1]

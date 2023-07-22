@@ -54,6 +54,16 @@ class TestLoaderTest(unittest.TestCase):
             "ImportError: No testcase named DummyTest in module tests.sampletest.hellotest",
         )
 
+        tests = self.loader.load("tests.sampletest.hellotest.notfound.DummyTest")
+        self.assertEqual(len(tests), 0)
+        errors = self.loader.get_last_errors()
+        self.assertEqual(len(errors), 1)
+        self.assertIn("tests.sampletest.hellotest.notfound.DummyTest", errors)
+        self.assertEquals(
+            list(errors.values())[0],
+            "ImportError: No module named tests.sampletest.hellotest.notfound",
+        )
+
     def test_load_failed_runtime_error(self):
         tests = self.loader.load("tests.sampletest.loaderr")
         self.assertEqual(len(tests), 0)
