@@ -44,6 +44,16 @@ class TestLoaderTest(unittest.TestCase):
             list(errors.values())[0], "No module named .*notfound.*"
         )
 
+        tests = self.loader.load("tests.sampletest.hellotest.DummyTest")
+        self.assertEqual(len(tests), 0)
+        errors = self.loader.get_last_errors()
+        self.assertEqual(len(errors), 1)
+        self.assertIn("tests.sampletest.hellotest.DummyTest", errors)
+        self.assertEqual(
+            list(errors.values())[0],
+            "ImportError: No testcase named DummyTest in module tests.sampletest.hellotest",
+        )
+
     def test_load_failed_runtime_error(self):
         tests = self.loader.load("tests.sampletest.loaderr")
         self.assertEqual(len(tests), 0)
@@ -156,10 +166,10 @@ class LoadDataDriveReversibleTest(unittest.TestCase):
         tests = self.loader.load("tests.sampletest.seqtest.SeqTestSuiteTest")
         tests_by_file = self.loader.load("tests.sampletest.seqtest")
         from testbase.testsuite import SeqTestSuite
+
         self.assertEqual(type(tests[0]), SeqTestSuite)
         self.assertEqual(tests[0].test_class_name, tests_by_file[0].test_class_name)
 
-        
 
 if __name__ == "__main__":
     #     unittest.main(defaultTest="LoadDataDriveReversibleTest")
