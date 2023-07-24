@@ -32,6 +32,9 @@ class TestHandler(logging.Handler):
     def emit(self, record):
         self.messages.append(self.format(record))
 
+    def format(self, record):
+        return self.formatter.format(record)
+
 class LoggerTest(unittest.TestCase):
 
 
