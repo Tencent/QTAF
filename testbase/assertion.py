@@ -231,7 +231,7 @@ class AssertionRewriter(ast.NodeVisitor):
 
         # Rewrite assert into a bunch of statements.
         if isinstance(elem, ast.Expr):
-            if getattr(elem.value, "keywords", None):
+            if len(elem.value.args) < 2 and getattr(elem.value, "keywords", None):
                 for keyword in elem.value.keywords:
                     if keyword.arg == "message":
                         msg_arg = keyword.value
