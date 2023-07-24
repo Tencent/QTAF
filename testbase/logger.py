@@ -112,11 +112,11 @@ def removeHandler(hdlr):  # pylint: disable=invalid-name
 def set_formatter(fmt):
     """Set the specified formatter to this logger.
     """
-    class __formatter(_Formatter):
+    class __Formatter(_Formatter):
         def __init__(self, fmt):
             super(_Formatter, self).__init__(fmt)
 
-    class _custom_formatter(logging.Formatter):
+    class _CustomFormatter(logging.Formatter):
         def format(self, record):
             # Get the code line number and file name of the call logger function.
             logger_module = "logger"
@@ -127,13 +127,13 @@ def set_formatter(fmt):
                     caller = inspect.getframeinfo(frame)
                     break
             else:
-                return super(_custom_formatter, self).format(record)
+                return super(_CustomFormatter, self).format(record)
             record.filename = caller.filename.split('/')[-1]
             record.lineno = caller.lineno
-            return super(_custom_formatter, self).format(record)
+            return super(_CustomFormatter, self).format(record)
 
-    _stream_handler.setFormatter(__formatter(fmt))
-    _testresult_bridge.setFormatter(_custom_formatter(fmt))
+    _stream_handler.setFormatter(__Formatter(fmt))
+    _testresult_bridge.setFormatter(_CustomFormatter(fmt))
 
 def set_level(level):
     """Set the specified log level to this logger.
