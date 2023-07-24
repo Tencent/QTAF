@@ -116,7 +116,9 @@ class TestLoader(object):
                         tests = self._load_from_testsuite(
                             obj, data_key, exclude_data_keys, parameters
                         )
-                        testcases.append(obj(tests))  # append testsuite to testcase list
+                        testcases.append(
+                            obj(tests)
+                        )  # append testsuite to testcase list
 
         # 过滤掉重复的用例
         testcase_dict = OrderedDict()
@@ -134,30 +136,38 @@ class TestLoader(object):
         """
         parts = testname.split(".")
         module = None
-        parts_imp = parts[:]
-        while parts_imp:
+        i = 0
+        while i < len(parts):
+            i += 1
+            modulename = ".".join(parts[:i])
             try:
-                modulename = ".".join(parts_imp)
-                __import__(modulename)  # __import__得到的是最外层模块的object
-                module = sys.modules[modulename]
-                break
-            except ImportError:
-                del parts_imp[-1]
-            except Exception:  # pylint: disable=broad-except
-                del parts_imp[-1]
-                break
+                module = __import__(modulename)  # __import__得到的是最外层模块的object
+            except Exception as ex:  # pylint: disable=broad-except
+                self._module_errs[modulename] = traceback.format_exc()
+                return
+            else:
+                for name in parts[1:i]:
+                    module = getattr(module, name)
+                if not hasattr(module, "__path__"):
+                    # file module
+                    break
 
         obj = module
-
-        if parts_imp == parts:  # 为一个包或模块
+        if i == len(parts):  # 为一个包或模块
             return obj
-        
-        elif parts_imp == parts[0:-1] and parts[-1] == 'SeqTestSuiteTest':  # 为顺序测试套
+        elif i < len(parts) - 1:
+            self._module_errs[testname] = "ImportError: No module named %s" % ".".join(
+                parts[: i + 1]
+            )
+            return
+
+        classname = parts[-1]
+        if classname == "SeqTestSuiteTest":  # 为顺序测试套
             return obj
 
-        elif parts_imp == parts[0:-1] and hasattr(module, parts[-1]):  # 为一个类
+        elif hasattr(module, classname):  # 为一个类
             try:
-                testclass = getattr(module, parts[-1])
+                testclass = getattr(module, classname)
                 if not self._is_testcase_class(
                     testclass
                 ) and not self._is_testsuite_class(testclass):
@@ -169,16 +179,12 @@ class TestLoader(object):
                 return testclass
 
         else:  # 触发异常
-            if parts_imp:
-                modulename = ".".join(parts_imp)
-                modulename += "."
-            else:
-                modulename = ""
-            modulename += parts[len(parts_imp)]
-            try:
-                __import__(modulename)
-            except Exception:  # pylint: disable=broad-except
-                self._module_errs[modulename] = traceback.format_exc()
+            self._module_errs[
+                testname
+            ] = "ImportError: No testcase named %s in module %s" % (
+                classname,
+                module.__name__,
+            )
 
     def _is_testcase_class(self, obj):
         """是否为测试用例类
