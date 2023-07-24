@@ -57,6 +57,16 @@ class AssertionInnerInvokeTest(AssertionFailureTest):
         for _ in range(2):
             self.assert_("assert", self.foo(self.bar(1)) in [2, 4])
 
+    def assert_foo_bar_with_while(self):
+        i = 1
+        while i < 3:
+            self.assert_("assert", self.foo(self.bar(1)) in [2, 4])
+
+    def assert_foo_bar_with_dict(self):
+        i = 1
+        if i == 1:
+            self.assert_(message="assert", value=self.foo(self.bar(1)) in [2, 4])
+
 
 class AssertionInnerInvokeForTest(AssertionFailureTest):
     """xxxx"""
