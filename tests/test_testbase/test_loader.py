@@ -34,6 +34,14 @@ class TestLoaderTest(unittest.TestCase):
 
         self.assertEqual(type(tests[0]), HelloTest)
 
+    def test_load_testcase_in_module(self):
+        """load test cases from class path"""
+        tests = self.loader.load("tests.sampletest.InitTest")
+        self.assertEqual(len(tests), 1)
+        from tests.sampletest import InitTest
+
+        self.assertEqual(type(tests[0]), InitTest)
+
     def test_load_failed_not_found(self):
         tests = self.loader.load("tests.sampletest.notfound")
         self.assertEqual(len(tests), 0)
