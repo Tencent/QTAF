@@ -143,6 +143,9 @@ class TestLoader(object):
             try:
                 module = __import__(modulename)  # __import__得到的是最外层模块的object
             except Exception as ex:  # pylint: disable=broad-except
+                if i == len(parts) and hasattr(module, parts[-1]):  # 类写在__init__.py的场景下module需返回文件夹
+                    i -= 1
+                    break
                 self._module_errs[modulename] = traceback.format_exc()
                 return
             else:
