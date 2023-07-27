@@ -147,7 +147,11 @@ class TestLoader(object):
                 return
             else:
                 for name in parts[1:i]:
-                    module = getattr(module, name)
+                    try:
+                        module = getattr(module, name)
+                    except:
+                        self._module_errs[modulename] = traceback.format_exc()
+                        return
                 if not hasattr(module, "__path__"):
                     # file module
                     break
