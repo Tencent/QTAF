@@ -7,21 +7,24 @@
 
 下面我们来编写第一个QTA测试用例，在测试项目中新建一个hello.py::
 
-   from testbase.testcase import TestCase
+        # -*- coding: utf-8 -*-
+        '''示例测试用例
+        '''
+        #2020/07/08 QTAF自动生成
 
-   class HelloTest(TestCase):
-       '''第一个测试用例
-       '''
-       owner = "foo"
-       status = TestCase.EnumStatus.Ready
-       priority = TestCase.EnumPriority.Normal
-       timeout = 1
-   
-       def run_test(self):
-           #---------------------------
-           self.start_step("第一个测试步骤")
-           #---------------------------
-           self.log_info("hello")
+        from foolib.testcase import FooTestCase
+
+        class HelloTest(FooTestCase):
+            '''第一个测试用例
+            '''
+            owner = "foo"
+            timeout = 5
+            priority = FooTestCase.EnumPriority.High
+            status = FooTestCase.EnumStatus.Design
+
+            def run_test(self):
+                self.log_info("hello testcase")
+                self.assert_equal(True, True)
            
            
 可以看到，这个最简单的测试用例包括以下主要的部分：
@@ -103,7 +106,7 @@
 设置标签的方式十分简单::
 
 
-   from testbase.testcase import TestCase
+   from foolib.testcase import TestCase
 
    class HelloTest(TestCase):
        '''第一个测试用例
@@ -122,7 +125,7 @@
 
 标签支持一个或多个，下面的例子也是正确的::
 
-   from testbase.testcase import TestCase
+   from foolib.testcase import TestCase
 
    class HelloTest(TestCase):
        '''第一个测试用例
@@ -153,7 +156,7 @@
 
 假设我们的用例需要临时配置一个本地host域名，示例代码如下::
 
-   from testbase.testcase import TestCase
+   from foolib.testcase import TestCase
    
    class EnvTest1(TestCase):
        '''环境构造测试
