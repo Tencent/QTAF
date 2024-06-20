@@ -47,6 +47,7 @@ import xml.sax.saxutils as saxutils
 import six
 
 from testbase import context
+from testbase.conf import settings
 from testbase.util import (
     TimeoutLock,
     smart_text,
@@ -282,7 +283,10 @@ class TestResultBase(object):
             self.__steps_passed[self.__curr_step] = False
             if level > self.__error_level:
                 self.__error_level = level
-            extra_record, extra_attachments = self._get_extra_fail_record_safe()
+            if hasattr(settings, "GET_EXTRA_FAIL_RECORD_NOT_SAFE") and settings.GET_EXTRA_FAIL_RECORD_NOT_SAFE:
+                extra_record, extra_attachments = context.current_testcase().get_extra_fail_record()
+            else:
+                extra_record, extra_attachments = self._get_extra_fail_record_safe()
             record.update(extra_record)
             attachments.update(extra_attachments)
 
