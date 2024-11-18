@@ -261,7 +261,7 @@ class TestCase(object):
     def casedata(self):
         """测试数据
 
-        :rtype: list
+        :rtype: Any
         """
         return self.__casedata
 
