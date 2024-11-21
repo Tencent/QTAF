@@ -17,7 +17,9 @@
 """
 from __future__ import absolute_import
 
+import copy
 import imp
+import itertools
 import pkgutil
 import os
 import sys
@@ -304,11 +306,23 @@ class TestLoader(object):
         return tests
 
     def _load_from_testsuite(
-        self, cls, data_key=None, exclude_data_key=None, attrs=None
+        self, cls, data_key=None, exclude_data_key=None, attrs=None, case_params=None
     ):
         """从测试用例套类加载测试用例"""
+
         tests = []
-        for test in cls.testcases:
+        if case_params is None:
+            case_params = []
+
+        zip_longest = itertools.izip_longest if six.PY2 else itertools.zip_longest
+        for test, case_param in zip_longest(cls.testcases, case_params):
+            combind_param = {}
+            if attrs is not None:
+                combind_param = copy.deepcopy(attrs)
+            if case_param is not None:
+                combind_param.update(case_param)
+            combind_param = combind_param or None
+
             if isinstance(test, str):
                 test = self._load(test)
             if not isinstance(test, type):
@@ -317,7 +331,7 @@ class TestLoader(object):
                         test,
                         data_key,
                         exclude_data_key=exclude_data_key,
-                        attrs=attrs,
+                        attrs=combind_param,
                         ignore_testsuite=True,
                     )
                 else:
@@ -325,13 +339,19 @@ class TestLoader(object):
                         test,
                         data_key,
                         exclude_data_key=exclude_data_key,
-                        attrs=attrs,
+                        attrs=combind_param,
                         ignore_testsuite=True,
                     )
             else:
-                tests += self._load_from_class(
-                    test, data_key, exclude_data_key=exclude_data_key, attrs=attrs
-                )
+                if issubclass(test, TestSuite):
+                    testcases = self._load_from_testsuite(
+                        test, data_key, exclude_data_key=exclude_data_key, attrs=combind_param
+                    )
+                    tests += [test(testcases)]
+                else:
+                    tests += self._load_from_class(
+                        test, data_key, exclude_data_key=exclude_data_key, attrs=combind_param
+                    )
 
         return [it for it in tests if not cls.filter(it)]
 
