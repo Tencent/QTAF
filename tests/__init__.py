@@ -29,6 +29,10 @@ sys.path.insert(0, test_dir)
 loader = unittest.TestLoader()
 
 
+if not hasattr(unittest.TestCase, "assertRegex"):
+    unittest.TestCase.assertRegex = unittest.TestCase.assertRegexpMatches
+
+
 def load_case(case_path):
     parts = case_path.split(".")
     temp_parts = parts[:]

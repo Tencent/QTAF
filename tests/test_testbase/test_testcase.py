@@ -31,7 +31,7 @@ class TestCaseTest(unittest.TestCase):
         self.assertEqual(test.test_class_name, "tests.sampletest.hellotest.HelloTest")
         self.assertEqual(test.test_name, "tests.sampletest.hellotest.HelloTest")
         self.assertEqual(test.casedata, None)
-        self.assertRegexpMatches(test.test_doc, "测试示例")
+        self.assertRegex(test.test_doc, "测试示例")
 
     def test_extra_info(self):
         test = TestLoader().load("tests.sampletest.hellotest.ExtraInfoTest")[0]

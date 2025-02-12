@@ -42,7 +42,6 @@ print(settings.CONFIG_OPTION)
 3、用户自定义配置          固定为：test_proj/settings.py
 """
 
-import imp
 import os
 import sys
 import traceback
@@ -50,6 +49,7 @@ import traceback
 import qtaf_settings
 
 from testbase import logger
+from testbase.compat import imp
 from testbase.exlib import ExLibManager
 
 _DEFAULT_SETTINSG_MODULE = "settings"
