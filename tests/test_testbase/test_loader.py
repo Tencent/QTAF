@@ -48,7 +48,7 @@ class TestLoaderTest(unittest.TestCase):
         errors = self.loader.get_last_errors()
         self.assertEqual(len(errors), 1)
         self.assertIn("tests.sampletest.notfound", errors)
-        self.assertRegexpMatches(
+        self.assertRegex(
             list(errors.values())[0], "No module named .*notfound.*"
         )
 
@@ -67,7 +67,7 @@ class TestLoaderTest(unittest.TestCase):
         errors = self.loader.get_last_errors()
         self.assertEqual(len(errors), 1)
         self.assertIn("tests.sampletest.hellotest.notfound.DummyTest", errors)
-        self.assertEquals(
+        self.assertEqual(
             list(errors.values())[0],
             "ImportError: No module named tests.sampletest.hellotest.notfound",
         )

@@ -17,7 +17,6 @@
 """
 from __future__ import absolute_import
 
-import imp
 import pkgutil
 import os
 import sys
@@ -29,6 +28,7 @@ from collections import OrderedDict
 import six
 
 from testbase import datadrive
+from testbase.compat import imp
 from testbase.testcase import TestCase
 from testbase.testsuite import SeqTestSuite, TestSuite
 from testbase.conf import settings

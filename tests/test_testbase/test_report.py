@@ -37,8 +37,7 @@ class TestReportBase(unittest.TestCase):
     """base class of report test"""
 
     def setUp(self):
-        if six.PY3:
-            self.assertRegexpMatches = self.assertRegex  # pylint: disable=invalid-name
+        pass
 
 
 class StreamReportTest(TestReportBase):
@@ -96,7 +95,7 @@ class XmlReportTest(TestReportBase):
                 error_nodes = result_xml.getElementsByTagName("ERROR")
                 self.assertEqual(len(error_nodes), 1)
                 failed_reason = smart_text(error_nodes[0].childNodes[0].nodeValue)
-                self.assertRegexpMatches(failed_reason, reason)
+                self.assertRegex(failed_reason, reason)
             finally:
                 os.chdir(old_cwd)
 
@@ -187,7 +186,7 @@ class JsonReportTest(TestReportBase):
                         failed_step = result_json["steps"][-1]
                         self.assertEqual(failed_step["succeed"], False)
                         actual_reson = smart_text(failed_step["logs"][0]["message"])
-                        self.assertRegexpMatches(actual_reson, reason)
+                        self.assertRegex(actual_reson, reason)
             finally:
                 os.chdir(old_cwd)
 
@@ -268,7 +267,7 @@ class HtmlReportTest(TestReportBase):
                         failed_step = result_json["steps"][-1]
                         self.assertEqual(failed_step["succeed"], False)
                         actual_reson = smart_text(failed_step["logs"][0]["message"])
-                        self.assertRegexpMatches(actual_reson, reason)
+                        self.assertRegex(actual_reson, reason)
 
             finally:
                 os.chdir(old_cwd)
