@@ -59,7 +59,7 @@ jobs:
           sudo apt-get update && sudo apt-get install -y software-properties-common
           sudo add-apt-repository ppa:deadsnakes/ppa -y && sudo apt-get update
           sudo apt-get install -y python3.7
-          wget https://bootstrap.pypa.io/get-pip.py && python3.7 get-pip.py
+          wget https://bootstrap.pypa.io/pip/3.7/get-pip.py && python3.7 get-pip.py
           mkdir ${HOME}/.bin
           ln -s $(which python3.7) "${HOME}/.bin/python"
           echo "${HOME}/.bin" >> $GITHUB_PATH
