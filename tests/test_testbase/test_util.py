@@ -23,6 +23,7 @@ import sys
 import six
 
 from testbase import util
+from testbase.test import modify_settings
 
 
 class UtilTest(unittest.TestCase):
@@ -84,3 +85,12 @@ class UtilTest(unittest.TestCase):
         time_cost = time.time() - time0
         self.assertGreater(time_cost, timeout + 1)
         self.assertLess(time_cost, timeout + 1.5)
+
+    def test_get_last_frame_stack(self):
+        def func_wrapper():
+            return util.get_last_frame_stack(2)
+        stack = func_wrapper()
+        assert "func_wrapper" in stack
+        with modify_settings(QTAF_STACK_FILTERS=["func_wrapper"]):
+            stack = func_wrapper()
+            assert "func_wrapper" not in stack

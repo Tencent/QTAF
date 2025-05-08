@@ -611,9 +611,17 @@ def get_method_defined_class(method):
 
 
 def get_last_frame_stack(back_count=2):
+    from testbase.conf import settings
+    filter_funcs = []
+    if hasattr(settings, "QTAF_STACK_FILTERS"):
+        filter_funcs = settings.QTAF_STACK_FILTERS
     frame = inspect.currentframe()
-    for _ in range(back_count):
+    i = 0
+    while i < back_count:
         frame = frame.f_back
+        if frame.f_code.co_name in filter_funcs:
+            continue
+        i += 1
     stack = "".join(traceback.format_stack(frame, 1))
     return stack
 
