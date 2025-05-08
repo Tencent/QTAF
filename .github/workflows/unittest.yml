@@ -18,7 +18,7 @@ jobs:
       max-parallel: 4
       matrix:
         python-version: ['2.7', '3.7', '3.8', '3.9', '3.10', '3.11', '3.12']
-        os: [ubuntu-20.04, windows-2019, macos-13]
+        os: [ubuntu-22.04, windows-2019, macos-13]
         exclude:
           - os: macos-13
             python-version: "2.7"
@@ -35,7 +35,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install Ubuntu Python 2.7
-        if: matrix.python-version == '2.7' && matrix.os == 'ubuntu-20.04'
+        if: matrix.python-version == '2.7' && matrix.os == 'ubuntu-22.04'
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends python2 python3-virtualenv
@@ -52,7 +52,7 @@ jobs:
           start /wait msiexec.exe /passive /i python-2.7.18.amd64.msi /norestart /L*V "python_install.log" ADDLOCAL=ALL ALLUSERS=1 TARGETDIR=c:\python27
           type "python_install.log"
       - name: Install Ubuntu Python 3.7
-        if: matrix.python-version == '3.7' && matrix.os == 'ubuntu-20.04'
+        if: matrix.python-version == '3.7' && matrix.os == 'ubuntu-22.04'
         env:
           DEBIAN_FRONTEND: noninteractive
         run: |
