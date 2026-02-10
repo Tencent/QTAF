@@ -329,9 +329,15 @@ class TestLoader(object):
                         ignore_testsuite=True,
                     )
             else:
-                tests += self._load_from_class(
-                    test, data_key, exclude_data_key=exclude_data_key, attrs=attrs
-                )
+                if issubclass(test, TestSuite):
+                    testcases = self._load_from_testsuite(
+                        test, data_key, exclude_data_key=exclude_data_key, attrs=attrs
+                    )
+                    tests += [test(testcases)]
+                else:
+                    tests += self._load_from_class(
+                        test, data_key, exclude_data_key=exclude_data_key, attrs=attrs
+                    )
 
         return [it for it in tests if not cls.filter(it)]
 
