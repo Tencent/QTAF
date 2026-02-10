@@ -17,21 +17,21 @@ jobs:
     strategy:
       max-parallel: 4
       matrix:
-        python-version: ['2.7', '3.7', '3.9', '3.10', '3.11', '3.12']
+        python-version: ['2.7', '3.9', '3.10', '3.11', '3.12']
         os: [ubuntu-22.04, windows-2019, macos-13]
         exclude:
           - os: macos-13
             python-version: "2.7"
           - os: macos-13
-            python-version: "3.7"
+            python-version: "3.9"
           - os: windows-2019
-            python-version: "3.7"
+            python-version: "3.9"
 
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v1
-        if: matrix.python-version != '2.7' && matrix.python-version != '3.7'
+        if: matrix.python-version != '2.7' && matrix.python-version != '3.9'
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install Ubuntu Python 2.7
@@ -51,17 +51,17 @@ jobs:
           wget -nv "https://www.python.org/ftp/python/2.7.18/python-2.7.18.amd64.msi"
           start /wait msiexec.exe /passive /i python-2.7.18.amd64.msi /norestart /L*V "python_install.log" ADDLOCAL=ALL ALLUSERS=1 TARGETDIR=c:\python27
           type "python_install.log"
-      - name: Install Ubuntu Python 3.7
-        if: matrix.python-version == '3.7' && matrix.os == 'ubuntu-22.04'
+      - name: Install Ubuntu Python 3.9
+        if: matrix.python-version == '3.9' && matrix.os == 'ubuntu-22.04'
         env:
           DEBIAN_FRONTEND: noninteractive
         run: |
           sudo apt-get update && sudo apt-get install -y software-properties-common
           sudo add-apt-repository ppa:deadsnakes/ppa -y && sudo apt-get update
-          sudo apt-get install -y python3.7 python3.7-distutils
-          wget https://bootstrap.pypa.io/pip/3.7/get-pip.py && python3.7 get-pip.py
+          sudo apt-get install -y python3.9 python3.9-distutils
+          wget https://bootstrap.pypa.io/pip/get-pip.py && python3.9 get-pip.py
           mkdir ${HOME}/.bin
-          ln -s $(which python3.7) "${HOME}/.bin/python"
+          ln -s $(which python3.9) "${HOME}/.bin/python"
           echo "${HOME}/.bin" >> $GITHUB_PATH
       - name: Install Dependencies
         run: |
