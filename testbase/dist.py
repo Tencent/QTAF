@@ -182,7 +182,7 @@ class DistGenerator(object):
         if os.path.isfile(req_txt):
             with codecs_open(req_txt, "r", encoding="utf-8") as fd:
                 for it in pkg_resources.parse_requirements(fd.read()):
-                    reqs_dict[it.name] = str(it)
+                    reqs_dict[it.project_name] = str(it)
 
         elif os.path.isdir(exlib):
             for filename in os.listdir(exlib):
