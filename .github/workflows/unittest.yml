@@ -18,13 +18,13 @@ jobs:
       max-parallel: 4
       matrix:
         python-version: ['2.7', '3.9', '3.10', '3.11', '3.12']
-        os: [ubuntu-22.04, windows-2019, macos-14]
+        os: [ubuntu-22.04, windows-2019, macos-14-arm64]
         exclude:
-          - os: macos-14
+          - os: macos-14-arm64
             python-version: "2.7"
-          - os: macos-14
+          - os: macos-14-arm64
             python-version: "3.9"
-          - os: macos-14
+          - os: macos-14-arm64
             python-version: "3.10"
           - os: windows-2019
             python-version: "3.9"
